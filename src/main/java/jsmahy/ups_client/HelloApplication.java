@@ -4,6 +4,8 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import jsmahy.ups_client.game.Chessboard;
+import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.Player;
 import jsmahy.ups_client.net.Packet;
 
@@ -30,10 +32,15 @@ public class HelloApplication extends Application {
      * @throws IOException the io exception
      */
     public static void main(String[] args) throws IOException {
-        Player c = new Player("127.0.0.1", 5000);
-        Thread t = new Thread(c);
-        t.setDaemon(true);
-        t.start();
+        Chessboard chessboard = new Chessboard();
+        //connectionTest();
+        //launch();
+    }
+
+    private static void connectionTest() throws IOException {
+        NetworkManager.setup("127.0.0.1", 5000);
+
+        Player c = new Player();
 
         Scanner sc = new Scanner(System.in);
 
@@ -42,15 +49,9 @@ public class HelloApplication extends Application {
         while(!line.equalsIgnoreCase("exit")){
             line = sc.nextLine();
             String finalLine = line;
-            c.sendPacket(new Packet() {
-                @Override
-                public String getMessage() {
-                    return finalLine;
-                }
-            });
+            //c.sendPacket(null);
             //System.out.println("Recvd: " + recv);
         }
         c.disconnect();
-        //launch();
     }
 }

@@ -5,27 +5,27 @@ package jsmahy.ups_client.chess_pieces;
  */
 public enum ChessPieceEnum {
     /**
-     * The pawn
+     * The Pawn
      */
     PAWN(new Pawn()),
     /**
-     * The bishop
+     * The Bishop
      */
     BISHOP(null),
     /**
-     * The knight
+     * The kNight
      */
     KNIGHT(null),
     /**
-     * The rook
+     * The Rook
      */
     ROOK(null),
     /**
-     * The queen
+     * The Queen
      */
     QUEEN(null),
     /**
-     * The king
+     * The King
      */
     KING(null);
 
@@ -33,6 +33,7 @@ public enum ChessPieceEnum {
 
     ChessPieceEnum(IChessPiece piece) {
         this.piece = piece;
+
     }
 
     /**
@@ -41,5 +42,6 @@ public enum ChessPieceEnum {
     public IChessPiece getPiece() {
         return piece;
     }
+
 
 }

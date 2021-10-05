@@ -1,14 +1,17 @@
 package jsmahy.ups_client.net;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 /**
  * The type Packet.
  */
-public abstract class Packet {
+public interface Packet {
 
-    /**
-     * Gets message.
-     *
-     * @return the message
-     */
-    public abstract String getMessage();
+    void write(DataOutputStream out) throws IOException;
+
+    void read(DataInputStream in) throws IOException;
+
+    int getId();
 }

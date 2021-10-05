@@ -1,6 +1,7 @@
 package jsmahy.ups_client.chess_pieces;
 
 import jsmahy.ups_client.game.Chessboard;
+import jsmahy.ups_client.util.ChessPieceUtil;
 import jsmahy.ups_client.util.Pair;
 import jsmahy.ups_client.util.Position;
 
@@ -11,20 +12,12 @@ import java.util.HashSet;
  * The type Abstract chess piece.
  */
 abstract class AbstractChessPiece implements IChessPiece {
-    private final byte id;
+    private final char white;
+    private final char black;
 
-    /**
-     * Instantiates a new chess piece
-     *
-     * @param id the piece id
-     */
-    public AbstractChessPiece(byte id) {
-        this.id = id;
-    }
-
-    @Override
-    public final byte getId() {
-        return id;
+    AbstractChessPiece(char charId){
+        this.white = ChessPieceUtil.toWhite(charId);
+        this.black = ChessPieceUtil.toBlack(charId);
     }
 
     /**
@@ -63,6 +56,7 @@ abstract class AbstractChessPiece implements IChessPiece {
         }
         boolean white = chessboard.isWhite(piecePos);
 
+        Position copy = new Position(piecePos);
         for (Pair<Integer, Integer> vector : direction.vectors) {
             // check for all directions
             for (int i = 0; i < 4; i++) {
@@ -71,5 +65,20 @@ abstract class AbstractChessPiece implements IChessPiece {
             }
         }
         return positions;
+    }
+
+    @Override
+    public boolean isValidMove(Chessboard chessboard, Position currentPosition, Position destination) {
+        return getValidMoves(chessboard, currentPosition).contains(destination);
+    }
+
+    @Override
+    public char getWhite() {
+        return white;
+    }
+
+    @Override
+    public char getBlack() {
+        return black;
     }
 }

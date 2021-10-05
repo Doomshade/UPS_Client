@@ -11,12 +11,6 @@ import java.util.Collection;
 public interface IChessPiece {
 
     /**
-     *
-     * @return the unique id of this piece
-     */
-    byte getId();
-
-    /**
      * Gets valid moves.
      *
      * @param chessboard      the chessboard
@@ -24,4 +18,10 @@ public interface IChessPiece {
      * @return the valid moves
      */
     Collection<Position> getValidMoves(Chessboard chessboard, Position currentPosition);
+
+    boolean isValidMove(Chessboard chessboard, Position currentPosition, Position destination);
+
+    char getWhite();
+
+    char getBlack();
 }
