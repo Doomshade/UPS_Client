@@ -14,7 +14,7 @@
     <Button onAction="#onHelloButtonClick" onDragDetected="#onDragDetected" text="Hello!" />
    <AreaChart fx:id="areaChart">
      <xAxis>
-       <CategoryAxis side="BOTTOM" />
+       <CategoryAxis side="LEFT" />
      </xAxis>
      <yAxis>
        <NumberAxis side="LEFT" />
