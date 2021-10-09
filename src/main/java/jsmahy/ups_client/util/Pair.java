@@ -1,29 +1,17 @@
 package jsmahy.ups_client.util;
 
 /**
- * The type Pair.
+ * @param <A>
+ * @param <B>
  *
- * @param <T> the type parameter
- * @param <V> the type parameter
+ * @author Jakub Šmrha
  */
-public class Pair<T, V> {
-    /**
-     * The T.
-     */
-    public final T t;
-    /**
-     * The V.
-     */
-    public final V v;
+public class Pair<A, B> {
+    public final A a;
+    public final B b;
 
-    /**
-     * Instantiates a new Pair.
-     *
-     * @param t the t
-     * @param v the v
-     */
-    public Pair(T t, V v) {
-        this.t = t;
-        this.v = v;
+    public Pair(A a, B b) {
+        this.a = a;
+        this.b = b;
     }
 }

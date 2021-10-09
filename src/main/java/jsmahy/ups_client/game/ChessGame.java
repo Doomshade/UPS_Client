@@ -2,7 +2,9 @@ package jsmahy.ups_client.game;
 
 import jsmahy.ups_client.chess_pieces.ChessPieceEnum;
 import jsmahy.ups_client.chess_pieces.IChessPiece;
-import jsmahy.ups_client.net.Player;
+import jsmahy.ups_client.net.NetworkManager;
+import jsmahy.ups_client.net.in.PlayerConnection;
+import jsmahy.ups_client.net.out.PacketPlayOutMove;
 import jsmahy.ups_client.util.ChessPieceUtil;
 import jsmahy.ups_client.util.Position;
 
@@ -14,8 +16,8 @@ import java.util.Optional;
  */
 public final class ChessGame {
     private final Chessboard chessboard;
-    private final Player white;
-    private final Player black;
+    private final PlayerConnection white;
+    private final PlayerConnection black;
 
     // 0 = white | short
     // 1 = white | long
@@ -30,10 +32,12 @@ public final class ChessGame {
      * @param white      the white
      * @param black      the black
      */
-    public ChessGame(Chessboard chessboard, Player white, Player black) {
+    public ChessGame(Chessboard chessboard, PlayerConnection white, PlayerConnection black) {
         this.chessboard = chessboard;
         this.white = white;
         this.black = black;
+        white.startGame(this, true);
+        black.startGame(this, false);
         Arrays.fill(allowedCastles, true);
     }
 
@@ -41,11 +45,11 @@ public final class ChessGame {
         return chessboard;
     }
 
-    public Player getWhite() {
+    public PlayerConnection getWhite() {
         return white;
     }
 
-    public Player getBlack() {
+    public PlayerConnection getBlack() {
         return black;
     }
 
@@ -60,6 +64,7 @@ public final class ChessGame {
             //
             updateCastlesPrivileges(from);
             // send packet to players
+            NetworkManager.getInstance().sendPacket(new PacketPlayOutMove(from, to));
         }
     }
 
@@ -92,11 +97,11 @@ public final class ChessGame {
         return idx;
     }
 
-    public boolean getAllowedCastles(boolean white, boolean shortCastles) {
-        return allowedCastles[getCastlesIndex(white, shortCastles)];
-    }
-
     public boolean canKingCastles(boolean white) {
         return getAllowedCastles(white, true) && getAllowedCastles(white, false);
+    }
+
+    public boolean getAllowedCastles(boolean white, boolean shortCastles) {
+        return allowedCastles[getCastlesIndex(white, shortCastles)];
     }
 }

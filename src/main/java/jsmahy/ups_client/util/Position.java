@@ -6,23 +6,24 @@ import java.util.Objects;
  * The type Position.
  */
 public final class Position {
-    private final int row, column;
+    private final byte row, column;
+
+    public Position(Position other) {
+        this(other.row, other.column);
+    }
 
     /**
      * Instantiates a new position (square)
      *
      * @param row    the row
      * @param column the column
+     *
      * @throws IllegalArgumentException if either row or column are out of bounds
      */
-    public Position(int row, int column) throws IllegalArgumentException {
+    public Position(byte row, byte column) throws IllegalArgumentException {
         validatePosition(row, column);
         this.row = row;
         this.column = column;
-    }
-
-    public Position(Position other) {
-        this(other.row, other.column);
     }
 
     /**
@@ -30,35 +31,88 @@ public final class Position {
      *
      * @param row    the row
      * @param column the column
+     *
      * @throws IllegalArgumentException the illegal argument exception
      */
     public static void validatePosition(int row, int column) throws IllegalArgumentException {
         if (!isValidPosition(row, column)) {
-            throw new IllegalArgumentException(String.format("Both parameters must be within the range of 0-7 (inclusive)! row=%d, column=%d", row, column));
+            throw new IllegalArgumentException(
+                    String.format("Both parameters must be within the range of 0-7 (inclusive)! row=%d, column=%d", row,
+                            column));
         }
     }
 
     /**
      * @param row    the row
      * @param column the column
+     *
      * @return {@code true} if both arguments are within 0-7 (inclusive) range
      */
     public static boolean isValidPosition(int row, int column) {
+        // only the 3 lowest significant bits are needed
         return (row >> 3) == 0 && (column >> 3) == 0;
+    }
+
+    /**
+     * Encodes the position to a single short value
+     *
+     * @param from the position the piece moved from
+     * @param to   the position the piece moved to
+     *
+     * @return
+     */
+    public static short encode(Position from, Position to) {
+        return (short) ((from.getRow() << 9) | (from.getColumn() << 6) | (to.getRow() << 3) | to.getColumn());
     }
 
     /**
      * @return the row
      */
-    public int getRow() {
+    public byte getRow() {
         return row;
     }
 
     /**
      * @return the column
      */
-    public int getColumn() {
+    public byte getColumn() {
         return column;
+    }
+
+    /**
+     * Decodes a position
+     *
+     * @param position the position to decode
+     *
+     * @return a pair of positions; A = from, B = to
+     */
+    public static Pair<Position, Position> decode(short position) {
+        byte fromX = (byte) ((position >> 9) & 0b111);
+        byte fromY = (byte) ((position >> 6) & 0b111);
+        byte toX = (byte) ((position >> 3) & 0b111);
+        byte toY = (byte) (position & 0b111);
+
+        Position from = new Position(fromX, fromY);
+        Position to = new Position(toX, toY);
+
+        return new Pair<>(from, to);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getRow(), getColumn());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Position position = (Position) o;
+        return getRow() == position.getRow() && getColumn() == position.getColumn();
     }
 
     @Override
@@ -67,18 +121,5 @@ public final class Position {
                 "row=" + row +
                 ", column=" + column +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Position position = (Position) o;
-        return getRow() == position.getRow() && getColumn() == position.getColumn();
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getRow(), getColumn());
     }
 }

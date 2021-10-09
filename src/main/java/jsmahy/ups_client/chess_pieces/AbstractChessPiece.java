@@ -60,8 +60,8 @@ abstract class AbstractChessPiece implements IChessPiece {
         for (Pair<Integer, Integer> vector : direction.vectors) {
             // check for all directions
             for (int i = 0; i < 4; i++) {
-                int a = vector.t * (i & 0b1);
-                int b = vector.v * (i & 0b10);
+                int a = vector.a * (i & 0b1);
+                int b = vector.b * (i & 0b10);
             }
         }
         return positions;
