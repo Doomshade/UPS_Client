@@ -7,8 +7,10 @@
     requires javafx.fxml;
     requires javafx.graphics;
     requires javafx.web;
+    requires org.apache.logging.log4j;
 
     requires java.logging;
+    requires org.apache.commons.lang3;
 
     exports jsmahy.ups_client;
     exports jsmahy.ups_client.controller;

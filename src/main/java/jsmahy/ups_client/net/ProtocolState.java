@@ -1,5 +1,6 @@
 package jsmahy.ups_client.net;
 
+import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
 import jsmahy.ups_client.net.out.PacketLobbyOutHandshake;
 
@@ -45,11 +46,13 @@ public enum ProtocolState {
      * @param packetId the packet id
      *
      * @return an instance of a packet
+     * @throws InvalidPacketFormatException if the packet format is incorrect
      */
-    public Packet getPacket(PacketDirection direction, int packetId) {
+    public Packet getPacket(PacketDirection direction, int packetId) throws
+            InvalidPacketFormatException {
         final Map<Integer, Class<? extends Packet>> registry = PACKET_REGISTRY_BY_ID.get(direction);
         if (registry == null || !registry.containsKey(packetId)) {
-            throw new IllegalArgumentException(String.format("No packet with ID %d and direction %s found in %s state!",
+            throw new InvalidPacketFormatException(String.format("No packet with ID %d and direction %s found in %s state!",
                     packetId
                     , direction, this));
         }

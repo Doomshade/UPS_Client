@@ -8,6 +8,8 @@ import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.in.PlayerConnection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -17,9 +19,16 @@ import java.util.Scanner;
  * The type Hello application.
  */
 public class HelloApplication extends Application {
+    private static final Logger LOGGER = LogManager.getLogger(HelloApplication.class);
+
+    public static Logger getLogger() {
+        return LOGGER;
+    }
+
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("/fxml/hello-view.fxml"));
+        FXMLLoader fxmlLoader =
+                new FXMLLoader(HelloApplication.class.getResource("/fxml/hello-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 320, 240);
         stage.setTitle("Hello!");
         stage.setScene(scene);
@@ -30,6 +39,7 @@ public class HelloApplication extends Application {
      * The entry point of application.
      *
      * @param args the input arguments
+     *
      * @throws IOException the io exception
      */
     public static void main(String[] args) throws IOException {
@@ -49,7 +59,7 @@ public class HelloApplication extends Application {
 
         String line = "";
 
-        while(!line.equalsIgnoreCase("exit")){
+        while (!line.equalsIgnoreCase("exit")) {
             line = sc.nextLine();
             String finalLine = line;
             //c.sendPacket(null);

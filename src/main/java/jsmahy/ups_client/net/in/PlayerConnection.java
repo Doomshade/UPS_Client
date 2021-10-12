@@ -1,16 +1,20 @@
 package jsmahy.ups_client.net.in;
 
+import jsmahy.ups_client.HelloApplication;
 import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.out.PacketPlayOutDisconnect;
 import jsmahy.ups_client.net.out.PacketPlayOutKeepAlive;
 import jsmahy.ups_client.util.Position;
+import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class PlayerConnection implements PacketListenerPlay {
+    private static final Logger L = HelloApplication.getLogger();
     public static final int SERVER_RESPONSE_LIMIT = 25_000;
     public static final int KEEPALIVE_CHECK_PERIOD = 1_000;
     private static final NetworkManager NET_MAN = NetworkManager.getInstance();
@@ -22,7 +26,7 @@ public class PlayerConnection implements PacketListenerPlay {
 
     public PlayerConnection(ChessPlayer player) {
         this.player = player;
-        NetworkManager.setListener(this);
+        NetworkManager.setPlayListener(this);
     }
 
     public void startGame(final ChessGame chessGame, boolean white) {
@@ -56,7 +60,11 @@ public class PlayerConnection implements PacketListenerPlay {
 
     public void disconnect() {
         NET_MAN.sendPacket(new PacketPlayOutDisconnect());
-        NET_MAN.stopListening();
+        try {
+            NET_MAN.stopListening();
+        } catch (IOException e) {
+            L.error("An exception occurred when trying to close the socket", e);
+        }
     }
 
     @Override

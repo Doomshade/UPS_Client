@@ -1,5 +1,7 @@
 package jsmahy.ups_client.net.in;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 
@@ -25,5 +27,12 @@ public class PacketLobbyInHandshake implements PacketInLobby {
 
     public ResponseCode getResponseCode() {
         return responseCode;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("responseCode", responseCode)
+                .toString();
     }
 }

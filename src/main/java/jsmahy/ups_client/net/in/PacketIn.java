@@ -1,5 +1,6 @@
 package jsmahy.ups_client.net.in;
 
+import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.Packet;
 
 import java.io.DataInputStream;
@@ -12,7 +13,7 @@ import java.io.IOException;
  */
 public interface PacketIn<T extends PacketListener> extends Packet {
 
-    void read(DataInputStream in) throws IOException;
+    void read(DataInputStream in) throws IOException, InvalidPacketFormatException;
 
     void broadcast(T listener);
 }
