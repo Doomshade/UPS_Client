@@ -34,6 +34,10 @@ public class PlayerConnection implements PacketListenerPlay {
         startKeepAlive();
     }
 
+    public ChessPlayer getPlayer() {
+        return player;
+    }
+
     private void startKeepAlive() {
         final TimerTask keepAlive = new TimerTask() {
             @Override
@@ -75,7 +79,8 @@ public class PlayerConnection implements PacketListenerPlay {
                 // the server will flip the positions for us
             case MOVE:
                 // move the piece
-
+                chessGame.movePiece(packetPlayInMove.getFrom(), packetPlayInMove.getTo());
+                chessGame.nextTurn();
                 break;
             case OK:
                 // don't do anything

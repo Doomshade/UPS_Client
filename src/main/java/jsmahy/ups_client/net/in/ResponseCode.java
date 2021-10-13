@@ -8,7 +8,8 @@ package jsmahy.ups_client.net.in;
 public enum ResponseCode {
     OK,
     MOVE,
-    REJECTED;
+    REJECTED,
+    RECONNECT;
 
     public static ResponseCode getResponseCode(int id) {
         validateId(id);

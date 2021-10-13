@@ -52,7 +52,7 @@ public class HelloApplication extends Application {
     private static void connectionTest() throws IOException {
         NetworkManager.setup(InetAddress.getLocalHost().getHostAddress(), 5000);
 
-        ChessPlayer white = new ChessPlayer();
+        ChessPlayer white = new ChessPlayer("Testshade", true);
         PlayerConnection c = new PlayerConnection(white);
 
         Scanner sc = new Scanner(System.in);

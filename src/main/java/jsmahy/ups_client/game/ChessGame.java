@@ -1,107 +1,82 @@
 package jsmahy.ups_client.game;
 
-import jsmahy.ups_client.chess_pieces.ChessPieceEnum;
-import jsmahy.ups_client.chess_pieces.IChessPiece;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.in.PlayerConnection;
 import jsmahy.ups_client.net.out.PacketPlayOutMove;
-import jsmahy.ups_client.util.ChessPieceUtil;
 import jsmahy.ups_client.util.Position;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.regex.Matcher;
 
-/**
- * The type Chess game.
- */
 public final class ChessGame {
+    private static ChessGame chessGame = null;
     private final Chessboard chessboard;
-    private final PlayerConnection white;
-    private final PlayerConnection black;
+    private final PlayerConnection client;
+    private final ChessPlayer opponent;
 
-    // 0 = white | short
-    // 1 = white | long
-    // 2 = black | short
-    // 3 = black | long
-    private final boolean[] allowedCastles = new boolean[4];
+    private boolean clientToMove = true;
+
+    public static void setupChessGame(Chessboard chessboard, PlayerConnection client,
+                                      ChessPlayer opponent) {
+        if (isSetUp()) {
+            throw new IllegalStateException("Chess game has already been set up!");
+        }
+        chessGame = new ChessGame(chessboard, client, opponent);
+    }
+
+    public static boolean isSetUp() {
+        return chessGame != null;
+    }
+
+    public static ChessGame getChessGame() {
+        return chessGame;
+    }
 
     /**
      * Instantiates a new Chess game.
      *
      * @param chessboard the chessboard
-     * @param white      the white
-     * @param black      the black
+     * @param client     the player
+     * @param opponent   the opponent
      */
-    public ChessGame(Chessboard chessboard, PlayerConnection white, PlayerConnection black) {
+    private ChessGame(Chessboard chessboard, PlayerConnection client, ChessPlayer opponent) {
         this.chessboard = chessboard;
-        this.white = white;
-        this.black = black;
-        white.startGame(this, true);
-        black.startGame(this, false);
-        Arrays.fill(allowedCastles, true);
+        this.client = client;
+        this.opponent = opponent;
+        client.startGame(this, true);
     }
 
     public Chessboard getChessboard() {
         return chessboard;
     }
 
-    public PlayerConnection getWhite() {
-        return white;
+    public PlayerConnection getClient() {
+        return client;
     }
 
-    public PlayerConnection getBlack() {
-        return black;
+    public boolean isClientToMove() {
+        return clientToMove;
+    }
+
+    public ChessPlayer getOpponent() {
+        return opponent;
     }
 
     /**
-     * Moves a piece and propagates the move to the server
+     * Moves a piece and propagates the move to the server.
      *
      * @param from the from
      * @param to   the to
      */
     public void movePiece(Position from, Position to) {
-        if (chessboard.move(from, to) != ChessMove.NO_MOVE) {
-            //
-            updateCastlesPrivileges(from);
+        // the move to perform as
+        final ChessPlayer as = clientToMove ? getClient().getPlayer() : getOpponent();
+        if (chessboard.move(from, to, as) != ChessMove.NO_MOVE && clientToMove) {
             // send packet to players
             NetworkManager.getInstance().sendPacket(new PacketPlayOutMove(from, to));
         }
     }
 
-    private void updateCastlesPrivileges(Position from) {
-        Optional<IChessPiece> piece = chessboard.getPiece(from);
-        piece.ifPresent(x -> {
-            boolean isWhite = chessboard.isWhite(from);
-
-            // check for king move
-            if (ChessPieceUtil.isKing(x)) {
-                modifyCastlesPrivilege(isWhite, true, false);
-                modifyCastlesPrivilege(isWhite, false, false);
-            }
-            // and a rook move as well
-            else if (ChessPieceUtil.is(x, ChessPieceEnum.ROOK)) {
-                // if the rook is at the right edge (7) that means it's short castles
-                // else it means it's long castles
-                modifyCastlesPrivilege(isWhite, from.getColumn() == 7, false);
-            }
-        });
-    }
-
-    public void modifyCastlesPrivilege(boolean white, boolean shortCastles, boolean allow) {
-        allowedCastles[getCastlesIndex(white, shortCastles)] = allow;
-    }
-
-    private int getCastlesIndex(boolean white, boolean shortCastles) {
-        int idx = white ? 0 : 2;
-        idx += shortCastles ? 0 : 1;
-        return idx;
-    }
-
-    public boolean canKingCastles(boolean white) {
-        return getAllowedCastles(white, true) && getAllowedCastles(white, false);
-    }
-
-    public boolean getAllowedCastles(boolean white, boolean shortCastles) {
-        return allowedCastles[getCastlesIndex(white, shortCastles)];
+    public void nextTurn() {
+        this.clientToMove = !this.clientToMove;
     }
 }
