@@ -1,10 +1,7 @@
 package jsmahy.ups_client.net;
 
 import jsmahy.ups_client.HelloApplication;
-import jsmahy.ups_client.net.in.LobbyListener;
-import jsmahy.ups_client.net.in.PacketDeserializer;
-import jsmahy.ups_client.net.in.PacketListener;
-import jsmahy.ups_client.net.in.PacketListenerPlay;
+import jsmahy.ups_client.net.in.*;
 import jsmahy.ups_client.net.out.PacketOut;
 import org.apache.logging.log4j.Logger;
 
@@ -18,18 +15,18 @@ import java.util.Map;
 import static java.lang.String.format;
 
 /**
- * The network manager.
+ * The network manager that handles packets and broadcasts them to listeners
  *
  * @author Jakub Šmrha
  * @version 1.0
+ * @see PacketListener
+ * @see LobbyListener
+ * @see PlayerConnection
  * @since 1.0
  */
 public final class NetworkManager {
     private static final Logger L = HelloApplication.getLogger();
 
-    /**
-     * Singleton.
-     */
     private static final NetworkManager INSTANCE = new NetworkManager();
 
     /**
@@ -40,6 +37,10 @@ public final class NetworkManager {
             put(ProtocolState.LOBBY, new LobbyListener());
         }
     };
+
+    /**
+     * The timeout limit for server to answer.
+     */
     private static final int TIMEOUT = 30_000;
 
     /**
@@ -47,19 +48,8 @@ public final class NetworkManager {
      */
     private static boolean successfullyInitialized = false;
 
-    /**
-     * The host.
-     */
     private String host;
-
-    /**
-     * The port.
-     */
     private int port;
-
-    /**
-     * The client socket.
-     */
     private Socket socket = null;
 
     /**
@@ -68,7 +58,7 @@ public final class NetworkManager {
     private DataInputStream in = null;
 
     /**
-     * Messages to server sent in this output stream.
+     * Messages to server are sent in this output stream.
      */
     private DataOutputStream out = null;
 
@@ -167,6 +157,7 @@ public final class NetworkManager {
             out.writeByte(id);
 
             // State
+            // TODO delete state
             out.writeByte(state.ordinal());
 
             // Data
@@ -196,7 +187,7 @@ public final class NetworkManager {
     }
 
     /**
-     * @return {@code true} whether the network manager has been successfully initialized.
+     * @return {@code true} if the network manager has been successfully initialized.
      */
     public static boolean isSuccessfullyInitialized() {
         return successfullyInitialized;
