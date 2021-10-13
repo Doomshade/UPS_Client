@@ -37,9 +37,37 @@ public final class Position {
     public static void validatePosition(int row, int column) throws IllegalArgumentException {
         if (!isValidPosition(row, column)) {
             throw new IllegalArgumentException(
-                    String.format("Both parameters must be within the range of 0-7 (inclusive)! row=%d, column=%d", row,
+                    String.format(
+                            "Both parameters must be within the range of 0-7 (inclusive)! row=%d," +
+                                    " column=%d",
+                            row,
                             column));
         }
+    }
+
+    public String toAsciiString() {
+        return new String(new char[] {toChar(row), toChar(column)});
+    }
+
+    public static Position fromString(String s) throws IllegalArgumentException {
+        if (s.length() != 2) {
+            throw new IllegalArgumentException("The position length must be 2!");
+        }
+        char file = s.charAt(0);
+        if (file < 'A' || file > 'H') {
+            throw new IllegalArgumentException(
+                    String.format("Invalid file in position (%c)", file));
+        }
+        char rank = s.charAt(1);
+        if (rank < '0' || rank > '8') {
+            throw new IllegalArgumentException(String.format("Invalid rank in position (%c)",
+                    rank));
+        }
+        return new Position((byte) (file - 'A'), (byte) (rank - '0'));
+    }
+
+    private char toChar(int num) {
+        return (char) (num + 'A');
     }
 
     /**
@@ -62,7 +90,8 @@ public final class Position {
      * @return
      */
     public static short encode(Position from, Position to) {
-        return (short) ((from.getRow() << 9) | (from.getColumn() << 6) | (to.getRow() << 3) | to.getColumn());
+        return (short) ((from.getRow() << 9) | (from.getColumn() << 6) | (to.getRow() << 3) |
+                to.getColumn());
     }
 
     /**

@@ -4,7 +4,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * @author Doomshade
+ * This packet is sent when the player disconnects via an exit button
+ *
+ * @author Jakub Šmrha
  * @version 1.0
  * @since 1.0
  */

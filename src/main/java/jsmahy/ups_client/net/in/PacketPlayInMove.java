@@ -15,7 +15,20 @@ public class PacketPlayInMove implements PacketInPlay {
 
     @Override
     public void read(DataInputStream in) throws IOException {
-        byte response = (byte) (in.readByte() & 0b11);
+        this.responseCode = ResponseCode.getResponseCode(in.readUTF());
+        final String pos = in.readUTF();
+        if (pos.length() != 4) {
+            throw new IOException("Server sent an invalid position packet!");
+        }
+
+        // the server sent us back that the move was valid
+        if (this.responseCode == ResponseCode.OK) {
+            return;
+        }
+        this.from = Position.fromString(pos.substring(0, 2));
+        this.to = Position.fromString(pos.substring(2, 4));
+
+        /*byte response = (byte) (in.readByte() & 0b11);
         responseCode = ResponseCode.values()[response];
         if (responseCode == ResponseCode.OK) {
             return;
@@ -27,7 +40,7 @@ public class PacketPlayInMove implements PacketInPlay {
         byte toY = (byte) (position & 0b111);
 
         from = new Position(fromX, fromY);
-        to = new Position(toX, toY);
+        to = new Position(toX, toY);*/
     }
 
     @Override

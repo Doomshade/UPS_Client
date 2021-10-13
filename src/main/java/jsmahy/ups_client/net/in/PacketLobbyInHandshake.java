@@ -16,8 +16,7 @@ public class PacketLobbyInHandshake implements PacketInLobby {
     @Override
     public void read(final DataInputStream in) throws IOException {
         // we only need the last bit right now as we only have two response codes
-        final int b = in.readUnsignedByte() & 0b1;
-        this.responseCode = ResponseCode.values()[b];
+        this.responseCode = ResponseCode.getResponseCode(in.readUTF());
     }
 
     @Override

@@ -4,20 +4,16 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * @author Doomshade
+ * This packet is sent periodically to check whether the connection is still up
+ *
+ * @author Jakub Šmrha
  * @version 1.0
  * @since 1.0
  */
 public class PacketPlayOutKeepAlive implements PacketOut {
-    private final long time;
-
-    public PacketPlayOutKeepAlive(long time){
-        this.time = time;
-    }
 
     @Override
     public void write(final DataOutputStream out) throws IOException {
-        out.writeLong(time);
     }
 
 }

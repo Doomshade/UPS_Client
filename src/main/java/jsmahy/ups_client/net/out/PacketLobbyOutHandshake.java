@@ -4,7 +4,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * @author Doomshade
+ * This packet is sent when the player joins a lobby or attempts to reconnect
+ *
+ * @author Jakub Šmrha
  * @version 1.0
  * @since 1.0
  */

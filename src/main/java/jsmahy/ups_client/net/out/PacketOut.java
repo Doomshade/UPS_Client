@@ -6,10 +6,20 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * @author Doomshade
+ * Interface for outgoing packets.
+ *
+ * @author Jakub Šmrha
  * @version 1.0
  * @since 1.0
  */
 public interface PacketOut extends Packet {
+
+    /**
+     * Writes the packet data to the output stream.
+     *
+     * @param out the output stream
+     *
+     * @throws IOException if the data could not be written into the stream
+     */
     void write(DataOutputStream out) throws IOException;
 }

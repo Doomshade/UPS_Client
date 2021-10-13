@@ -6,7 +6,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * @author Doomshade
+ * This packet is sent whenever the player makes a move
+ *
+ * @author Jakub Šmrha
  * @version 1.0
  * @since 1.0
  */
@@ -20,7 +22,9 @@ public class PacketPlayOutMove implements PacketOut {
 
     @Override
     public void write(DataOutputStream out) throws IOException {
-        short pos = (short) ((from.getRow() << 9) | (from.getColumn() << 6) | (to.getRow() << 3) | to.getColumn());
-        out.writeShort(pos);
+        out.writeUTF(from.toAsciiString().concat(to.toAsciiString()));
+        // short pos = (short) ((from.getRow() << 9) | (from.getColumn() << 6) | (to.getRow() <<
+        // 3) | to.getColumn());
+        // out.writeShort(pos);
     }
 }

@@ -50,7 +50,7 @@ public class PlayerConnection implements PacketListenerPlay {
                 }
 
                 PlayerConnection.this.keepAlive = System.currentTimeMillis();
-                NET_MAN.sendPacket(new PacketPlayOutKeepAlive(PlayerConnection.this.keepAlive));
+                NET_MAN.sendPacket(new PacketPlayOutKeepAlive());
 
             }
         };
@@ -89,8 +89,6 @@ public class PlayerConnection implements PacketListenerPlay {
 
     @Override
     public void keepAlive(final PacketPlayInKeepAlive packetPlayInKeepAlive) {
-        if (awaitingKeepAlive && packetPlayInKeepAlive.getDelay() == keepAlive) {
-            awaitingKeepAlive = false;
-        }
+        awaitingKeepAlive = false;
     }
 }

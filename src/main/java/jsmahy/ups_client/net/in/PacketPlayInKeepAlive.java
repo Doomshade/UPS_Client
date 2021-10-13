@@ -10,19 +10,12 @@ import java.io.IOException;
  */
 public class PacketPlayInKeepAlive implements PacketInPlay {
 
-    private long delay;
-
     @Override
     public void read(final DataInputStream in) throws IOException {
-        delay = in.readLong();
     }
 
     @Override
     public void broadcast(final PacketListenerPlay listener) {
         listener.keepAlive(this);
-    }
-
-    public long getDelay() {
-        return delay;
     }
 }
