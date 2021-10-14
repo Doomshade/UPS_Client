@@ -7,10 +7,9 @@ import jsmahy.ups_client.util.Position;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Optional;
 
 /**
- * The abstract implementation of a chess piece,
+ * The abstract implementation of a chess piece.
  *
  * @author Jakub Šmrha
  * @version 1.0
@@ -92,7 +91,12 @@ abstract class AbstractChessPiece implements IChessPiece {
     @Override
     public final boolean isValidMove(Chessboard chessboard, Position currentPosition,
                                      Position destination) {
-        return getValidMoves(chessboard, currentPosition).contains(destination);
+        final Collection<Position> validMoves = getValidMoves(chessboard, currentPosition);
+        if (validMoves == null) {
+            throw new UnsupportedOperationException("Moves for this piece were not yet " +
+                    "implemented!");
+        }
+        return validMoves.contains(destination);
     }
 
     @Override

@@ -1,7 +1,11 @@
 package jsmahy.ups_client.chess_pieces;
 
 /**
- * The enum Chess piece enum.
+ * The implementation of chess pieces.
+ *
+ * @author Jakub Šmrha
+ * @version 1.0
+ * @since 1.0
  */
 public enum ChessPieceEnum {
     /**
@@ -11,23 +15,23 @@ public enum ChessPieceEnum {
     /**
      * The Bishop
      */
-    BISHOP(null),
+    BISHOP(new Bishop()),
     /**
      * The kNight
      */
-    KNIGHT(null),
+    KNIGHT(new Knight()),
     /**
      * The Rook
      */
-    ROOK(null),
+    ROOK(new Rook()),
     /**
      * The Queen
      */
-    QUEEN(null),
+    QUEEN(new Queen()),
     /**
      * The King
      */
-    KING(null);
+    KING(new King());
 
     private final IChessPiece piece;
 
