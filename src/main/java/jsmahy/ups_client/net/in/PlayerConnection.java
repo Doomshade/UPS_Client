@@ -7,6 +7,7 @@ import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.out.PacketPlayOutDisconnect;
 import jsmahy.ups_client.net.out.PacketPlayOutKeepAlive;
 import jsmahy.ups_client.util.Position;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
@@ -14,7 +15,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class PlayerConnection implements PacketListenerPlay {
-    private static final Logger L = HelloApplication.getLogger();
+    private static final Logger L = LogManager.getLogger(PlayerConnection.class);
     public static final int SERVER_RESPONSE_LIMIT = 25_000;
     public static final int KEEPALIVE_CHECK_PERIOD = 1_000;
     private static final NetworkManager NET_MAN = NetworkManager.getInstance();

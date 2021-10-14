@@ -4,6 +4,7 @@ import jsmahy.ups_client.HelloApplication;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
 import jsmahy.ups_client.net.out.PacketLobbyOutHandshake;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
@@ -30,7 +31,7 @@ public enum ProtocolState {
         }
     };
 
-    private static final Logger L = HelloApplication.getLogger();
+    private static final Logger L = LogManager.getLogger(ProtocolState.class);
     // a BiMap would be nice here
     /**
      * The ID-packet map.

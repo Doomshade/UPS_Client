@@ -2,9 +2,6 @@ package jsmahy.ups_client.util;
 
 import java.util.Objects;
 
-/**
- * The type Position.
- */
 public final class Position {
     private final byte row, column;
 

@@ -3,6 +3,7 @@ package jsmahy.ups_client.net;
 import jsmahy.ups_client.HelloApplication;
 import jsmahy.ups_client.net.in.*;
 import jsmahy.ups_client.net.out.PacketOut;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.DataInputStream;
@@ -25,7 +26,7 @@ import static java.lang.String.format;
  * @since 1.0
  */
 public final class NetworkManager {
-    private static final Logger L = HelloApplication.getLogger();
+    private static final Logger L = LogManager.getLogger(NetworkManager.class);
 
     private static final NetworkManager INSTANCE = new NetworkManager();
 

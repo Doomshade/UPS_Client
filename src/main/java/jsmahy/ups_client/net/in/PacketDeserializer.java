@@ -5,6 +5,7 @@ import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.PacketDirection;
 import jsmahy.ups_client.net.ProtocolState;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.DataInputStream;
@@ -16,7 +17,7 @@ public class PacketDeserializer implements Runnable{
     /**
      * The logger.
      */
-    private static final Logger L = HelloApplication.getLogger();
+    private static final Logger L = LogManager.getLogger(PacketDeserializer.class);
 
     /**
      * The NetworkManager instance.

@@ -3,8 +3,10 @@ package jsmahy.ups_client.game;
 import jsmahy.ups_client.HelloApplication;
 import jsmahy.ups_client.chess_pieces.ChessPieceEnum;
 import jsmahy.ups_client.chess_pieces.IChessPiece;
+import jsmahy.ups_client.exception.InvalidFENFormatException;
 import jsmahy.ups_client.util.ChessPieceUtil;
 import jsmahy.ups_client.util.Position;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Arrays;
@@ -16,7 +18,7 @@ import java.util.regex.Matcher;
 import static java.lang.String.format;
 
 public class Chessboard {
-    private static final Logger L = HelloApplication.getLogger();
+    private static final Logger L = LogManager.getLogger(Chessboard.class);
 
     // board of characters
     // upper case 'P' represents a white pawn, lower case 'p' represents a black pawn
@@ -95,11 +97,9 @@ public class Chessboard {
         // the first group is the big part
         // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
         final String[] split = m.group(1).split("/");
-        L.debug(format("First part of FEN: %s", Arrays.toString(split)));
-        final IllegalArgumentException ex =
-                new IllegalArgumentException("Attempted to parse an invalid FEN String");
+        L.trace(format("First part of FEN: %s", Arrays.toString(split)));
         if (split.length != 8) {
-            throw ex;
+            throw new InvalidFENFormatException("Attempted to parse an invalid FEN String");
         }
 
         for (int i = 0; i < split.length; i++) {
@@ -112,26 +112,27 @@ public class Chessboard {
                     // there could be too large of a number
                     // or the piece id is nonexistent
                     if (rowIdx >= 8 || !ChessPieceUtil.isPiece(c)) {
-                        throw ex;
+                        throw new InvalidFENFormatException("Attempted to parse an invalid FEN String");
                     }
                     // there should be only valid characters now
-                    board[i][rowIdx] = c;
+                    board[i][rowIdx++] = c;
                 }
             }
         }
         final int rowSize = ChessPieceUtil.ROW_SIZE;
-        char[] buf = new char[rowSize * rowSize];
-        for (int i = 0; i < rowSize; i++) {
+        L.trace("Chessboard after first FEN part:");
+        for (int i = rowSize - 1; i >= 0; i--) {
+            char[] bbuf = new char[8];
             for (int j = 0; j < rowSize; j++) {
                 char c = board[i][j];
                 if (c == '\u0000') {
                     c = ' ';
                 }
-
-                buf[j + i * rowSize] = c;
+                bbuf[j] = c;
             }
+            L.trace(Arrays.toString(bbuf));
         }
-        L.debug(format("Chessboard after first part: %s", Arrays.toString(buf)));
+        L.debug("Chessboard after first FEN part: " + Arrays.deepToString(board));
         // end of chessboard piece parsing
 
     }
