@@ -8,8 +8,10 @@ import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.in.PlayerConnection;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.simple.SimpleLogger;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -19,7 +21,8 @@ import java.util.Scanner;
  * The type Hello application.
  */
 public class HelloApplication extends Application {
-    private static final Logger LOGGER = LogManager.getLogger(HelloApplication.class);
+    private static final SimpleLogger LOGGER =
+            (SimpleLogger) LogManager.getLogger(HelloApplication.class);
 
     public static Logger getLogger() {
         return LOGGER;
@@ -27,6 +30,8 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        LOGGER.setLevel(Level.DEBUG);
+        Chessboard chessboard = new Chessboard();
         FXMLLoader fxmlLoader =
                 new FXMLLoader(HelloApplication.class.getResource("/fxml/hello-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 320, 240);
@@ -44,7 +49,6 @@ public class HelloApplication extends Application {
      */
     public static void main(String[] args) throws IOException {
         launch(args);
-        Chessboard chessboard = new Chessboard();
         //connectionTest();
         //launch();
     }

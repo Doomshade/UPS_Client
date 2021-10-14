@@ -1,32 +1,27 @@
 package jsmahy.ups_client.game;
 
+import jsmahy.ups_client.HelloApplication;
 import jsmahy.ups_client.chess_pieces.ChessPieceEnum;
 import jsmahy.ups_client.chess_pieces.IChessPiece;
 import jsmahy.ups_client.util.ChessPieceUtil;
 import jsmahy.ups_client.util.Position;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static java.lang.String.format;
 
 public class Chessboard {
-    public static final String START_FEN =
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    public static final Pattern FEN_PATTERN =
-            Pattern.compile(
-                    "((([rnbqkpRNBQKP1-8]+)\\/){7}([rnbqkpRNBQKP1-8]+)) ([wb]) ([KQkq\\-]+) (" +
-                            "([a-h][0-7])|\\-) ([0-9]+) ([0-9]+)");
-
-    public static final int ROW_SIZE = 8;
-
+    private static final Logger L = HelloApplication.getLogger();
 
     // board of characters
     // upper case 'P' represents a white pawn, lower case 'p' represents a black pawn
     // this goes for all the pieces
-    private final char[][] board = new char[ROW_SIZE][ROW_SIZE];
+    private final char[][] board = new char[ChessPieceUtil.ROW_SIZE][ChessPieceUtil.ROW_SIZE];
 
     // 0 = white | short
     // 1 = white | long
@@ -34,8 +29,12 @@ public class Chessboard {
     // 3 = black | long
     private final boolean[] allowedCastles = new boolean[4];
 
-    {
+    /**
+     * Sets up the board to the default position once initialized.
+     */
+    public Chessboard() {
         Arrays.fill(allowedCastles, true);
+        setupBoard(ChessPieceUtil.START_FEN);
     }
 
     public void modifyCastlesPrivilege(boolean white, boolean shortCastles, boolean allow) {
@@ -76,33 +75,7 @@ public class Chessboard {
     }
 
     /**
-     * Sets up the board with the given char matrix
-     *
-     * @param board the board
-     *
-     * @throws IllegalArgumentException
-     */
-    private void setupBoard(char[][] board) throws IllegalArgumentException {
-        validateBoard(board);
-        System.arraycopy(board, 0, this.board, 0, ROW_SIZE);
-    }
-
-    private void validateBoard(char[][] board) {
-        if (board.length != this.board.length || board[0].length != this.board[0].length) {
-            throw new IllegalArgumentException("Invalid board length");
-        }
-        String viableIds = ChessPieceUtil.getAllPieceIds();
-        for (char[] cc : board) {
-            for (char c : cc) {
-                if (c != '\u0000' && viableIds.indexOf(c) == -1) {
-                    throw new IllegalArgumentException("Invalid piece on board found: " + c);
-                }
-            }
-        }
-    }
-
-    /**
-     * Sets up a board from a fen string
+     * Sets up a board from a fen string.
      *
      * @param fen the fen string
      *
@@ -111,24 +84,22 @@ public class Chessboard {
     public void setupBoard(String fen) throws IllegalArgumentException {
         // somewhat of an ugly pattern but works
         // this just ensures the format is right
-        final Pattern fenPattern =
-                Pattern.compile(
-                        "((([rnbqkpRNBQKP1-8]+)\\/){7}([rnbqkpRNBQKP1-8]+)) ([wb]) ([KQkq\\-]+) (" +
-                                "([a-h][0-7])|\\-) ([0-9]+) ([0-9]+)");
-        final Matcher m = fenPattern.matcher(fen);
+        final Matcher m = ChessPieceUtil.FEN_PATTERN.matcher(fen);
 
         // very likely an invalid fen string
         if (!m.find()) {
-            throw new IllegalArgumentException(String.format("Invalid FEN String %s", fen));
+            throw new IllegalArgumentException(format("Invalid FEN String %s", fen));
         }
 
         // start parsing the string
         // the first group is the big part
         // rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
-        String[] split = m.group(1).split("/");
-
+        final String[] split = m.group(1).split("/");
+        L.debug(format("First part of FEN: %s", Arrays.toString(split)));
+        final IllegalArgumentException ex =
+                new IllegalArgumentException("Attempted to parse an invalid FEN String");
         if (split.length != 8) {
-            throw new IllegalArgumentException("Attempted to parse an invalid FEN String");
+            throw ex;
         }
 
         for (int i = 0; i < split.length; i++) {
@@ -138,25 +109,40 @@ public class Chessboard {
                 if (Character.isDigit(c)) {
                     rowIdx += Character.digit(c, 10);
                 } else {
-                    // there could be too large of a number, and it could crash the client
-                    // with an index out of bounds ex
-                    if (rowIdx >= 8) {
-                        break;
+                    // there could be too large of a number
+                    // or the piece id is nonexistent
+                    if (rowIdx >= 8 || !ChessPieceUtil.isPiece(c)) {
+                        throw ex;
                     }
                     // there should be only valid characters now
                     board[i][rowIdx] = c;
                 }
             }
         }
+        final int rowSize = ChessPieceUtil.ROW_SIZE;
+        char[] buf = new char[rowSize * rowSize];
+        for (int i = 0; i < rowSize; i++) {
+            for (int j = 0; j < rowSize; j++) {
+                char c = board[i][j];
+                if (c == '\u0000') {
+                    c = ' ';
+                }
+
+                buf[j + i * rowSize] = c;
+            }
+        }
+        L.debug(format("Chessboard after first part: %s", Arrays.toString(buf)));
+        // end of chessboard piece parsing
+
     }
 
     /**
-     * Moves a piece on the board
+     * Moves a piece on the board.
      *
      * @param from the square from
      * @param to   the square to
      *
-     * @return {@code true} if a piece was moved
+     * @return the chess move that was performed
      */
     public ChessMove move(Position from, Position to, ChessPlayer as) {
         Optional<IChessPiece> opt = getPiece(from);
@@ -181,7 +167,7 @@ public class Chessboard {
      *
      * @throws IllegalStateException if there's no piece on the starting position
      * @throws IllegalAccessError    if the client attempted to move opponents piece and the
-     * client called this method for some reason
+     *                               client called this method for some reason
      */
     private ChessMove moveOnBoard(Position from, Position to, ChessPlayer as)
             throws IllegalStateException {
@@ -262,13 +248,17 @@ public class Chessboard {
      */
     public boolean isWhite(Position pos) throws IllegalArgumentException {
         if (!containsPiece(pos)) {
-            throw new IllegalArgumentException(String.format("No piece on %s square!", pos));
+            throw new IllegalArgumentException(format("No piece on %s square!", pos));
         }
         return ChessPieceUtil.isWhite(getPieceId(pos));
     }
 
-    private char getPieceId(Position pos) {
-        return board[pos.getRow()][pos.getColumn()];
+    public char getPieceId(Position pos) throws IllegalArgumentException {
+        final char c = board[pos.getRow()][pos.getColumn()];
+        if (!ChessPieceUtil.isPiece(c)) {
+            throw new IllegalArgumentException("No piece found on position " + pos);
+        }
+        return c;
     }
 
 }

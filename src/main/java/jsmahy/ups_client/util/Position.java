@@ -21,28 +21,9 @@ public final class Position {
      * @throws IllegalArgumentException if either row or column are out of bounds
      */
     public Position(byte row, byte column) throws IllegalArgumentException {
-        validatePosition(row, column);
+        ChessPieceUtil.validatePosition(row, column);
         this.row = row;
         this.column = column;
-    }
-
-    /**
-     * Validates the position
-     *
-     * @param row    the row
-     * @param column the column
-     *
-     * @throws IllegalArgumentException the illegal argument exception
-     */
-    public static void validatePosition(int row, int column) throws IllegalArgumentException {
-        if (!isValidPosition(row, column)) {
-            throw new IllegalArgumentException(
-                    String.format(
-                            "Both parameters must be within the range of 0-7 (inclusive)! row=%d," +
-                                    " column=%d",
-                            row,
-                            column));
-        }
     }
 
     public String toAsciiString() {
@@ -68,17 +49,6 @@ public final class Position {
 
     private char toChar(int num) {
         return (char) (num + 'A');
-    }
-
-    /**
-     * @param row    the row
-     * @param column the column
-     *
-     * @return {@code true} if both arguments are within 0-7 (inclusive) range
-     */
-    public static boolean isValidPosition(int row, int column) {
-        // only the 3 lowest significant bits are needed
-        return (row >> 3) == 0 && (column >> 3) == 0;
     }
 
     /**
