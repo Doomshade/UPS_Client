@@ -1,15 +1,13 @@
 package jsmahy.ups_client.net.in;
 
-import jsmahy.ups_client.HelloApplication;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.PacketDirection;
-import jsmahy.ups_client.net.ProtocolState;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import static java.lang.String.format;
 
@@ -23,65 +21,50 @@ public class PacketDeserializer implements Runnable {
      * The NetworkManager instance.
      */
     private static final NetworkManager NM = NetworkManager.getInstance();
+    public static final char SEPARATION_CHAR = ';';
 
     /**
      * The messages from server that are received by this input stream.
      */
-    private final DataInputStream in;
+    private final InputStream in;
 
-    public PacketDeserializer(final DataInputStream in) {
+    public PacketDeserializer(final InputStream in) {
         this.in = in;
     }
 
     @Override
     public void run() {
         while (true) {
+            final byte[] allbytes;
+            try {
+                allbytes = in.readAllBytes();
+            } catch (IOException e) {
+                L.fatal("Could not read the packet!", e);
+                return;
+            }
+            if (allbytes.length < 3) {
+                L.error("Invalid packet received!");
+                return;
+            }
             // ID | state | data
 
             // TODO redo to UTF
             // read the packet ID
+            String s = new String(allbytes);
             final int packetId;
             try {
-                packetId = in.readUnsignedByte();
-            } catch (IOException e) {
-                L.fatal("Could not read the packet ID from the input stream!", e);
-                return;
-            }
-
-            // TODO the protocol state is not sent
-            // read the protocol state
-            final int state;
-            try {
-                state = in.readUnsignedByte();
-            } catch (IOException e) {
-                L.fatal("Could not read the protocol state from the input stream!", e);
-                return;
-            }
-
-            // check if the states match
-            // this should not happen and an exception should be thrown
-            final ProtocolState serverState = ProtocolState.getById(state);
-            final ProtocolState clientState = NM.getState();
-            if (clientState != serverState) {
-                L.error(format(
-                        "Server sent a packet in state %s, while the client has the state" +
-                                " %s!", serverState, clientState));
-                try {
-                    in.skipBytes(in.available());
-                } catch (IOException e) {
-                    L.fatal("Failed to skip bytes!", e);
-                }
+                packetId = Integer.parseUnsignedInt(s.substring(0, 2), 16);
+            } catch (NumberFormatException e) {
+                L.fatal("Could not read the packet ID!", e);
                 return;
             }
 
             // attempt to look up the packet with the given ID and state
             final PacketIn<? extends PacketListener> packet;
             try {
-                packet = (PacketIn<? extends PacketListener>) serverState.getPacket(
-                        PacketDirection.CLIENT_BOUND,
-                        packetId);
-                L.debug(format("Found packet with ID %d and state %s", packetId,
-                        serverState));
+                packet = (PacketIn<? extends PacketListener>)
+                        NM.getState().getPacket(PacketDirection.CLIENT_BOUND, packetId);
+                L.debug(format("Found packet with ID %d and state %s", packetId, NM.getState()));
             } catch (InvalidPacketFormatException e) {
                 // TODO disconnect the client
                 L.fatal("Received packet was not found in the lookup table!", e);
@@ -90,7 +73,11 @@ public class PacketDeserializer implements Runnable {
 
             // attempt to parse the data section
             try {
-                packet.read(in);
+                final String[] split = s.substring(2).split(String.valueOf(SEPARATION_CHAR));
+                if (split.length == 0) {
+                    throw new InvalidPacketFormatException("No values received after packet ID!");
+                }
+                packet.read(split);
                 L.debug(format("Successfully read %s packet from the input stream", packet));
             } catch (IOException | InvalidPacketFormatException e) {
                 L.fatal("Could not read the packet from the input stream!", e);

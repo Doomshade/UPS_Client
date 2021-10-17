@@ -13,7 +13,7 @@ import java.io.IOException;
  */
 public interface PacketIn<T extends PacketListener> extends Packet {
 
-    void read(DataInputStream in) throws IOException, InvalidPacketFormatException;
+    void read(String[] in) throws IOException, InvalidPacketFormatException;
 
     void broadcast(T listener);
 }

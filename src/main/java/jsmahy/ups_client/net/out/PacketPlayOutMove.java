@@ -4,6 +4,8 @@ import jsmahy.ups_client.util.Position;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * This packet is sent whenever the player makes a move
@@ -21,8 +23,9 @@ public class PacketPlayOutMove implements PacketOut {
     }
 
     @Override
-    public void write(DataOutputStream out) throws IOException {
-        out.writeUTF(from.toAsciiString().concat(to.toAsciiString()));
+    public void write(OutputStream out) throws IOException {
+        out.write(from.toAsciiString().concat(",").concat(to.toAsciiString()).getBytes(
+                StandardCharsets.UTF_8));
         // short pos = (short) ((from.getRow() << 9) | (from.getColumn() << 6) | (to.getRow() <<
         // 3) | to.getColumn());
         // out.writeShort(pos);

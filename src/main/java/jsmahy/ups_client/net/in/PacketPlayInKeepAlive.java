@@ -11,7 +11,7 @@ import java.io.IOException;
 public class PacketPlayInKeepAlive implements PacketInPlay {
 
     @Override
-    public void read(final DataInputStream in) throws IOException {
+    public void read(final String[] in) throws IOException {
     }
 
     @Override

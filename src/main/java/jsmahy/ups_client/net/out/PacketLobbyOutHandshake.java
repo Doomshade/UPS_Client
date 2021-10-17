@@ -2,6 +2,8 @@ package jsmahy.ups_client.net.out;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * This packet is sent when the player joins a lobby or attempts to reconnect
@@ -18,7 +20,7 @@ public class PacketLobbyOutHandshake implements PacketOut {
     }
 
     @Override
-    public void write(final DataOutputStream out) throws IOException {
-        out.writeUTF(playerName);
+    public void write(final OutputStream out) throws IOException {
+        out.write(playerName.getBytes(StandardCharsets.UTF_8));
     }
 }

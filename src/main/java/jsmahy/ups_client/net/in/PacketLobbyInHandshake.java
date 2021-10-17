@@ -1,9 +1,7 @@
 package jsmahy.ups_client.net.in;
 
+import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-
-import java.io.DataInputStream;
-import java.io.IOException;
 
 /**
  * This packet is received when the player attempts to handshake with the server either by
@@ -20,13 +18,16 @@ public class PacketLobbyInHandshake implements PacketInLobby {
     private String fenString = "";
 
     @Override
-    public void read(final DataInputStream in) throws IOException {
+    public void read(final String[] in) throws InvalidPacketFormatException {
         // we only need the last bit right now as we only have two response codes
-        this.responseCode = ResponseCode.getResponseCode(in.readUTF());
+        this.responseCode = ResponseCode.getResponseCode(in[0]);
         if (this.responseCode == ResponseCode.RECONNECT) {
-            this.white = in.readUTF().equalsIgnoreCase("W");
-            this.opponentName = in.readUTF();
-            this.fenString = in.readUTF();
+            if (in.length < 4){
+                throw new InvalidPacketFormatException("Invalid packet length received!");
+            }
+            this.white = in[1].equalsIgnoreCase("W");
+            this.opponentName = in[2];
+            this.fenString = in[3];
         }
     }
 

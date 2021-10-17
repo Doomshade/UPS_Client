@@ -7,11 +7,14 @@ import javafx.stage.Stage;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
+import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
 import jsmahy.ups_client.net.in.PlayerConnection;
+import jsmahy.ups_client.net.in.ResponseCode;
+import jsmahy.ups_client.util.ChessPieceUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.InetAddress;
 import java.util.Scanner;
 
@@ -30,7 +33,6 @@ public class HelloApplication extends Application {
         stage.setTitle("Hello!");
         stage.setScene(scene);
         stage.show();
-
     }
 
     /**

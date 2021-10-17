@@ -2,6 +2,7 @@ package jsmahy.ups_client.net.out;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * This packet is sent when the player disconnects via an exit button
@@ -12,7 +13,7 @@ import java.io.IOException;
  */
 public class PacketPlayOutDisconnect implements PacketOut {
     @Override
-    public void write(final DataOutputStream out) throws IOException {
+    public void write(final OutputStream out) throws IOException {
 
     }
 }
