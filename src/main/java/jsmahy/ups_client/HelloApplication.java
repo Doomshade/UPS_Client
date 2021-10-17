@@ -52,17 +52,6 @@ public class HelloApplication extends Application {
 
         ChessPlayer white = new ChessPlayer("Testshade", true);
         PlayerConnection c = new PlayerConnection(white);
-
-        Scanner sc = new Scanner(System.in);
-
-        String line = "";
-
-        while (!line.equalsIgnoreCase("exit")) {
-            line = sc.nextLine();
-            String finalLine = line;
-            //c.sendPacket(null);
-            //System.out.println("Recvd: " + recv);
-        }
         c.disconnect();
     }
 }

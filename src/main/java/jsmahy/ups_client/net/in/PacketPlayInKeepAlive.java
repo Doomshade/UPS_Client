@@ -4,7 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 /**
- * @author Doomshade
+ * @author Jakub Šmrha
  * @version 1.0
  * @since 1.0
  */

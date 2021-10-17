@@ -1,6 +1,5 @@
 package jsmahy.ups_client.net.in;
 
-import jsmahy.ups_client.HelloApplication;
 import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.net.NetworkManager;
@@ -87,10 +86,6 @@ public class PlayerConnection implements PacketListenerPlay {
                 // don't do anything
                 break;
         }
-    }
-
-    public void movePiece(Position from, Position to) {
-        // TODO
     }
 
     @Override

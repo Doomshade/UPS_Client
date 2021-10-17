@@ -13,7 +13,7 @@ import java.io.IOException;
 
 import static java.lang.String.format;
 
-public class PacketDeserializer implements Runnable{
+public class PacketDeserializer implements Runnable {
     /**
      * The logger.
      */
@@ -38,6 +38,7 @@ public class PacketDeserializer implements Runnable{
         while (true) {
             // ID | state | data
 
+            // TODO redo to UTF
             // read the packet ID
             final int packetId;
             try {
@@ -47,6 +48,7 @@ public class PacketDeserializer implements Runnable{
                 return;
             }
 
+            // TODO the protocol state is not sent
             // read the protocol state
             final int state;
             try {
