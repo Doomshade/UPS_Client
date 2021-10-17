@@ -7,6 +7,7 @@ import javafx.stage.Stage;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
+import jsmahy.ups_client.net.in.PacketDeserializer;
 import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
 import jsmahy.ups_client.net.in.PlayerConnection;
 import jsmahy.ups_client.net.in.ResponseCode;
@@ -16,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 /**
@@ -27,6 +29,7 @@ public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         Chessboard chessboard = new Chessboard();
+        test();
         FXMLLoader fxmlLoader =
                 new FXMLLoader(HelloApplication.class.getResource("/fxml/hello-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 320, 240);
@@ -47,6 +50,17 @@ public class HelloApplication extends Application {
         launch(args);
         //connectionTest();
         //launch();
+    }
+
+    private void test() throws IOException {
+        File f = new File("C:\\Temp\\ups\\testt.txt");
+        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(f));
+        out.write(0x81);
+        String msg = "A2;A4";
+        out.write(msg.getBytes(StandardCharsets.UTF_8));
+
+        PacketDeserializer deserializer = new PacketDeserializer(new FileInputStream(f));
+        deserializer.run();
     }
 
     private static void connectionTest() throws IOException {

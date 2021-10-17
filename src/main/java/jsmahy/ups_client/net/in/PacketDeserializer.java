@@ -3,6 +3,7 @@ package jsmahy.ups_client.net.in;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.PacketDirection;
+import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -21,7 +22,6 @@ public class PacketDeserializer implements Runnable {
      * The NetworkManager instance.
      */
     private static final NetworkManager NM = NetworkManager.getInstance();
-    public static final char SEPARATION_CHAR = ';';
 
     /**
      * The messages from server that are received by this input stream.
@@ -35,14 +35,14 @@ public class PacketDeserializer implements Runnable {
     @Override
     public void run() {
         while (true) {
-            final byte[] allbytes;
+            final byte[] allBytes;
             try {
-                allbytes = in.readAllBytes();
+                allBytes = in.readAllBytes();
             } catch (IOException e) {
                 L.fatal("Could not read the packet!", e);
                 return;
             }
-            if (allbytes.length < 3) {
+            if (allBytes.length < 3) {
                 L.error("Invalid packet received!");
                 return;
             }
@@ -50,10 +50,11 @@ public class PacketDeserializer implements Runnable {
 
             // TODO redo to UTF
             // read the packet ID
-            String s = new String(allbytes);
+            String s = new String(allBytes);
             final int packetId;
             try {
                 packetId = Integer.parseUnsignedInt(s.substring(0, 2), 16);
+                L.debug("Deserialized packet ID: " + packetId);
             } catch (NumberFormatException e) {
                 L.fatal("Could not read the packet ID!", e);
                 return;
@@ -73,10 +74,12 @@ public class PacketDeserializer implements Runnable {
 
             // attempt to parse the data section
             try {
-                final String[] split = s.substring(2).split(String.valueOf(SEPARATION_CHAR));
+                final String[] split = s.substring(2).split(String.valueOf(
+                        Util.SEPARATION_CHAR));
                 if (split.length == 0) {
                     throw new InvalidPacketFormatException("No values received after packet ID!");
                 }
+                L.debug(format("Parsing %s arguments...", (Object[]) split));
                 packet.read(split);
                 L.debug(format("Successfully read %s packet from the input stream", packet));
             } catch (IOException | InvalidPacketFormatException e) {

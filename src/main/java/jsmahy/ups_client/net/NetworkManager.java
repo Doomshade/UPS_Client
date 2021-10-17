@@ -1,14 +1,12 @@
 package jsmahy.ups_client.net;
 
-import jsmahy.ups_client.HelloApplication;
 import jsmahy.ups_client.net.in.*;
 import jsmahy.ups_client.net.out.PacketOut;
+import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,12 +54,12 @@ public final class NetworkManager {
     /**
      * Messages from server are received by this input stream.
      */
-    private DataInputStream in = null;
+    private BufferedInputStream in = null;
 
     /**
      * Messages to server are sent in this output stream.
      */
-    private DataOutputStream out = null;
+    private BufferedOutputStream out = null;
 
     /**
      * The current state of the protocol.
@@ -105,10 +103,11 @@ public final class NetworkManager {
      */
     private void initializeConnection() throws IOException {
         this.socket = new Socket(host, port);
-        this.out = new DataOutputStream(socket.getOutputStream());
-        this.in = new DataInputStream(socket.getInputStream());
         this.socket.setSoTimeout(TIMEOUT);
         this.socket.setKeepAlive(true);
+
+        this.out = new BufferedOutputStream(socket.getOutputStream());
+        this.in = new BufferedInputStream(socket.getInputStream());
         L.info("Successfully initialized connection");
 
         startListening();
@@ -151,15 +150,12 @@ public final class NetworkManager {
      */
     public void sendPacket(PacketOut packet) {
         try {
-            // Packet format: [ID | State | Data]
+            // Packet format: [ID;Data]
 
             // ID
             final int id = state.getPacketId(PacketDirection.SERVER_BOUND, packet.getClass());
-            out.writeByte(id);
-
-            // State
-            // TODO delete state
-            out.writeByte(state.ordinal());
+            out.write(id);
+            out.write(Util.SEPARATION_CHAR);
 
             // Data
             packet.write(out);
@@ -214,6 +210,8 @@ public final class NetworkManager {
      * Stops listening to the server - closes the socket
      */
     public void stopListening() throws IOException {
-        socket.close();
+        if (socket != null) {
+            socket.close();
+        }
     }
 }

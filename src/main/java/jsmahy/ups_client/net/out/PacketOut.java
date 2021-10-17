@@ -2,8 +2,8 @@ package jsmahy.ups_client.net.out;
 
 import jsmahy.ups_client.net.Packet;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * Interface for outgoing packets.
@@ -21,5 +21,5 @@ public interface PacketOut extends Packet {
      *
      * @throws IOException if the data could not be written into the stream
      */
-    void write(OutputStream out) throws IOException;
+    void write(final BufferedOutputStream out) throws IOException;
 }

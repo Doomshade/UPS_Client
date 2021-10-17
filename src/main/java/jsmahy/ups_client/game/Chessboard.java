@@ -1,11 +1,11 @@
 package jsmahy.ups_client.game;
 
-import jsmahy.ups_client.HelloApplication;
 import jsmahy.ups_client.chess_pieces.ChessPieceEnum;
 import jsmahy.ups_client.chess_pieces.IChessPiece;
 import jsmahy.ups_client.exception.InvalidFENFormatException;
 import jsmahy.ups_client.util.ChessPieceUtil;
 import jsmahy.ups_client.util.Position;
+import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,7 +36,7 @@ public class Chessboard {
      */
     public Chessboard() {
         Arrays.fill(allowedCastles, true);
-        setupBoard(ChessPieceUtil.START_FEN);
+        setupBoard(Util.START_FEN);
     }
 
     public void modifyCastlesPrivilege(boolean white, boolean shortCastles, boolean allow) {
@@ -86,7 +86,7 @@ public class Chessboard {
     public void setupBoard(String fen) throws IllegalArgumentException {
         // somewhat of an ugly pattern but works
         // this just ensures the format is right
-        final Matcher m = ChessPieceUtil.FEN_PATTERN.matcher(fen);
+        final Matcher m = Util.FEN_PATTERN.matcher(fen);
 
         // very likely an invalid fen string
         if (!m.find()) {

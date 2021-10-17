@@ -3,7 +3,9 @@ package jsmahy.ups_client.net;
 import jsmahy.ups_client.HelloApplication;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
+import jsmahy.ups_client.net.in.PacketPlayInMove;
 import jsmahy.ups_client.net.out.PacketLobbyOutHandshake;
+import jsmahy.ups_client.net.out.PacketPlayOutMove;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,6 +30,8 @@ public enum ProtocolState {
     },
     PLAY {
         {
+            register(PacketDirection.SERVER_BOUND, PacketPlayOutMove.class, 0x01);
+            register(PacketDirection.CLIENT_BOUND, PacketPlayInMove.class, 0x81);
         }
     };
 
@@ -163,6 +167,7 @@ public enum ProtocolState {
     private void putId(final PacketDirection direction, final Class<? extends Packet> packetClass,
                        final int packetId) {
         putPacket(packetRegistryById, direction, packetId, packetClass);
+        // TODO NullPointerException
         L.debug(format("Registered %s packet in %s direction with id %d",
                 packetClass.getSimpleName(), direction, packetId));
     }

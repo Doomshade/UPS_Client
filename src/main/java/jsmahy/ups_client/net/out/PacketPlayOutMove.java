@@ -1,10 +1,10 @@
 package jsmahy.ups_client.net.out;
 
 import jsmahy.ups_client.util.Position;
+import jsmahy.ups_client.util.Util;
 
-import java.io.DataOutputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -23,9 +23,11 @@ public class PacketPlayOutMove implements PacketOut {
     }
 
     @Override
-    public void write(OutputStream out) throws IOException {
-        out.write(from.toAsciiString().concat(",").concat(to.toAsciiString()).getBytes(
-                StandardCharsets.UTF_8));
+    public void write(final BufferedOutputStream out) throws IOException {
+        out.write(from.toAsciiString()
+                .concat(String.valueOf(Util.SEPARATION_CHAR))
+                .concat(to.toAsciiString())
+                .getBytes(StandardCharsets.UTF_8));
         // short pos = (short) ((from.getRow() << 9) | (from.getColumn() << 6) | (to.getRow() <<
         // 3) | to.getColumn());
         // out.writeShort(pos);
