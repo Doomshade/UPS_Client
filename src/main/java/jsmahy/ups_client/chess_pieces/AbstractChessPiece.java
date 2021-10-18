@@ -77,7 +77,11 @@ abstract class AbstractChessPiece implements IChessPiece {
                 while (ChessPieceUtil.isValidPosition(a, b)) {
                     // generate a new position
                     Position pos = new Position((byte) a, (byte) b);
-                    char newPieceId = chessboard.getPieceId(pos);
+                    try {
+                        char newPieceId = chessboard.getPieceId(pos);
+                    } catch (IllegalArgumentException ignored) {
+                        // no piece was found
+                    }
                     // move in the direction vector
                     a++;
                     b++;

@@ -147,8 +147,13 @@ public final class NetworkManager {
      * Sends a packet to the server.
      *
      * @param packet the packet to send
+     *
+     * @throws IllegalStateException if the network manager has not yet been initialized
      */
-    public void sendPacket(PacketOut packet) {
+    public void sendPacket(PacketOut packet) throws IllegalStateException {
+        if (!isSuccessfullyInitialized()){
+            throw new IllegalStateException("The network manager has not yet been initialized!");
+        }
         try {
             // Packet format: [ID;Data]
 

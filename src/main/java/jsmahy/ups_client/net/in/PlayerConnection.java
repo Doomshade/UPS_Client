@@ -29,8 +29,8 @@ public class PlayerConnection implements PacketListenerPlay {
         NetworkManager.setPlayListener(this);
     }
 
-    public void startGame(final ChessGame chessGame, boolean white) {
-        this.chessGame = chessGame;
+    public void startGame(boolean white) {
+        this.chessGame = ChessGame.getChessGame();
         startKeepAlive();
     }
 

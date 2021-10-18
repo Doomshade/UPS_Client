@@ -3,12 +3,14 @@ package jsmahy.ups_client.net.in;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.PacketDirection;
+import jsmahy.ups_client.net.ProtocolState;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 import static java.lang.String.format;
 
@@ -34,7 +36,7 @@ public class PacketDeserializer implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
+        //while (true) {
             final byte[] allBytes;
             try {
                 allBytes = in.readAllBytes();
@@ -43,7 +45,7 @@ public class PacketDeserializer implements Runnable {
                 return;
             }
             if (allBytes.length < 3) {
-                L.error("Invalid packet received!");
+                L.error("Invalid packet received! - invalid packet length: " + allBytes.length);
                 return;
             }
             // ID | state | data
@@ -74,12 +76,12 @@ public class PacketDeserializer implements Runnable {
 
             // attempt to parse the data section
             try {
-                final String[] split = s.substring(2).split(String.valueOf(
+                final String[] split = s.substring(3).split(String.valueOf(
                         Util.SEPARATION_CHAR));
                 if (split.length == 0) {
                     throw new InvalidPacketFormatException("No values received after packet ID!");
                 }
-                L.debug(format("Parsing %s arguments...", (Object[]) split));
+                L.debug(format("Parsing %s arguments...", String.join(", ", split)));
                 packet.read(split);
                 L.debug(format("Successfully read %s packet from the input stream", packet));
             } catch (IOException | InvalidPacketFormatException e) {
@@ -89,6 +91,6 @@ public class PacketDeserializer implements Runnable {
 
             L.debug(format("Received %s packet, broadcasting to the listeners...", packet));
             packet.broadcast(NM.getCurrentListener());
-        }
+        //}
     }
 }

@@ -1,10 +1,11 @@
 package jsmahy.ups_client.net;
 
-import jsmahy.ups_client.HelloApplication;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
+import jsmahy.ups_client.net.in.PacketPlayInKeepAlive;
 import jsmahy.ups_client.net.in.PacketPlayInMove;
 import jsmahy.ups_client.net.out.PacketLobbyOutHandshake;
+import jsmahy.ups_client.net.out.PacketPlayOutKeepAlive;
 import jsmahy.ups_client.net.out.PacketPlayOutMove;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,10 +33,13 @@ public enum ProtocolState {
         {
             register(PacketDirection.SERVER_BOUND, PacketPlayOutMove.class, 0x01);
             register(PacketDirection.CLIENT_BOUND, PacketPlayInMove.class, 0x81);
+
+            register(PacketDirection.SERVER_BOUND, PacketPlayOutKeepAlive.class, 0x02);
+            register(PacketDirection.CLIENT_BOUND, PacketPlayInKeepAlive.class, 0x82);
         }
     };
 
-    private static final Logger L = LogManager.getLogger(ProtocolState.class);
+    private static Logger L = null;
     // a BiMap would be nice here
     /**
      * The ID-packet map.
@@ -138,8 +142,13 @@ public enum ProtocolState {
      */
     protected void register(PacketDirection direction, Class<? extends Packet> packetClass,
                             int packetId) {
+        if (L == null) {
+            L = LogManager.getLogger(ProtocolState.class);
+        }
         putId(direction, packetClass, packetId);
         putClass(direction, packetClass, packetId);
+        L.debug(format("Registered %s packet in %s direction with id %d",
+                packetClass.getSimpleName(), direction, packetId));
     }
 
     /**
@@ -153,8 +162,7 @@ public enum ProtocolState {
                           final Class<? extends Packet> packetClass,
                           final int packetId) {
         putPacket(packetRegistryByClass, direction, packetClass, packetId);
-        L.debug(format("Registered %s packet in %s direction with id %d",
-                packetClass.getSimpleName(), direction, packetId));
+
     }
 
     /**
@@ -167,9 +175,6 @@ public enum ProtocolState {
     private void putId(final PacketDirection direction, final Class<? extends Packet> packetClass,
                        final int packetId) {
         putPacket(packetRegistryById, direction, packetId, packetClass);
-        // TODO NullPointerException
-        L.debug(format("Registered %s packet in %s direction with id %d",
-                packetClass.getSimpleName(), direction, packetId));
     }
 
     /**

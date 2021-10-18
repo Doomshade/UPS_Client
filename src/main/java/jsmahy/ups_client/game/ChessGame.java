@@ -42,7 +42,6 @@ public final class ChessGame {
         this.chessboard = chessboard;
         this.client = client;
         this.opponent = opponent;
-        client.startGame(this, true);
     }
 
     public Chessboard getChessboard() {
