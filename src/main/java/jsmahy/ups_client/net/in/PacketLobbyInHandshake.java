@@ -25,6 +25,9 @@ public class PacketLobbyInHandshake implements PacketInLobby {
         } catch (IllegalArgumentException e) {
             throw new InvalidPacketFormatException(e);
         }
+        if (in.length > 1) {
+            reason = in[1];
+        }
     }
 
     @Override
