@@ -6,7 +6,6 @@ import jsmahy.ups_client.net.out.PacketPlayOutMove;
 import jsmahy.ups_client.util.Position;
 
 public final class ChessGame {
-    private static ChessGame chessGame = null;
     private final Chessboard chessboard;
     private final PlayerConnection client;
     private final ChessPlayer opponent;
@@ -38,7 +37,7 @@ public final class ChessGame {
     }
 
     /**
-     * Moves a piece and propagates the move to the server.
+     * Moves a piece and propagates the move to the server if source of the movement was the client
      *
      * @param from the from
      * @param to   the to

@@ -202,6 +202,7 @@ public final class NetworkManager {
 
             // write
             out.flush();
+            L.debug("Sending %s packet to the server...");
         } catch (IOException e) {
             L.error("Could not write to the output stream!", e);
         }

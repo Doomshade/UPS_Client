@@ -82,7 +82,6 @@ public class Chessboard {
             }
         }
         final int rowSize = ChessPieceUtil.ROW_SIZE;
-        L.trace("Chessboard after first FEN part:");
         for (int i = rowSize - 1; i >= 0; i--) {
             char[] bbuf = new char[8];
             for (int j = 0; j < rowSize; j++) {
@@ -92,7 +91,6 @@ public class Chessboard {
                 }
                 bbuf[j] = c;
             }
-            L.trace(Arrays.toString(bbuf));
         }
         L.trace("Chessboard after first FEN part: " + Arrays.deepToString(board));
         // end of chessboard piece parsing
@@ -101,6 +99,8 @@ public class Chessboard {
 
     public void modifyCastlesPrivilege(boolean white, boolean shortCastles, boolean allow) {
         allowedCastles[getCastlesIndex(white, shortCastles)] = allow;
+        L.trace(format("Modified castles privileges for %s on %s to %s", white ? "white" : "black",
+                shortCastles ? "short castles" : "long castles", allow));
     }
 
     private void updateCastlesPrivileges(Position from) {
@@ -192,6 +192,8 @@ public class Chessboard {
 
         // update the privileges if the piece on the "from" position was a rook or a king
         updateCastlesPrivileges(from);
+
+        L.trace(format("Moving from %s to %s", from, to));
         board[to.getRow()][to.getColumn()] = board[from.getRow()][from.getColumn()];
         board[from.getRow()][from.getColumn()] = 0;
         return chessMove;

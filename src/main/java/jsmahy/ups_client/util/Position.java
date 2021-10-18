@@ -25,7 +25,9 @@ public final class Position {
 
     public static Position fromString(String s) throws IllegalArgumentException {
         if (s.length() != 2) {
-            throw new IllegalArgumentException("The position length must be 2!");
+            throw new IllegalArgumentException(String.format("Invalid position %s! The position " +
+                    "length " +
+                    "must be 2!", s));
         }
         char file = s.charAt(0);
         if (file < 'A' || file > 'H') {
@@ -117,5 +119,9 @@ public final class Position {
                 "row=" + row +
                 ", column=" + column +
                 '}';
+    }
+
+    public Position add(byte row, byte column) throws IllegalArgumentException {
+        return new Position((byte) (this.row + row), (byte) (this.column + column));
     }
 }

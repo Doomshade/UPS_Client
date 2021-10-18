@@ -24,17 +24,22 @@ abstract class AbstractChessPiece implements IChessPiece {
         this.black = ChessPieceUtil.toBlack(charId);
     }
 
+    protected Collection<Position> generateMoves(Chessboard chessboard, Position piecePos,
+                                                 Direction direction, int amount) {
+        return generateMoves(chessboard, piecePos, direction.vectors, amount);
+    }
+
     /**
      * Generates valid moves.
      *
      * @param chessboard the chessboard
      * @param piecePos   the piece position
-     * @param direction  the direction
+     * @param vectors    the vectors
      *
      * @return all valid moves, be it captures or castles
      */
     protected Collection<Position> generateMoves(Chessboard chessboard, Position piecePos,
-                                                 Direction direction) {
+                                                 Pair<Integer, Integer>[] vectors, int amount) {
         Collection<Position> positions = new HashSet<>();
         if (!chessboard.containsPiece(piecePos)) {
             return positions;
@@ -42,9 +47,8 @@ abstract class AbstractChessPiece implements IChessPiece {
         final char givenPieceId = chessboard.getPieceId(piecePos);
         boolean givenPieceColour = chessboard.isWhite(piecePos);
 
-        Position copy = new Position(piecePos);
-        for (Pair<Integer, Integer> vector : direction.vectors) {
-            // check for all direction combinations
+        for (Pair<Integer, Integer> vector : vectors) {
+            // check for all vectors combinations
             for (int i = 0; i < 4; i++) {
                 // multiplies the vector by 0 1 0 1
                 int a = vector.a * (i & 0b1);
@@ -52,18 +56,32 @@ abstract class AbstractChessPiece implements IChessPiece {
                 // multiplies the vector by 0 0 1 1
                 int b = vector.b * (i & 0b10);
 
+                int count = 0;
                 // don't check for invalid positions
-                while (ChessPieceUtil.isValidPosition(a, b)) {
+                while (ChessPieceUtil.isValidPosition(a, b) && count++ != amount) {
                     // generate a new position
-                    Position pos = new Position((byte) a, (byte) b);
+                    Position pos;
                     try {
-                        char newPieceId = chessboard.getPieceId(pos);
-                    } catch (IllegalArgumentException ignored) {
-                        // no piece was found
+                        pos = new Position((byte) a, (byte) b);
+                    } catch (IllegalArgumentException e) {
+                        // the position is no longer valid, stop searching
+                        break;
                     }
-                    // move in the direction vector
-                    a++;
-                    b++;
+                    try {
+                        char targetSquarePieceId = chessboard.getPieceId(pos);
+
+                        // a piece found in the vectors, if the target square is
+                        // the opponents piece, add it to the valid moves
+                        if (!ChessPieceUtil.areSameColours(targetSquarePieceId, givenPieceId)) {
+                            positions.add(pos);
+                        }
+                        break;
+                    } catch (IllegalArgumentException ignored) {
+                        // no piece was found, add the position and move in the vectors vector
+                        positions.add(pos);
+                        a++;
+                        b++;
+                    }
                 }
 
             }

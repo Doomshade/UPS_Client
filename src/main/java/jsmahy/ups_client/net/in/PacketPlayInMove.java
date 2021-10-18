@@ -15,9 +15,6 @@ public class PacketPlayInMove implements PacketInPlay {
 
     @Override
     public void read(String[] in) throws InvalidPacketFormatException {
-        if (in.length < 3) {
-            throw new InvalidPacketFormatException("Invalid packet size received!");
-        }
         try {
             this.responseCode = ResponseCode.getResponseCode(in[0]);
         } catch (IllegalArgumentException e) {
@@ -27,6 +24,9 @@ public class PacketPlayInMove implements PacketInPlay {
         // the server sent us back that the move was valid
         if (this.responseCode == ResponseCode.OK) {
             return;
+        }
+        if (in.length < 3) {
+            throw new InvalidPacketFormatException("Invalid packet size received!");
         }
         try {
             this.from = Position.fromString(in[1]);
