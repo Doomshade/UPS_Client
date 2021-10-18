@@ -1,6 +1,8 @@
 package jsmahy.ups_client.net.in;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
+import jsmahy.ups_client.net.ResponseCode;
+import jsmahy.ups_client.net.listener.PacketListenerLobby;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
@@ -16,9 +18,13 @@ public class PacketLobbyInHandshake implements PacketInLobby {
     private String reason = "";
 
     @Override
-    public void read(final String[] in) {
+    public void read(final String[] in) throws InvalidPacketFormatException {
         // we only need the last bit right now as we only have two response codes
-        this.responseCode = ResponseCode.getResponseCode(in[0]);
+        try {
+            this.responseCode = ResponseCode.getResponseCode(in[0]);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidPacketFormatException(e);
+        }
     }
 
     @Override

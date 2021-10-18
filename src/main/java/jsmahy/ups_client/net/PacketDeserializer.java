@@ -2,8 +2,8 @@ package jsmahy.ups_client.net;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.in.PacketIn;
-import jsmahy.ups_client.net.in.PacketListener;
-import jsmahy.ups_client.net.in.PlayerConnection;
+import jsmahy.ups_client.net.listener.PacketListener;
+import jsmahy.ups_client.net.listener.PlayerConnection;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -78,7 +78,7 @@ public class PacketDeserializer implements Runnable {
                 }
                 L.debug(format("Parsing %s arguments...", String.join(", ", split)));
                 packet.read(split);
-            } catch (IOException | InvalidPacketFormatException e) {
+            } catch (InvalidPacketFormatException e) {
                 L.fatal("Could not read the packet from the input stream!", e);
                 break;
             }

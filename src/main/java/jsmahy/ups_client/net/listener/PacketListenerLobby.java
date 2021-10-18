@@ -1,4 +1,7 @@
-package jsmahy.ups_client.net.in;
+package jsmahy.ups_client.net.listener;
+
+import jsmahy.ups_client.net.in.PacketLobbyInGameStart;
+import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
 
 /**
  * @author Doomshade

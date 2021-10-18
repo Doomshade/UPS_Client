@@ -2,17 +2,25 @@ package jsmahy.ups_client.net.in;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.Packet;
-
-import java.io.IOException;
+import jsmahy.ups_client.net.listener.PacketListener;
 
 /**
- * @author Doomshade
+ * An incoming packet Server -{@literal >} Client.
+ *
+ * @author Jakub Šmrha
  * @version 1.0
  * @since 1.0
  */
 public interface PacketIn<T extends PacketListener> extends Packet {
 
-    void read(String[] in) throws IOException, InvalidPacketFormatException;
+    /**
+     * Reads the packet from the input String array.
+     *
+     * @param in the String array
+     *
+     * @throws InvalidPacketFormatException if thr received packet has an invalid format
+     */
+    void read(String[] in) throws InvalidPacketFormatException;
 
     void broadcast(T listener);
 }

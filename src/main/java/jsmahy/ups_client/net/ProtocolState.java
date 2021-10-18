@@ -1,12 +1,9 @@
 package jsmahy.ups_client.net;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
-import jsmahy.ups_client.net.in.PacketLobbyInGameStart;
-import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
-import jsmahy.ups_client.net.in.PacketPlayInKeepAlive;
-import jsmahy.ups_client.net.in.PacketPlayInMove;
+import jsmahy.ups_client.net.in.*;
 import jsmahy.ups_client.net.out.PacketLobbyOutHandshake;
-import jsmahy.ups_client.net.out.PacketPlayOutDisconnect;
+import jsmahy.ups_client.net.out.PacketOutDisconnect;
 import jsmahy.ups_client.net.out.PacketPlayOutKeepAlive;
 import jsmahy.ups_client.net.out.PacketPlayOutMove;
 import org.apache.logging.log4j.LogManager;
@@ -28,19 +25,21 @@ public enum ProtocolState {
     LOBBY {
         {
             register(PacketDirection.SERVER_BOUND, PacketLobbyOutHandshake.class, 0x00);
-            register(PacketDirection.CLIENT_BOUND, PacketLobbyInHandshake.class, 0x80);
-            register(PacketDirection.CLIENT_BOUND, PacketLobbyInGameStart.class, 0x83);
+            register(PacketDirection.SERVER_BOUND, PacketOutDisconnect.class, 0x01);
+
+            register(PacketDirection.CLIENT_BOUND, PacketLobbyInHandshake.class, 0x40);
+            register(PacketDirection.CLIENT_BOUND, PacketLobbyInGameStart.class, 0x41);
         }
     },
     PLAY {
         {
-            register(PacketDirection.SERVER_BOUND, PacketPlayOutMove.class, 0x01);
-            register(PacketDirection.CLIENT_BOUND, PacketPlayInMove.class, 0x81);
+            register(PacketDirection.SERVER_BOUND, PacketPlayOutMove.class, 0x80);
+            register(PacketDirection.SERVER_BOUND, PacketPlayOutKeepAlive.class, 0x81);
+            register(PacketDirection.SERVER_BOUND, PacketOutDisconnect.class, 0x82);
 
-            register(PacketDirection.SERVER_BOUND, PacketPlayOutKeepAlive.class, 0x02);
-            register(PacketDirection.CLIENT_BOUND, PacketPlayInKeepAlive.class, 0x82);
-
-            register(PacketDirection.SERVER_BOUND, PacketPlayOutDisconnect.class, 0x03);
+            register(PacketDirection.CLIENT_BOUND, PacketPlayInMove.class, 0xC0);
+            register(PacketDirection.CLIENT_BOUND, PacketPlayInKeepAlive.class, 0xC1);
+            register(PacketDirection.CLIENT_BOUND, PacketPlayInDrawOffer.class, 0xC2);
 
         }
     };

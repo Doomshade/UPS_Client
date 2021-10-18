@@ -1,10 +1,14 @@
-package jsmahy.ups_client.net.in;
+package jsmahy.ups_client.net.listener;
 
 import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.ProtocolState;
-import jsmahy.ups_client.net.out.PacketPlayOutDisconnect;
+import jsmahy.ups_client.net.in.PacketListenerPlay;
+import jsmahy.ups_client.net.in.PacketPlayInDrawOffer;
+import jsmahy.ups_client.net.in.PacketPlayInKeepAlive;
+import jsmahy.ups_client.net.in.PacketPlayInMove;
+import jsmahy.ups_client.net.out.PacketOutDisconnect;
 import jsmahy.ups_client.net.out.PacketPlayOutKeepAlive;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,11 +22,13 @@ public class PlayerConnection implements PacketListenerPlay {
     public static final int KEEPALIVE_CHECK_PERIOD = 1_000;
     private static final Logger L = LogManager.getLogger(PlayerConnection.class);
     private static final NetworkManager NET_MAN = NetworkManager.getInstance();
-
+    // TODO rename
+    private static final int DRAW_OFFER_MAX_DELAY = 15_000;
     private final ChessPlayer player;
     private boolean awaitingKeepAlive = false;
     private long keepAlive = System.currentTimeMillis();
     private ChessGame chessGame = null;
+    private long timeSinceLastDrawOffer = 0L;
 
     public PlayerConnection(ChessPlayer player) {
         this.player = player;
@@ -64,7 +70,7 @@ public class PlayerConnection implements PacketListenerPlay {
 
     public void disconnect(String reason) {
         L.info("Disconnecting from the server...");
-        NET_MAN.sendPacket(new PacketPlayOutDisconnect(reason));
+        NET_MAN.sendPacket(new PacketOutDisconnect(reason));
         try {
             NET_MAN.stopListening();
         } catch (IOException e) {
@@ -96,5 +102,15 @@ public class PlayerConnection implements PacketListenerPlay {
     @Override
     public void keepAlive(final PacketPlayInKeepAlive packetPlayInKeepAlive) {
         awaitingKeepAlive = false;
+    }
+
+    @Override
+    public void onDrawOffer(final PacketPlayInDrawOffer packetPlayInDrawOffer) {
+        L.trace("Received a draw offer");
+        final long millis = System.currentTimeMillis();
+        if (millis - timeSinceLastDrawOffer > DRAW_OFFER_MAX_DELAY) {
+            timeSinceLastDrawOffer = millis;
+            L.debug("Showing draw offer available responses...");
+        }
     }
 }

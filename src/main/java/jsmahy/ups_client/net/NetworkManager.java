@@ -1,6 +1,9 @@
 package jsmahy.ups_client.net;
 
 import jsmahy.ups_client.net.in.*;
+import jsmahy.ups_client.net.listener.LobbyListener;
+import jsmahy.ups_client.net.listener.PacketListener;
+import jsmahy.ups_client.net.listener.PlayerConnection;
 import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
@@ -211,6 +214,7 @@ public final class NetworkManager {
      */
     public void changeState(ProtocolState state) {
         this.state = state;
+        L.debug("Switched state to " + state.name());
     }
 
     /**
@@ -235,6 +239,6 @@ public final class NetworkManager {
         }
         connectionSuccessful = false;
         initializedStreams = false;
-        L.info("Closed all I/O streams...");
+        L.debug("Closing both I/O streams...");
     }
 }

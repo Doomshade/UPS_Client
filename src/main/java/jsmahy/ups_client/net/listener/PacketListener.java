@@ -1,4 +1,4 @@
-package jsmahy.ups_client.net.in;
+package jsmahy.ups_client.net.listener;
 
 /**
  * @author Doomshade

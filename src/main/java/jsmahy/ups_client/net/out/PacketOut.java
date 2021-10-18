@@ -6,7 +6,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 
 /**
- * Interface for outgoing packets.
+ * An outgoing packet - Client -{@literal >} Server.
  *
  * @author Jakub Šmrha
  * @version 1.0

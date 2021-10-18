@@ -1,4 +1,6 @@
-package jsmahy.ups_client.net.in;
+package jsmahy.ups_client.net;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Doomshade
@@ -12,18 +14,18 @@ public enum ResponseCode {
     REJECTED,
     CONNECT;
 
-    public static ResponseCode getResponseCode(int id) {
+    public static ResponseCode getResponseCode(int id) throws IllegalArgumentException {
         validateId(id);
         return values()[id];
     }
 
-    private static void validateId(final int id) {
+    private static void validateId(final int id) throws IllegalArgumentException {
         if (id < 0 || id >= values().length) {
             throw new IllegalArgumentException(String.format("Invalid ID response code: %d", id));
         }
     }
 
-    public static ResponseCode getResponseCode(String s) {
+    public static ResponseCode getResponseCode(@NotNull final String s) throws IllegalArgumentException {
         for (ResponseCode rc : values()) {
             if (rc.name().equalsIgnoreCase(s)) {
                 return rc;

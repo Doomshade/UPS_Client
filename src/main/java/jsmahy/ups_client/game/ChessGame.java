@@ -1,7 +1,7 @@
 package jsmahy.ups_client.game;
 
 import jsmahy.ups_client.net.NetworkManager;
-import jsmahy.ups_client.net.in.PlayerConnection;
+import jsmahy.ups_client.net.listener.PlayerConnection;
 import jsmahy.ups_client.net.out.PacketPlayOutMove;
 import jsmahy.ups_client.util.Position;
 

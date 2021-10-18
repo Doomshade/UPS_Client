@@ -11,11 +11,11 @@ import java.nio.charset.StandardCharsets;
  * @version 1.0
  * @since 1.0
  */
-public class PacketPlayOutDisconnect implements PacketOut {
+public class PacketOutDisconnect implements PacketOut {
 
     private final String reason;
 
-    public PacketPlayOutDisconnect(String reason) {
+    public PacketOutDisconnect(String reason) {
         this.reason = reason;
     }
 

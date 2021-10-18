@@ -94,7 +94,7 @@ public class Chessboard {
             }
             L.trace(Arrays.toString(bbuf));
         }
-        L.debug("Chessboard after first FEN part: " + Arrays.deepToString(board));
+        L.trace("Chessboard after first FEN part: " + Arrays.deepToString(board));
         // end of chessboard piece parsing
 
     }

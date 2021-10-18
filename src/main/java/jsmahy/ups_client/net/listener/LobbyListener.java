@@ -1,9 +1,12 @@
-package jsmahy.ups_client.net.in;
+package jsmahy.ups_client.net.listener;
 
 import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
+import jsmahy.ups_client.net.ResponseCode;
+import jsmahy.ups_client.net.in.PacketLobbyInGameStart;
+import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
 
 /**
  * @author Doomshade
