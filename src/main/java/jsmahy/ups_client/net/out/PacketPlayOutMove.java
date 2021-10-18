@@ -2,6 +2,7 @@ package jsmahy.ups_client.net.out;
 
 import jsmahy.ups_client.util.Position;
 import jsmahy.ups_client.util.Util;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -31,5 +32,13 @@ public class PacketPlayOutMove implements PacketOut {
         // short pos = (short) ((from.getRow() << 9) | (from.getColumn() << 6) | (to.getRow() <<
         // 3) | to.getColumn());
         // out.writeShort(pos);
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("from", from)
+                .append("to", to)
+                .toString();
     }
 }

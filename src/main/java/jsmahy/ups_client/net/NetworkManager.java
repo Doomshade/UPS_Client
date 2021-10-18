@@ -80,7 +80,7 @@ public final class NetworkManager {
      * @throws IOException           if the connection could not be established
      * @throws IllegalStateException if the connection has already been established
      */
-    public void setup(final String host, final int port)
+    public void setup(@NotNull final PlayerConnection client, @NotNull final String host, final int port)
             throws IOException, IllegalStateException {
         if (isConnectionSuccessful()) {
             throw new IllegalStateException("Already connected to a server!");
@@ -89,14 +89,14 @@ public final class NetworkManager {
         this.socket = new Socket(host, port);
         this.socket.setSoTimeout(TIMEOUT);
         this.socket.setKeepAlive(true);
-        this.setupIO0(socket.getInputStream(), socket.getOutputStream());
+        this.setupIO(client, socket.getInputStream(), socket.getOutputStream());
 
         connectionSuccessful = true;
         L.info("Successfully initialized connection");
     }
 
-    private void startListening() {
-        Thread readThread = new Thread(new PacketDeserializer(this.in));
+    private void startListening(final InputStream in, final PlayerConnection client) {
+        Thread readThread = new Thread(new PacketDeserializer(in, client));
         readThread.setDaemon(true);
         readThread.start();
     }
@@ -109,7 +109,8 @@ public final class NetworkManager {
      *
      * @throws IllegalStateException if the streams have already been initialized
      */
-    public void setupIO0(@NotNull final InputStream in, @NotNull final OutputStream out)
+    public void setupIO(@NotNull PlayerConnection client, @NotNull final InputStream in,
+                        @NotNull final OutputStream out)
             throws IllegalStateException {
         if (isInitializedStreams()) {
             throw new IllegalStateException("I/O streams have already been initialized!");
@@ -117,7 +118,7 @@ public final class NetworkManager {
         L.info("Setting up I/O...");
         this.in = new BufferedInputStream(in);
         this.out = new BufferedOutputStream(out);
-        startListening();
+        startListening(in, client);
         this.initializedStreams = true;
         L.info("I/O set up");
     }
@@ -234,5 +235,6 @@ public final class NetworkManager {
         }
         connectionSuccessful = false;
         initializedStreams = false;
+        L.info("Closed all I/O streams...");
     }
 }

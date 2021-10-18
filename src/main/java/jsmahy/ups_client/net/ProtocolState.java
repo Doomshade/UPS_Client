@@ -1,10 +1,12 @@
 package jsmahy.ups_client.net;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
+import jsmahy.ups_client.net.in.PacketLobbyInGameStart;
 import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
 import jsmahy.ups_client.net.in.PacketPlayInKeepAlive;
 import jsmahy.ups_client.net.in.PacketPlayInMove;
 import jsmahy.ups_client.net.out.PacketLobbyOutHandshake;
+import jsmahy.ups_client.net.out.PacketPlayOutDisconnect;
 import jsmahy.ups_client.net.out.PacketPlayOutKeepAlive;
 import jsmahy.ups_client.net.out.PacketPlayOutMove;
 import org.apache.logging.log4j.LogManager;
@@ -27,6 +29,7 @@ public enum ProtocolState {
         {
             register(PacketDirection.SERVER_BOUND, PacketLobbyOutHandshake.class, 0x00);
             register(PacketDirection.CLIENT_BOUND, PacketLobbyInHandshake.class, 0x80);
+            register(PacketDirection.CLIENT_BOUND, PacketLobbyInGameStart.class, 0x83);
         }
     },
     PLAY {
@@ -36,6 +39,9 @@ public enum ProtocolState {
 
             register(PacketDirection.SERVER_BOUND, PacketPlayOutKeepAlive.class, 0x02);
             register(PacketDirection.CLIENT_BOUND, PacketPlayInKeepAlive.class, 0x82);
+
+            register(PacketDirection.SERVER_BOUND, PacketPlayOutDisconnect.class, 0x03);
+
         }
     };
 

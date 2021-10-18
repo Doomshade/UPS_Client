@@ -2,6 +2,7 @@ package jsmahy.ups_client.net.in;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.util.Position;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class PacketPlayInMove implements PacketInPlay {
     private Position from = null;
@@ -59,5 +60,14 @@ public class PacketPlayInMove implements PacketInPlay {
 
     public ResponseCode getResponseCode() {
         return responseCode;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("from", from)
+                .append("to", to)
+                .append("responseCode", responseCode)
+                .toString();
     }
 }

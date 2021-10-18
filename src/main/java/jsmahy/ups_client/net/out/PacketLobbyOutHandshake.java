@@ -1,5 +1,7 @@
 package jsmahy.ups_client.net.out;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -21,5 +23,12 @@ public class PacketLobbyOutHandshake implements PacketOut {
     @Override
     public void write(final BufferedOutputStream out) throws IOException {
         out.write(playerName.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("playerName", playerName)
+                .toString();
     }
 }

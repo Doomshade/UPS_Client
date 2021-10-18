@@ -35,7 +35,6 @@ public class Chessboard {
      */
     public Chessboard() {
         Arrays.fill(allowedCastles, true);
-        setupBoard(Util.START_FEN);
     }
 
     /**

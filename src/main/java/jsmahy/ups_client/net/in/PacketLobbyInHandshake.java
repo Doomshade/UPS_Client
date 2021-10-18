@@ -38,6 +38,7 @@ public class PacketLobbyInHandshake implements PacketInLobby {
     public String toString() {
         return new ToStringBuilder(this)
                 .append("responseCode", responseCode)
+                .append("reason", reason)
                 .toString();
     }
 }

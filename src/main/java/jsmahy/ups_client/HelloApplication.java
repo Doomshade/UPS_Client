@@ -37,11 +37,11 @@ public class HelloApplication extends Application {
     }
 
     private static void connectionTest() throws IOException {
-        NetworkManager.getInstance().setup(InetAddress.getLocalHost().getHostAddress(), 5000);
 
         ChessPlayer white = new ChessPlayer("Testshade");
         PlayerConnection c = new PlayerConnection(white);
-        c.disconnect();
+        NetworkManager.getInstance().setup(c, InetAddress.getLocalHost().getHostAddress(), 5000);
+        c.disconnect("No reason");
     }
 
     @Override
@@ -59,12 +59,9 @@ public class HelloApplication extends Application {
     private void testPackets() throws IOException {
         PlayerConnection con = new PlayerConnection(new ChessPlayer("test"));
 
-        ChessGame chessGame = new ChessGame(new Chessboard(), con, new ChessPlayer("test2"), true);
-        con.startGame(chessGame);
-        NetworkManager.getInstance().changeState(ProtocolState.PLAY);
         File f = new File("C:\\Temp\\ups\\testt.txt");
         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(f));
-        NetworkManager.getInstance().setupIO0(System.in, System.out);
+        NetworkManager.getInstance().setupIO(con, System.in, out);
         /*// packet ID
         out.write(
                 "81".concat(String.valueOf(Util.SEPARATION_CHAR)).getBytes(StandardCharsets.UTF_8));

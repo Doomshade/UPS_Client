@@ -3,6 +3,7 @@ package jsmahy.ups_client.net;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.in.PacketIn;
 import jsmahy.ups_client.net.in.PacketListener;
+import jsmahy.ups_client.net.in.PlayerConnection;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,9 +29,11 @@ public class PacketDeserializer implements Runnable {
      * The messages from server that are received by this input stream.
      */
     private final Scanner in;
+    private final PlayerConnection client;
 
-    public PacketDeserializer(final InputStream in) {
+    public PacketDeserializer(final InputStream in, final PlayerConnection client) {
         this.in = new Scanner(in);
+        this.client = client;
     }
 
     @Override
@@ -39,7 +42,7 @@ public class PacketDeserializer implements Runnable {
             final String s = in.nextLine();
             if (s.length() < 3) {
                 L.error("Invalid packet received! - invalid packet length: " + s.length());
-                continue;
+                break;
             }
             // ID | state | data
 
@@ -51,7 +54,7 @@ public class PacketDeserializer implements Runnable {
                 L.debug("Deserialized packet ID: " + packetId);
             } catch (NumberFormatException e) {
                 L.fatal("Could not read the packet ID!", e);
-                continue;
+                break;
             }
 
             // attempt to look up the packet with the given ID and state
@@ -63,7 +66,7 @@ public class PacketDeserializer implements Runnable {
             } catch (InvalidPacketFormatException e) {
                 // TODO disconnect the client
                 L.fatal("Received packet was not found in the lookup table!", e);
-                continue;
+                break;
             }
 
             // attempt to parse the data section
@@ -75,14 +78,14 @@ public class PacketDeserializer implements Runnable {
                 }
                 L.debug(format("Parsing %s arguments...", String.join(", ", split)));
                 packet.read(split);
-                L.debug(format("Successfully read %s packet from the input stream", packet));
             } catch (IOException | InvalidPacketFormatException e) {
                 L.fatal("Could not read the packet from the input stream!", e);
-                continue;
+                break;
             }
 
             L.debug(format("Received %s packet, broadcasting to the listeners...", packet));
             packet.broadcast(NM.getCurrentListener());
         }
+        client.disconnect("Attempted to send an invalid packet");
     }
 }

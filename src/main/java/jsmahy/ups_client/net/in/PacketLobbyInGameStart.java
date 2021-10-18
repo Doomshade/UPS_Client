@@ -1,6 +1,7 @@
 package jsmahy.ups_client.net.in;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class PacketLobbyInGameStart implements PacketInLobby {
     private ResponseCode responseCode = null;
@@ -41,5 +42,15 @@ public class PacketLobbyInGameStart implements PacketInLobby {
 
     public boolean isWhite() {
         return white;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("responseCode", responseCode)
+                .append("white", white)
+                .append("opponentName", opponentName)
+                .append("fenString", fenString)
+                .toString();
     }
 }

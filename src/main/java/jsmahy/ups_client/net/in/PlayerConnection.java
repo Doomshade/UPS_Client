@@ -46,7 +46,7 @@ public class PlayerConnection implements PacketListenerPlay {
                 // check if the server is still alive
                 if (currKeepAlive >= SERVER_RESPONSE_LIMIT) {
                     if (awaitingKeepAlive) {
-                        disconnect();
+                        disconnect("Have not received keepAlive packet in a while");
                     } else {
                         awaitingKeepAlive = true;
                         PlayerConnection.this.keepAlive = System.currentTimeMillis();
@@ -62,8 +62,9 @@ public class PlayerConnection implements PacketListenerPlay {
         timer.schedule(keepAlive, 0, KEEPALIVE_CHECK_PERIOD);
     }
 
-    public void disconnect() {
-        NET_MAN.sendPacket(new PacketPlayOutDisconnect());
+    public void disconnect(String reason) {
+        L.info("Disconnecting from the server...");
+        NET_MAN.sendPacket(new PacketPlayOutDisconnect(reason));
         try {
             NET_MAN.stopListening();
         } catch (IOException e) {
