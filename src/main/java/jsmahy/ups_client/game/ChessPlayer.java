@@ -6,19 +6,40 @@ package jsmahy.ups_client.game;
  * @since 1.0
  */
 public class ChessPlayer {
-    private final boolean white;
     private final String name;
+    private boolean hasColour = false;
+    private boolean white = true;
 
-    public ChessPlayer(final String name, final boolean white) {
-        this.white = white;
+    public ChessPlayer(final String name) {
         this.name = name;
+    }
+
+    /**
+     * @param white
+     *
+     * @throws IllegalStateException
+     */
+    public void setColour(boolean white) throws IllegalStateException {
+        if (hasColour) {
+            throw new IllegalStateException("Already set up the colour!");
+        }
+        this.hasColour = true;
+        this.white = white;
+    }
+
+    /**
+     * @return
+     *
+     * @throws IllegalStateException
+     */
+    public boolean isWhite() throws IllegalStateException {
+        if (!hasColour) {
+            throw new IllegalStateException("The chess player %s has no colour set!");
+        }
+        return white;
     }
 
     public String getName() {
         return name;
-    }
-
-    public boolean isWhite() {
-        return white;
     }
 }

@@ -18,13 +18,12 @@ import java.util.regex.Matcher;
 import static java.lang.String.format;
 
 public class Chessboard {
-    private static final Logger L = LogManager.getLogger(Chessboard.class);
 
+    private static final Logger L = LogManager.getLogger(Chessboard.class);
     // board of characters
     // upper case 'P' represents a white pawn, lower case 'p' represents a black pawn
     // this goes for all the pieces
     private final char[][] board = new char[ChessPieceUtil.ROW_SIZE][ChessPieceUtil.ROW_SIZE];
-
     // 0 = white | short
     // 1 = white | long
     // 2 = black | short
@@ -37,43 +36,6 @@ public class Chessboard {
     public Chessboard() {
         Arrays.fill(allowedCastles, true);
         setupBoard(Util.START_FEN);
-    }
-
-    public void modifyCastlesPrivilege(boolean white, boolean shortCastles, boolean allow) {
-        allowedCastles[getCastlesIndex(white, shortCastles)] = allow;
-    }
-
-    private void updateCastlesPrivileges(Position from) {
-        Optional<IChessPiece> piece = getPiece(from);
-        piece.ifPresent(x -> {
-            boolean isWhite = isWhite(from);
-
-            // check for king move
-            if (ChessPieceUtil.isKing(x)) {
-                modifyCastlesPrivilege(isWhite, true, false);
-                modifyCastlesPrivilege(isWhite, false, false);
-            }
-            // and a rook move as well
-            else if (ChessPieceUtil.is(x, ChessPieceEnum.ROOK)) {
-                // if the rook is at the right edge (7) that means it's short castles
-                // else it means it's long castles
-                modifyCastlesPrivilege(isWhite, from.getColumn() == 7, false);
-            }
-        });
-    }
-
-    private int getCastlesIndex(boolean white, boolean shortCastles) {
-        int idx = white ? 0 : 2;
-        idx += shortCastles ? 0 : 1;
-        return idx;
-    }
-
-    public boolean canKingCastles(boolean white) {
-        return getAllowedCastles(white, true) && getAllowedCastles(white, false);
-    }
-
-    public boolean getAllowedCastles(boolean white, boolean shortCastles) {
-        return allowedCastles[getCastlesIndex(white, shortCastles)];
     }
 
     /**
@@ -112,7 +74,8 @@ public class Chessboard {
                     // there could be too large of a number
                     // or the piece id is nonexistent
                     if (rowIdx >= 8 || !ChessPieceUtil.isPiece(c)) {
-                        throw new InvalidFENFormatException("Attempted to parse an invalid FEN String");
+                        throw new InvalidFENFormatException(
+                                "Attempted to parse an invalid FEN String");
                     }
                     // there should be only valid characters now
                     board[i][rowIdx++] = c;
@@ -135,6 +98,43 @@ public class Chessboard {
         L.debug("Chessboard after first FEN part: " + Arrays.deepToString(board));
         // end of chessboard piece parsing
 
+    }
+
+    public void modifyCastlesPrivilege(boolean white, boolean shortCastles, boolean allow) {
+        allowedCastles[getCastlesIndex(white, shortCastles)] = allow;
+    }
+
+    private void updateCastlesPrivileges(Position from) {
+        Optional<IChessPiece> piece = getPiece(from);
+        piece.ifPresent(x -> {
+            boolean isWhite = isWhite(from);
+
+            // check for king move
+            if (ChessPieceUtil.isKing(x)) {
+                modifyCastlesPrivilege(isWhite, true, false);
+                modifyCastlesPrivilege(isWhite, false, false);
+            }
+            // and a rook move as well
+            else if (ChessPieceUtil.is(x, ChessPieceEnum.ROOK)) {
+                // if the rook is at the right edge (7) that means it's short castles
+                // else it means it's long castles
+                modifyCastlesPrivilege(isWhite, from.getColumn() == 7, false);
+            }
+        });
+    }
+
+    public boolean canKingCastles(boolean white) {
+        return getAllowedCastles(white, true) && getAllowedCastles(white, false);
+    }
+
+    public boolean getAllowedCastles(boolean white, boolean shortCastles) {
+        return allowedCastles[getCastlesIndex(white, shortCastles)];
+    }
+
+    private int getCastlesIndex(boolean white, boolean shortCastles) {
+        int idx = white ? 0 : 2;
+        idx += shortCastles ? 0 : 1;
+        return idx;
     }
 
     /**

@@ -1,6 +1,5 @@
 package jsmahy.ups_client.net.in;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 
 /**
@@ -11,7 +10,7 @@ import java.io.IOException;
 public class PacketPlayInKeepAlive implements PacketInPlay {
 
     @Override
-    public void read(final String[] in) throws IOException {
+    public void read(final String[] in) {
     }
 
     @Override

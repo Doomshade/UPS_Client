@@ -25,27 +25,6 @@ abstract class AbstractChessPiece implements IChessPiece {
     }
 
     /**
-     * The possible directions in vector.
-     */
-    protected enum Direction {
-        /**
-         * The diagonal direction.
-         */
-        DIAGONAL(new Pair<>(1, 1)),
-        /**
-         * The horizontal and vertical direction.
-         */
-        HOR_AND_VERT(new Pair<>(0, 1), new Pair<>(1, 0));
-
-        private final Pair<Integer, Integer>[] vectors;
-
-        @SafeVarargs
-        Direction(Pair<Integer, Integer>... vectors) {
-            this.vectors = vectors;
-        }
-    }
-
-    /**
      * Generates valid moves.
      *
      * @param chessboard the chessboard
@@ -111,5 +90,26 @@ abstract class AbstractChessPiece implements IChessPiece {
     @Override
     public final char getBlack() {
         return black;
+    }
+
+    /**
+     * The possible directions in vector.
+     */
+    protected enum Direction {
+        /**
+         * The diagonal direction.
+         */
+        DIAGONAL(new Pair<>(1, 1)),
+        /**
+         * The horizontal and vertical direction.
+         */
+        HOR_AND_VERT(new Pair<>(0, 1), new Pair<>(1, 0));
+
+        private final Pair<Integer, Integer>[] vectors;
+
+        @SafeVarargs
+        Direction(Pair<Integer, Integer>... vectors) {
+            this.vectors = vectors;
+        }
     }
 }

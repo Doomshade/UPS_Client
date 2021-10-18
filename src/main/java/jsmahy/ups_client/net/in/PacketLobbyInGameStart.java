@@ -1,0 +1,45 @@
+package jsmahy.ups_client.net.in;
+
+import jsmahy.ups_client.exception.InvalidPacketFormatException;
+
+public class PacketLobbyInGameStart implements PacketInLobby {
+    private ResponseCode responseCode = null;
+    private boolean white = true;
+    private String opponentName = "";
+    private String fenString = "";
+
+    @Override
+    public void read(final String[] in) throws InvalidPacketFormatException {
+        this.responseCode = ResponseCode.getResponseCode(in[0]);
+
+        if (this.responseCode == ResponseCode.CONNECT) {
+            if (in.length < 4) {
+                throw new InvalidPacketFormatException("Invalid packet length received!");
+            }
+            this.white = in[1].equalsIgnoreCase("W");
+            this.opponentName = in[2];
+            this.fenString = in[3];
+        }
+    }
+
+    @Override
+    public void broadcast(final PacketListenerLobby listener) {
+        listener.onGameStart(this);
+    }
+
+    public ResponseCode getResponseCode() {
+        return responseCode;
+    }
+
+    public String getFenString() {
+        return fenString;
+    }
+
+    public String getOpponentName() {
+        return opponentName;
+    }
+
+    public boolean isWhite() {
+        return white;
+    }
+}

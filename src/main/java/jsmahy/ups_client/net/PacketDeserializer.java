@@ -1,16 +1,15 @@
-package jsmahy.ups_client.net.in;
+package jsmahy.ups_client.net;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
-import jsmahy.ups_client.net.NetworkManager;
-import jsmahy.ups_client.net.PacketDirection;
-import jsmahy.ups_client.net.ProtocolState;
+import jsmahy.ups_client.net.in.PacketIn;
+import jsmahy.ups_client.net.in.PacketListener;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
+import java.util.Scanner;
 
 import static java.lang.String.format;
 
@@ -28,38 +27,31 @@ public class PacketDeserializer implements Runnable {
     /**
      * The messages from server that are received by this input stream.
      */
-    private final InputStream in;
+    private final Scanner in;
 
     public PacketDeserializer(final InputStream in) {
-        this.in = in;
+        this.in = new Scanner(in);
     }
 
     @Override
     public void run() {
-        //while (true) {
-            final byte[] allBytes;
-            try {
-                allBytes = in.readAllBytes();
-            } catch (IOException e) {
-                L.fatal("Could not read the packet!", e);
-                return;
-            }
-            if (allBytes.length < 3) {
-                L.error("Invalid packet received! - invalid packet length: " + allBytes.length);
-                return;
+        while (true) {
+            final String s = in.nextLine();
+            if (s.length() < 3) {
+                L.error("Invalid packet received! - invalid packet length: " + s.length());
+                continue;
             }
             // ID | state | data
 
             // TODO redo to UTF
             // read the packet ID
-            String s = new String(allBytes);
             final int packetId;
             try {
                 packetId = Integer.parseUnsignedInt(s.substring(0, 2), 16);
                 L.debug("Deserialized packet ID: " + packetId);
             } catch (NumberFormatException e) {
                 L.fatal("Could not read the packet ID!", e);
-                return;
+                continue;
             }
 
             // attempt to look up the packet with the given ID and state
@@ -71,7 +63,7 @@ public class PacketDeserializer implements Runnable {
             } catch (InvalidPacketFormatException e) {
                 // TODO disconnect the client
                 L.fatal("Received packet was not found in the lookup table!", e);
-                return;
+                continue;
             }
 
             // attempt to parse the data section
@@ -86,11 +78,11 @@ public class PacketDeserializer implements Runnable {
                 L.debug(format("Successfully read %s packet from the input stream", packet));
             } catch (IOException | InvalidPacketFormatException e) {
                 L.fatal("Could not read the packet from the input stream!", e);
-                return;
+                continue;
             }
 
             L.debug(format("Received %s packet, broadcasting to the listeners...", packet));
             packet.broadcast(NM.getCurrentListener());
-        //}
+        }
     }
 }

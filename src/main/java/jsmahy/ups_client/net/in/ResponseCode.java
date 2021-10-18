@@ -6,14 +6,21 @@ package jsmahy.ups_client.net.in;
  * @since 1.0
  */
 public enum ResponseCode {
+    NONE,
     OK,
     MOVE,
     REJECTED,
-    RECONNECT;
+    CONNECT;
 
     public static ResponseCode getResponseCode(int id) {
         validateId(id);
         return values()[id];
+    }
+
+    private static void validateId(final int id) {
+        if (id < 0 || id >= values().length) {
+            throw new IllegalArgumentException(String.format("Invalid ID response code: %d", id));
+        }
     }
 
     public static ResponseCode getResponseCode(String s) {
@@ -23,11 +30,5 @@ public enum ResponseCode {
             }
         }
         throw new IllegalArgumentException(String.format("No response code found for %s!", s));
-    }
-
-    private static void validateId(final int id) {
-        if (id < 0 || id >= values().length) {
-            throw new IllegalArgumentException(String.format("Invalid ID response code: %d", id));
-        }
     }
 }

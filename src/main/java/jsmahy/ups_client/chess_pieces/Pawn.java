@@ -25,11 +25,13 @@ class Pawn extends AbstractChessPiece {
         return validMoves;
     }
 
-    private void addAttackingMoves(Chessboard chessboard, Position currentPosition, Collection<Position> validMoves) {
+    private void addAttackingMoves(Chessboard chessboard, Position currentPosition,
+                                   Collection<Position> validMoves) {
 
     }
 
-    private void addMoves(Chessboard chessboard, Position currentPosition, Collection<Position> validMoves) {
+    private void addMoves(Chessboard chessboard, Position currentPosition,
+                          Collection<Position> validMoves) {
         // check if there's a piece one square up
         boolean canMoveTwoSquares = canMoveTwoSquares(chessboard, currentPosition);
     }

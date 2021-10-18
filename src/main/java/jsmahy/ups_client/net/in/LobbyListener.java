@@ -4,7 +4,6 @@ import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
-import jsmahy.ups_client.net.ProtocolState;
 
 /**
  * @author Doomshade
@@ -20,29 +19,37 @@ public class LobbyListener implements PacketListenerLobby {
 
     @Override
     public void onHandshake(final PacketLobbyInHandshake packet) {
-        switch (packet.getResponseCode()){
+        switch (packet.getResponseCode()) {
             case OK:
                 break;
             case REJECTED:
-                break;
-            case RECONNECT:
-                final String fen = packet.getFenString();
-                if (fen.isEmpty()){
-                    throw new IllegalStateException("The server sent a reconnect packet, but did " +
-                            "not send a FEN string to update the board!");
-                }
-                PlayerConnection player =
-                        new PlayerConnection(new ChessPlayer("Testshade", packet.isWhite()));
-                ChessPlayer opponent = new ChessPlayer(packet.getOpponentName(), !packet.isWhite());
-                Chessboard chessboard = new Chessboard();
-                chessboard.setupBoard(fen);
-                ChessGame.setupChessGame(chessboard, player, opponent);
-                netMan.changeState(ProtocolState.PLAY);
                 break;
             default:
                 throw new UnsupportedOperationException(
                         String.format("%s response code is not checked for",
                                 packet.getResponseCode()));
         }
+    }
+
+    @Override
+    public void onGameStart(final PacketLobbyInGameStart packet) {
+        if (packet.getResponseCode() != ResponseCode.CONNECT) {
+            return;
+        }
+        // set up the board from the fen string
+        final String fen = packet.getFenString();
+        if (fen.isEmpty()) {
+            throw new IllegalStateException("The server sent a reconnect packet, but did " +
+                    "not send a FEN string to update the board!");
+        }
+        final Chessboard chessboard = new Chessboard();
+        chessboard.setupBoard(fen);
+
+        // set up the game and change the state
+        final PlayerConnection player =
+                new PlayerConnection(new ChessPlayer("Testshade"));
+        final ChessPlayer opponent = new ChessPlayer(packet.getOpponentName());
+        ChessGame game = new ChessGame(chessboard, player, opponent, packet.isWhite());
+        player.startGame(game);
     }
 }

@@ -3,7 +3,6 @@ package jsmahy.ups_client.net.in;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.Packet;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 
 /**

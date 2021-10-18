@@ -5,6 +5,7 @@ import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.net.Socket;
@@ -43,14 +44,10 @@ public final class NetworkManager {
     private static final int TIMEOUT = 30_000;
 
     /**
-     * Indicates, whether the class was successfully instantiated.
+     * Indicates whether the connection was successfully instantiated.
      */
-    private static boolean successfullyInitialized = false;
-
-    private String host;
-    private int port;
+    private boolean connectionSuccessful = false;
     private Socket socket = null;
-
     /**
      * Messages from server are received by this input stream.
      */
@@ -60,6 +57,11 @@ public final class NetworkManager {
      * Messages to server are sent in this output stream.
      */
     private BufferedOutputStream out = null;
+
+    /**
+     * Indicates whether the I/O streams were initialized.
+     */
+    private boolean initializedStreams = false;
 
     /**
      * The current state of the protocol.
@@ -75,50 +77,79 @@ public final class NetworkManager {
      * @param host the host
      * @param port the port
      *
-     * @throws IOException if the connection could not be established
+     * @throws IOException           if the connection could not be established
+     * @throws IllegalStateException if the connection has already been established
      */
-    public static void setup(final String host, final int port) throws IOException {
+    public void setup(final String host, final int port)
+            throws IOException, IllegalStateException {
+        if (isConnectionSuccessful()) {
+            throw new IllegalStateException("Already connected to a server!");
+        }
         L.info(format("Setting up Network Manager with host %s and port %d", host, port));
-        INSTANCE.setup0(host, port);
-    }
-
-    /**
-     * Sets up (initializes) the network manager.
-     *
-     * @param host the host
-     * @param port the port
-     *
-     * @throws IOException if the connection could not be established
-     */
-    private void setup0(final String host, final int port) throws IOException {
-        this.host = host;
-        this.port = port;
-        initializeConnection();
-    }
-
-    /**
-     * Initializes the connection between the client and the server.
-     *
-     * @throws IOException if the connection could not be established
-     */
-    private void initializeConnection() throws IOException {
         this.socket = new Socket(host, port);
         this.socket.setSoTimeout(TIMEOUT);
         this.socket.setKeepAlive(true);
+        this.setupIO0(socket.getInputStream(), socket.getOutputStream());
 
-        this.out = new BufferedOutputStream(socket.getOutputStream());
-        this.in = new BufferedInputStream(socket.getInputStream());
+        connectionSuccessful = true;
         L.info("Successfully initialized connection");
-
-        startListening();
-
-        successfullyInitialized = true;
     }
 
     private void startListening() {
         Thread readThread = new Thread(new PacketDeserializer(this.in));
         readThread.setDaemon(true);
         readThread.start();
+    }
+
+    /**
+     * Sets up the I/O streams.
+     *
+     * @param in  the input stream
+     * @param out the output stream
+     *
+     * @throws IllegalStateException if the streams have already been initialized
+     */
+    public void setupIO0(@NotNull final InputStream in, @NotNull final OutputStream out)
+            throws IllegalStateException {
+        if (isInitializedStreams()) {
+            throw new IllegalStateException("I/O streams have already been initialized!");
+        }
+        L.info("Setting up I/O...");
+        this.in = new BufferedInputStream(in);
+        this.out = new BufferedOutputStream(out);
+        startListening();
+        this.initializedStreams = true;
+        L.info("I/O set up");
+    }
+
+    /**
+     * @return {@code true} if the I/O streams have been successfully initialized.
+     */
+    public boolean isInitializedStreams() {
+        return initializedStreams;
+    }
+
+    /**
+     * @return {@code true} if the connection has been successfully established.
+     */
+    public boolean isConnectionSuccessful() {
+        return connectionSuccessful;
+    }
+
+    /**
+     * Sets up the packet listener in {@link ProtocolState#PLAY} state.
+     *
+     * @param listener the listener
+     */
+    public static void setPlayListener(@NotNull PacketListenerPlay listener) {
+        LISTENERS.put(ProtocolState.PLAY, listener);
+    }
+
+    /**
+     * @return the instance
+     */
+    public static NetworkManager getInstance() {
+        return INSTANCE;
     }
 
     /**
@@ -139,7 +170,7 @@ public final class NetworkManager {
      *
      * @return the packet listener
      */
-    private PacketListener getListener(ProtocolState state) {
+    private PacketListener getListener(@NotNull ProtocolState state) {
         return LISTENERS.get(state);
     }
 
@@ -150,9 +181,9 @@ public final class NetworkManager {
      *
      * @throws IllegalStateException if the network manager has not yet been initialized
      */
-    public void sendPacket(PacketOut packet) throws IllegalStateException {
-        if (!isSuccessfullyInitialized()){
-            throw new IllegalStateException("The network manager has not yet been initialized!");
+    public void sendPacket(@NotNull PacketOut packet) throws IllegalStateException {
+        if (!isInitializedStreams()) {
+            throw new IllegalStateException("The I/O streams have not yet been initialized!");
         }
         try {
             // Packet format: [ID;Data]
@@ -173,29 +204,6 @@ public final class NetworkManager {
     }
 
     /**
-     * Sets up the packet listener in {@link ProtocolState#PLAY} state.
-     *
-     * @param listener the listener
-     */
-    public static void setPlayListener(PacketListenerPlay listener) {
-        LISTENERS.put(ProtocolState.PLAY, listener);
-    }
-
-    /**
-     * @return the instance
-     */
-    public static NetworkManager getInstance() {
-        return INSTANCE;
-    }
-
-    /**
-     * @return {@code true} if the network manager has been successfully initialized.
-     */
-    public static boolean isSuccessfullyInitialized() {
-        return successfullyInitialized;
-    }
-
-    /**
      * Changes the current state of the client.
      *
      * @param state the state to change to
@@ -212,11 +220,19 @@ public final class NetworkManager {
     }
 
     /**
-     * Stops listening to the server - closes the socket
+     * Stops listening to the server - closes the socket and the I/O streams
      */
     public void stopListening() throws IOException {
         if (socket != null) {
             socket.close();
         }
+        if (out != null) {
+            out.close();
+        }
+        if (in != null) {
+            in.close();
+        }
+        connectionSuccessful = false;
+        initializedStreams = false;
     }
 }

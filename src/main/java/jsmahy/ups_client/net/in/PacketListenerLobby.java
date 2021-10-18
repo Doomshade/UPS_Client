@@ -7,4 +7,6 @@ package jsmahy.ups_client.net.in;
  */
 public interface PacketListenerLobby extends PacketListener {
     void onHandshake(PacketLobbyInHandshake packet);
+
+    void onGameStart(PacketLobbyInGameStart packet);
 }

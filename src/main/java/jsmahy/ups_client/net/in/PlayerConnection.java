@@ -3,9 +3,9 @@ package jsmahy.ups_client.net.in;
 import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.net.NetworkManager;
+import jsmahy.ups_client.net.ProtocolState;
 import jsmahy.ups_client.net.out.PacketPlayOutDisconnect;
 import jsmahy.ups_client.net.out.PacketPlayOutKeepAlive;
-import jsmahy.ups_client.util.Position;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,9 +14,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class PlayerConnection implements PacketListenerPlay {
-    private static final Logger L = LogManager.getLogger(PlayerConnection.class);
     public static final int SERVER_RESPONSE_LIMIT = 25_000;
     public static final int KEEPALIVE_CHECK_PERIOD = 1_000;
+    private static final Logger L = LogManager.getLogger(PlayerConnection.class);
     private static final NetworkManager NET_MAN = NetworkManager.getInstance();
 
     private final ChessPlayer player;
@@ -29,13 +29,13 @@ public class PlayerConnection implements PacketListenerPlay {
         NetworkManager.setPlayListener(this);
     }
 
-    public void startGame(boolean white) {
-        this.chessGame = ChessGame.getChessGame();
-        startKeepAlive();
-    }
-
-    public ChessPlayer getPlayer() {
-        return player;
+    public void startGame(ChessGame chessGame) {
+        if (this.chessGame != null) {
+            throw new IllegalStateException("A chess game is already in play!");
+        }
+        this.chessGame = chessGame;
+        NET_MAN.changeState(ProtocolState.PLAY);
+        //startKeepAlive();
     }
 
     private void startKeepAlive() {
@@ -69,6 +69,10 @@ public class PlayerConnection implements PacketListenerPlay {
         } catch (IOException e) {
             L.error("An exception occurred when trying to close the socket", e);
         }
+    }
+
+    public ChessPlayer getPlayer() {
+        return player;
     }
 
     @Override

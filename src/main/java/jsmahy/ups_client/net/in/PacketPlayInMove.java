@@ -3,8 +3,6 @@ package jsmahy.ups_client.net.in;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.util.Position;
 
-import java.io.IOException;
-
 public class PacketPlayInMove implements PacketInPlay {
     private Position from = null;
     private Position to = null;
@@ -15,10 +13,10 @@ public class PacketPlayInMove implements PacketInPlay {
 
     @Override
     public void read(String[] in) throws InvalidPacketFormatException {
-        this.responseCode = ResponseCode.getResponseCode(in[0]);
         if (in.length < 3) {
             throw new InvalidPacketFormatException("Invalid packet size received!");
         }
+        this.responseCode = ResponseCode.getResponseCode(in[0]);
 
         // the server sent us back that the move was valid
         if (this.responseCode == ResponseCode.OK) {

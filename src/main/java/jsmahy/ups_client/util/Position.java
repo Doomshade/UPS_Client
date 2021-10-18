@@ -23,10 +23,6 @@ public final class Position {
         this.column = column;
     }
 
-    public String toAsciiString() {
-        return new String(new char[] {toChar(row), toChar(column)});
-    }
-
     public static Position fromString(String s) throws IllegalArgumentException {
         if (s.length() != 2) {
             throw new IllegalArgumentException("The position length must be 2!");
@@ -42,10 +38,6 @@ public final class Position {
                     rank));
         }
         return new Position((byte) (file - 'A'), (byte) (rank - '0'));
-    }
-
-    private char toChar(int num) {
-        return (char) (num + 'A');
     }
 
     /**
@@ -92,6 +84,14 @@ public final class Position {
         Position to = new Position(toX, toY);
 
         return new Pair<>(from, to);
+    }
+
+    public String toAsciiString() {
+        return new String(new char[] {toChar(row), toChar(column)});
+    }
+
+    private char toChar(int num) {
+        return (char) (num + 'A');
     }
 
     @Override

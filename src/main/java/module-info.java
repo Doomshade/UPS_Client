@@ -11,6 +11,7 @@
 
     requires java.logging;
     requires org.apache.commons.lang3;
+    requires org.jetbrains.annotations;
 
     exports jsmahy.ups_client;
     exports jsmahy.ups_client.controller;

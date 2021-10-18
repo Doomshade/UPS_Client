@@ -12,23 +12,13 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * @since 1.0
  */
 public class PacketLobbyInHandshake implements PacketInLobby {
-    private ResponseCode responseCode = null;
-    private boolean white = true;
-    private String opponentName = "";
-    private String fenString = "";
+    private ResponseCode responseCode = ResponseCode.NONE;
+    private String reason = "";
 
     @Override
-    public void read(final String[] in) throws InvalidPacketFormatException {
+    public void read(final String[] in) {
         // we only need the last bit right now as we only have two response codes
         this.responseCode = ResponseCode.getResponseCode(in[0]);
-        if (this.responseCode == ResponseCode.RECONNECT) {
-            if (in.length < 4){
-                throw new InvalidPacketFormatException("Invalid packet length received!");
-            }
-            this.white = in[1].equalsIgnoreCase("W");
-            this.opponentName = in[2];
-            this.fenString = in[3];
-        }
     }
 
     @Override
@@ -40,16 +30,8 @@ public class PacketLobbyInHandshake implements PacketInLobby {
         return responseCode;
     }
 
-    public String getFenString() {
-        return fenString;
-    }
-
-    public String getOpponentName() {
-        return opponentName;
-    }
-
-    public boolean isWhite() {
-        return white;
+    public String getReason() {
+        return reason;
     }
 
     @Override

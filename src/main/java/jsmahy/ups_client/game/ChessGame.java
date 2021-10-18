@@ -5,8 +5,6 @@ import jsmahy.ups_client.net.in.PlayerConnection;
 import jsmahy.ups_client.net.out.PacketPlayOutMove;
 import jsmahy.ups_client.util.Position;
 
-import java.util.regex.Matcher;
-
 public final class ChessGame {
     private static ChessGame chessGame = null;
     private final Chessboard chessboard;
@@ -15,22 +13,6 @@ public final class ChessGame {
 
     private boolean clientToMove = true;
 
-    public static void setupChessGame(Chessboard chessboard, PlayerConnection client,
-                                      ChessPlayer opponent) {
-        if (isSetUp()) {
-            throw new IllegalStateException("Chess game has already been set up!");
-        }
-        chessGame = new ChessGame(chessboard, client, opponent);
-    }
-
-    public static boolean isSetUp() {
-        return chessGame != null;
-    }
-
-    public static ChessGame getChessGame() {
-        return chessGame;
-    }
-
     /**
      * Instantiates a new Chess game.
      *
@@ -38,26 +20,21 @@ public final class ChessGame {
      * @param client     the player
      * @param opponent   the opponent
      */
-    private ChessGame(Chessboard chessboard, PlayerConnection client, ChessPlayer opponent) {
+    public ChessGame(Chessboard chessboard, PlayerConnection client, ChessPlayer opponent,
+                     boolean clientIsWhite) {
         this.chessboard = chessboard;
         this.client = client;
         this.opponent = opponent;
+        this.client.getPlayer().setColour(clientIsWhite);
+        opponent.setColour(!clientIsWhite);
     }
 
     public Chessboard getChessboard() {
         return chessboard;
     }
 
-    public PlayerConnection getClient() {
-        return client;
-    }
-
     public boolean isClientToMove() {
         return clientToMove;
-    }
-
-    public ChessPlayer getOpponent() {
-        return opponent;
     }
 
     /**
@@ -73,6 +50,14 @@ public final class ChessGame {
             // send packet to players
             NetworkManager.getInstance().sendPacket(new PacketPlayOutMove(from, to));
         }
+    }
+
+    public PlayerConnection getClient() {
+        return client;
+    }
+
+    public ChessPlayer getOpponent() {
+        return opponent;
     }
 
     public void nextTurn() {

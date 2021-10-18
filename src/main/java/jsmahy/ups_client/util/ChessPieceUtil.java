@@ -3,8 +3,6 @@ package jsmahy.ups_client.util;
 import jsmahy.ups_client.chess_pieces.ChessPieceEnum;
 import jsmahy.ups_client.chess_pieces.IChessPiece;
 
-import java.util.regex.Pattern;
-
 /**
  * Chess piece utility class.
  *
@@ -18,19 +16,6 @@ public final class ChessPieceUtil {
      * The row/column size.
      */
     public static final int ROW_SIZE = 8;
-
-    /**
-     * Validates the char piece ID.
-     *
-     * @param id the ID
-     *
-     * @throws IllegalArgumentException if the ID is invalid
-     */
-    private static void validateId(char id) throws IllegalArgumentException {
-        if (!isPiece(id)) {
-            throw new IllegalArgumentException(String.format("Invalid ID '%c' provided", id));
-        }
-    }
 
     /**
      * Checks whether both pieces are the same colour
@@ -61,6 +46,30 @@ public final class ChessPieceUtil {
     }
 
     /**
+     * Validates the char piece ID.
+     *
+     * @param id the ID
+     *
+     * @throws IllegalArgumentException if the ID is invalid
+     */
+    private static void validateId(char id) throws IllegalArgumentException {
+        if (!isPiece(id)) {
+            throw new IllegalArgumentException(String.format("Invalid ID '%c' provided", id));
+        }
+    }
+
+    public static boolean isPiece(char c) {
+        return getAllPieceIds().indexOf(c) != -1;
+    }
+
+    /**
+     * @return all valid piece identifiers
+     */
+    public static String getAllPieceIds() {
+        return "pbnrqkPBNRQK";
+    }
+
+    /**
      * Converts a char to represent a black piece.
      *
      * @param c the piece identifier
@@ -82,17 +91,6 @@ public final class ChessPieceUtil {
     public static char toWhite(char c) {
         validateId(c);
         return Character.toUpperCase(c);
-    }
-
-    /**
-     * @return all valid piece identifiers
-     */
-    public static String getAllPieceIds() {
-        return "pbnrqkPBNRQK";
-    }
-
-    public static boolean isPiece(char c) {
-        return getAllPieceIds().indexOf(c) != -1;
     }
 
     /**
