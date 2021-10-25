@@ -3,7 +3,7 @@ package jsmahy.ups_client.game;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.listener.PlayerConnection;
 import jsmahy.ups_client.net.out.PacketPlayOutMove;
-import jsmahy.ups_client.util.Position;
+import jsmahy.ups_client.util.Square;
 
 public final class ChessGame {
     private final Chessboard chessboard;
@@ -42,7 +42,7 @@ public final class ChessGame {
      * @param from the from
      * @param to   the to
      */
-    public void movePiece(Position from, Position to) {
+    public void movePiece(Square from, Square to) {
         // the move to perform as
         final ChessPlayer as = clientToMove ? getClient().getPlayer() : getOpponent();
         if (chessboard.move(from, to, as) != ChessMove.NO_MOVE && clientToMove) {

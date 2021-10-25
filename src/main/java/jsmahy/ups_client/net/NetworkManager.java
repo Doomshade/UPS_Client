@@ -1,8 +1,8 @@
 package jsmahy.ups_client.net;
 
-import jsmahy.ups_client.net.in.*;
 import jsmahy.ups_client.net.listener.LobbyListener;
 import jsmahy.ups_client.net.listener.PacketListener;
+import jsmahy.ups_client.net.listener.PacketListenerPlay;
 import jsmahy.ups_client.net.listener.PlayerConnection;
 import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.util.Util;
@@ -36,6 +36,7 @@ public final class NetworkManager {
      * The packet listener based on the protocol state.
      */
     private static final Map<ProtocolState, PacketListener> LISTENERS = new HashMap<>() {
+        // test
         {
             put(ProtocolState.LOBBY, new LobbyListener());
         }
@@ -202,7 +203,7 @@ public final class NetworkManager {
 
             // write
             out.flush();
-            L.debug("Sending %s packet to the server...");
+            L.debug(format("Sending %s packet to the server...", packet));
         } catch (IOException e) {
             L.error("Could not write to the output stream!", e);
         }
@@ -215,7 +216,7 @@ public final class NetworkManager {
      */
     public void changeState(ProtocolState state) {
         this.state = state;
-        L.debug("Switched state to " + state.name());
+        L.debug(format("Switching state to %s", state.name()));
     }
 
     /**

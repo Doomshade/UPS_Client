@@ -1,6 +1,6 @@
 package jsmahy.ups_client.net.out;
 
-import jsmahy.ups_client.util.Position;
+import jsmahy.ups_client.util.Square;
 import jsmahy.ups_client.util.Util;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -16,9 +16,9 @@ import java.nio.charset.StandardCharsets;
  * @since 1.0
  */
 public class PacketPlayOutMove implements PacketOut {
-    private final Position from, to;
+    private final Square from, to;
 
-    public PacketPlayOutMove(final Position from, final Position to) {
+    public PacketPlayOutMove(final Square from, final Square to) {
         this.from = from;
         this.to = to;
     }

@@ -1,10 +1,10 @@
 package jsmahy.ups_client.net.listener;
 
+import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.ProtocolState;
-import jsmahy.ups_client.net.in.PacketListenerPlay;
 import jsmahy.ups_client.net.in.PacketPlayInDrawOffer;
 import jsmahy.ups_client.net.in.PacketPlayInKeepAlive;
 import jsmahy.ups_client.net.in.PacketPlayInMove;
@@ -83,7 +83,8 @@ public class PlayerConnection implements PacketListenerPlay {
     }
 
     @Override
-    public void onMove(final PacketPlayInMove packetPlayInMove) {
+    public void onMove(final PacketPlayInMove packetPlayInMove)
+            throws InvalidPacketFormatException {
         switch (packetPlayInMove.getResponseCode()) {
             case REJECTED:
                 // revert the move
@@ -96,6 +97,8 @@ public class PlayerConnection implements PacketListenerPlay {
             case OK:
                 // don't do anything
                 break;
+            default:
+                throw new InvalidPacketFormatException("Invalid response received");
         }
     }
 

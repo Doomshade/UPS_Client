@@ -1,5 +1,6 @@
 package jsmahy.ups_client.net.listener;
 
+import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.in.PacketLobbyInGameStart;
 import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
 
@@ -9,7 +10,7 @@ import jsmahy.ups_client.net.in.PacketLobbyInHandshake;
  * @since 1.0
  */
 public interface PacketListenerLobby extends PacketListener {
-    void onHandshake(PacketLobbyInHandshake packet);
+    void onHandshake(PacketLobbyInHandshake packet) throws InvalidPacketFormatException;
 
-    void onGameStart(PacketLobbyInGameStart packet);
+    void onGameStart(PacketLobbyInGameStart packet) throws InvalidPacketFormatException;
 }

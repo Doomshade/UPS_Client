@@ -22,5 +22,5 @@ public interface PacketIn<T extends PacketListener> extends Packet {
      */
     void read(String[] in) throws InvalidPacketFormatException;
 
-    void broadcast(T listener);
+    void broadcast(T listener) throws InvalidPacketFormatException;
 }

@@ -2,12 +2,13 @@ package jsmahy.ups_client.net.in;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.ResponseCode;
-import jsmahy.ups_client.util.Position;
+import jsmahy.ups_client.net.listener.PacketListenerPlay;
+import jsmahy.ups_client.util.Square;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class PacketPlayInMove implements PacketInPlay {
-    private Position from = null;
-    private Position to = null;
+    private Square from = null;
+    private Square to = null;
     private ResponseCode responseCode = ResponseCode.REJECTED;
 
     public PacketPlayInMove() {
@@ -29,8 +30,8 @@ public class PacketPlayInMove implements PacketInPlay {
             throw new InvalidPacketFormatException("Invalid packet size received!");
         }
         try {
-            this.from = Position.fromString(in[1]);
-            this.to = Position.fromString(in[2]);
+            this.from = Square.fromString(in[1]);
+            this.to = Square.fromString(in[2]);
         } catch (IllegalArgumentException e) {
             throw new InvalidPacketFormatException(e);
         }
@@ -51,15 +52,15 @@ public class PacketPlayInMove implements PacketInPlay {
     }
 
     @Override
-    public void broadcast(final PacketListenerPlay listener) {
+    public void broadcast(final PacketListenerPlay listener) throws InvalidPacketFormatException {
         listener.onMove(this);
     }
 
-    public Position getFrom() {
+    public Square getFrom() {
         return from;
     }
 
-    public Position getTo() {
+    public Square getTo() {
         return to;
     }
 

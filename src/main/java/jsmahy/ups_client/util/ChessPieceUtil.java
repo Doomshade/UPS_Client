@@ -2,6 +2,7 @@ package jsmahy.ups_client.util;
 
 import jsmahy.ups_client.chess_pieces.ChessPieceEnum;
 import jsmahy.ups_client.chess_pieces.IChessPiece;
+import jsmahy.ups_client.game.Chessboard;
 
 /**
  * Chess piece utility class.
@@ -82,18 +83,6 @@ public final class ChessPieceUtil {
     }
 
     /**
-     * Converts a char to represent a white piece.
-     *
-     * @param c the piece identifier
-     *
-     * @return the white piece identifier
-     */
-    public static char toWhite(char c) {
-        validateId(c);
-        return Character.toUpperCase(c);
-    }
-
-    /**
      * @param id the piece identifier
      *
      * @return a chess piece
@@ -111,6 +100,43 @@ public final class ChessPieceUtil {
             }
         }
         throw new IllegalStateException(String.format("Could not find a piece with ID '%c'", id));
+    }
+
+    /**
+     * Checks whether the target piece is on the given square.
+     *
+     * @param chessboard  the chessboard
+     * @param targetPiece the target piece
+     * @param square      the square
+     *
+     * @return {@code true} if there is a piece, the pieces match, and the colours are the same
+     */
+    public static boolean isCorrectPieceOnSquare(Chessboard chessboard, ChessPieceEnum targetPiece,
+                                                 Square square) {
+        if (!chessboard.containsPiece(square)) {
+            return false;
+        }
+
+        IChessPiece piece = targetPiece.getPiece();
+        char pieceId = chessboard.getPieceId(square);
+
+        if (isWhite(pieceId)) {
+            return piece.getWhite() == pieceId;
+        } else {
+            return piece.getBlack() == pieceId;
+        }
+    }
+
+    /**
+     * Converts a char to represent a white piece.
+     *
+     * @param c the piece identifier
+     *
+     * @return the white piece identifier
+     */
+    public static char toWhite(char c) {
+        validateId(c);
+        return Character.toUpperCase(c);
     }
 
     /**
@@ -155,15 +181,15 @@ public final class ChessPieceUtil {
     }
 
     /**
-     * Checks whether the row and column are valid.
+     * Checks whether the rank and file are valid.
      *
-     * @param row    the row
-     * @param column the column
+     * @param rank the rank
+     * @param file the file
      *
      * @return {@code true} if both arguments are within 0-7 (inclusive) range
+     * @see Square#isValidPosition(int, int)
      */
-    public static boolean isValidPosition(int row, int column) {
-        // only the 3 lowest significant bits are needed
-        return (row >> 3) == 0 && (column >> 3) == 0;
+    public static boolean isValidPosition(int rank, int file) {
+        return Square.isValidPosition(rank, file);
     }
 }

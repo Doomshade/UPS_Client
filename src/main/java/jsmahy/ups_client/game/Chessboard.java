@@ -4,7 +4,7 @@ import jsmahy.ups_client.chess_pieces.ChessPieceEnum;
 import jsmahy.ups_client.chess_pieces.IChessPiece;
 import jsmahy.ups_client.exception.InvalidFENFormatException;
 import jsmahy.ups_client.util.ChessPieceUtil;
-import jsmahy.ups_client.util.Position;
+import jsmahy.ups_client.util.Square;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +17,7 @@ import java.util.regex.Matcher;
 
 import static java.lang.String.format;
 
-public class Chessboard {
+public final class Chessboard {
 
     private static final Logger L = LogManager.getLogger(Chessboard.class);
     // board of characters
@@ -42,16 +42,16 @@ public class Chessboard {
      *
      * @param fen the fen string
      *
-     * @throws IllegalArgumentException if the fen string is invalid
+     * @throws InvalidFENFormatException if the fen string is invalid
      */
-    public void setupBoard(String fen) throws IllegalArgumentException {
+    public void setupBoard(String fen) throws InvalidFENFormatException {
         // somewhat of an ugly pattern but works
         // this just ensures the format is right
         final Matcher m = Util.FEN_PATTERN.matcher(fen);
 
         // very likely an invalid fen string
         if (!m.find()) {
-            throw new IllegalArgumentException(format("Invalid FEN String %s", fen));
+            throw new InvalidFENFormatException(format("Invalid FEN String %s", fen));
         }
 
         // start parsing the string
@@ -103,7 +103,7 @@ public class Chessboard {
                 shortCastles ? "short castles" : "long castles", allow));
     }
 
-    private void updateCastlesPrivileges(Position from) {
+    private void updateCastlesPrivileges(Square from) {
         Optional<IChessPiece> piece = getPiece(from);
         piece.ifPresent(x -> {
             boolean isWhite = isWhite(from);
@@ -117,7 +117,7 @@ public class Chessboard {
             else if (ChessPieceUtil.is(x, ChessPieceEnum.ROOK)) {
                 // if the rook is at the right edge (7) that means it's short castles
                 // else it means it's long castles
-                modifyCastlesPrivilege(isWhite, from.getColumn() == 7, false);
+                modifyCastlesPrivilege(isWhite, from.getFile() == 7, false);
             }
         });
     }
@@ -144,7 +144,7 @@ public class Chessboard {
      *
      * @return the chess move that was performed
      */
-    public ChessMove move(Position from, Position to, ChessPlayer as) {
+    public ChessMove move(Square from, Square to, ChessPlayer as) {
         Optional<IChessPiece> opt = getPiece(from);
         if (opt.isEmpty()) {
             return ChessMove.NO_MOVE;
@@ -169,7 +169,7 @@ public class Chessboard {
      * @throws IllegalAccessError    if the client attempted to move opponents piece and the
      *                               client called this method for some reason
      */
-    private ChessMove moveOnBoard(Position from, Position to, ChessPlayer as)
+    private ChessMove moveOnBoard(Square from, Square to, ChessPlayer as)
             throws IllegalStateException {
         final Optional<IChessPiece> opt = getPiece(from);
         if (opt.isEmpty()) {
@@ -186,7 +186,7 @@ public class Chessboard {
         ChessMove chessMove = ChessMove.MOVE;
 
         if (ChessPieceUtil.isKing(piece)) {
-            Collection<Position> opponentsAttackingSquares = getOpponentsAttackingSquares();
+
             chessMove = checkIfCastles(from, to, chessMove);
         }
 
@@ -194,24 +194,73 @@ public class Chessboard {
         updateCastlesPrivileges(from);
 
         L.trace(format("Moving from %s to %s", from, to));
-        board[to.getRow()][to.getColumn()] = board[from.getRow()][from.getColumn()];
-        board[from.getRow()][from.getColumn()] = 0;
+        board[to.getRank()][to.getFile()] = board[from.getRank()][from.getFile()];
+        board[from.getRank()][from.getFile()] = 0;
         return chessMove;
     }
 
-    private Collection<Position> getOpponentsAttackingSquares() {
-        Collection<Position> c = new HashSet<>();
-        return null;
+    /**
+     * Checks whether there are opponent's pieces attacking the squares
+     *
+     * @param kingsPos the king's position
+     * @param to       the king's destination
+     *
+     * @return {@code true} if the two squares next to the king based on the castle type are not
+     * under attack of the opponent
+     */
+    private boolean isOpponentAttackingKingsSquares(Square kingsPos, Square to) {
+        final boolean white = isWhite(kingsPos);
+        final Collection<Square> attackingMoves = new HashSet<>();
+
+        for (int rank = 0; rank < ChessPieceUtil.ROW_SIZE; rank++) {
+            for (int file = 0; file < ChessPieceUtil.ROW_SIZE; file++) {
+                final Square s = new Square(rank, file);
+
+                // the piece and the opponent's colour matches ->
+                // it's the opponent's piece ->
+                // add the attacking squares of the piece
+                if (isWhite(s) == white) {
+                    getPiece(s).ifPresent(x ->
+                            attackingMoves.addAll(x.getAttackingSquares(Chessboard.this, s)));
+                }
+            }
+        }
+
+        final int sgn = (int) Math.signum(kingsPos.getRank() - to.getRank());
+        // return true if the attacking moves don't contain the two squares next to the king in the
+        // direction of the castles
+        return !attackingMoves.contains(kingsPos.add(1 * sgn, 0)) &&
+                !attackingMoves.contains(kingsPos.add(2 * sgn, 0));
     }
 
-    private ChessMove checkIfCastles(final Position from, final Position to, ChessMove chessMove) {
-        // check for castles
-        final int posAmount = Math.abs(from.getColumn() - to.getColumn());
+    /**
+     * Checks whether the move was a castles move from the king
+     *
+     * @param from      the king's source position
+     * @param to        the king's destination
+     * @param chessMove the current chess move
+     *
+     * @return {@link ChessMove#CASTLES_SHORT} or {@link ChessMove#CASTLES_LONG} or chessMove if
+     * the move was either not a castles move or the king cannot castle
+     */
+    private ChessMove checkIfCastles(final Square from, final Square to, ChessMove chessMove) {
+        // first check whether the squares are not under attack
+        if (!isOpponentAttackingKingsSquares(from, to)) {
+            return chessMove;
+        }
+        // then check for both castles individually
+        final int posAmount = Math.abs(from.getFile() - to.getFile());
+
+        // check for short castles
         if (posAmount == 2 && getAllowedCastles(isWhite(from), true)) {
             chessMove = ChessMove.CASTLES_SHORT;
-        } else if (posAmount == 3 && getAllowedCastles(isWhite(from), false)) {
+        }
+
+        // check for long castles
+        else if (posAmount == 3 && getAllowedCastles(isWhite(from), false)) {
             chessMove = ChessMove.CASTLES_LONG;
         }
+
         return chessMove;
     }
 
@@ -221,7 +270,7 @@ public class Chessboard {
      * @return an {@link Optional#of(Object)} a chess piece if there's one or
      * {@link Optional#empty()}
      */
-    public Optional<IChessPiece> getPiece(Position square) {
+    public Optional<IChessPiece> getPiece(Square square) {
         if (!containsPiece(square)) {
             return Optional.empty();
         }
@@ -235,8 +284,15 @@ public class Chessboard {
      *
      * @return {@code true} if there's a piece
      */
-    public boolean containsPiece(Position pos) {
-        return getPieceId(pos) != 0;
+    public boolean containsPiece(Square pos) {
+        try {
+            // if there is a piece, the pieceId will not throw an ex
+            getPieceId(pos);
+            return true;
+        } catch (IllegalArgumentException e) {
+            // if there is no piece the getPieceId throws an IllegalArgumentException
+            return false;
+        }
     }
 
     /**
@@ -248,15 +304,22 @@ public class Chessboard {
      *
      * @throws IllegalArgumentException if there's no piece on the position
      */
-    public boolean isWhite(Position pos) throws IllegalArgumentException {
+    public boolean isWhite(Square pos) throws IllegalArgumentException {
         if (!containsPiece(pos)) {
             throw new IllegalArgumentException(format("No piece on %s square!", pos));
         }
         return ChessPieceUtil.isWhite(getPieceId(pos));
     }
 
-    public char getPieceId(Position pos) throws IllegalArgumentException {
-        final char c = board[pos.getRow()][pos.getColumn()];
+    /**
+     * @param pos
+     *
+     * @return
+     *
+     * @throws IllegalArgumentException if there is no piece on the position
+     */
+    public char getPieceId(Square pos) throws IllegalArgumentException {
+        final char c = board[pos.getRank()][pos.getFile()];
         if (!ChessPieceUtil.isPiece(c)) {
             throw new IllegalArgumentException("No piece found on position " + pos);
         }

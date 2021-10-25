@@ -31,7 +31,7 @@ public class PacketLobbyInHandshake implements PacketInLobby {
     }
 
     @Override
-    public void broadcast(final PacketListenerLobby listener) {
+    public void broadcast(final PacketListenerLobby listener) throws InvalidPacketFormatException {
         listener.onHandshake(this);
     }
 

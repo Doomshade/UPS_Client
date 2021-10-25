@@ -74,7 +74,12 @@ public class PacketDeserializer implements Runnable {
 
             // packet is valid and data is read, broadcast it to the listener
             L.info(format("Received %s packet, broadcasting to the listeners...", packet));
-            packet.broadcast(NM.getCurrentListener());
+            try {
+                packet.broadcast(NM.getCurrentListener());
+            } catch (InvalidPacketFormatException e) {
+                L.fatal(e);
+                break;
+            }
         }
         client.disconnect("Attempted to send an invalid packet");
     }

@@ -2,6 +2,7 @@ package jsmahy.ups_client.net.in;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.ResponseCode;
+import jsmahy.ups_client.net.listener.PacketListenerPlay;
 
 public class PacketPlayInDrawOffer implements PacketInPlay {
     private ResponseCode responseCode = ResponseCode.NONE;
@@ -16,7 +17,7 @@ public class PacketPlayInDrawOffer implements PacketInPlay {
     }
 
     @Override
-    public void broadcast(final PacketListenerPlay listener) {
+    public void broadcast(final PacketListenerPlay listener) throws InvalidPacketFormatException {
         listener.onDrawOffer(this);
     }
 

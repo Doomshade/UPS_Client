@@ -30,7 +30,7 @@ public class PacketLobbyInGameStart implements PacketInLobby {
     }
 
     @Override
-    public void broadcast(final PacketListenerLobby listener) {
+    public void broadcast(final PacketListenerLobby listener) throws InvalidPacketFormatException {
         listener.onGameStart(this);
     }
 

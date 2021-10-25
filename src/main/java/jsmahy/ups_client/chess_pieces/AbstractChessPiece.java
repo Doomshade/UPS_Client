@@ -3,7 +3,7 @@ package jsmahy.ups_client.chess_pieces;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.util.ChessPieceUtil;
 import jsmahy.ups_client.util.Pair;
-import jsmahy.ups_client.util.Position;
+import jsmahy.ups_client.util.Square;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -24,8 +24,8 @@ abstract class AbstractChessPiece implements IChessPiece {
         this.black = ChessPieceUtil.toBlack(charId);
     }
 
-    protected Collection<Position> generateMoves(Chessboard chessboard, Position piecePos,
-                                                 Direction direction, int amount) {
+    protected Collection<Square> generateMoves(Chessboard chessboard, Square piecePos,
+                                               Direction direction, int amount) {
         return generateMoves(chessboard, piecePos, direction.vectors, amount);
     }
 
@@ -35,64 +35,79 @@ abstract class AbstractChessPiece implements IChessPiece {
      * @param chessboard the chessboard
      * @param piecePos   the piece position
      * @param vectors    the vectors
+     * @param amount     the amount of squares the piece can move in the vector's direction
      *
-     * @return all valid moves, be it captures or castles
+     * @return all valid moves, be it normal moves, attacking moves, or castles
      */
-    protected Collection<Position> generateMoves(Chessboard chessboard, Position piecePos,
-                                                 Pair<Integer, Integer>[] vectors, int amount) {
-        Collection<Position> positions = new HashSet<>();
-        if (!chessboard.containsPiece(piecePos)) {
-            return positions;
+    protected Collection<Square> generateMoves(Chessboard chessboard,
+                                               Square piecePos,
+                                               Pair<Integer, Integer>[] vectors,
+                                               int amount) {
+        Collection<Square> squares = new HashSet<>();
+        if (amount <= 0 || !chessboard.containsPiece(piecePos)) {
+            return squares;
         }
-        final char givenPieceId = chessboard.getPieceId(piecePos);
-        boolean givenPieceColour = chessboard.isWhite(piecePos);
 
+        final char givenPieceId = chessboard.getPieceId(piecePos);
         for (Pair<Integer, Integer> vector : vectors) {
             // check for all vectors combinations
             for (int i = 0; i < 4; i++) {
                 // multiplies the vector by 0 1 0 1
-                int a = vector.a * (i & 0b1);
+                int row = piecePos.getRank() + vector.a * (i & 0b1);
 
                 // multiplies the vector by 0 0 1 1
-                int b = vector.b * (i & 0b10);
+                int column = piecePos.getFile() + vector.b * (i & 0b10);
 
                 int count = 0;
                 // don't check for invalid positions
-                while (ChessPieceUtil.isValidPosition(a, b) && count++ != amount) {
+                // check until we reach the amount of squares the piece can move
+                while (ChessPieceUtil.isValidPosition(row, column) && count++ != amount) {
                     // generate a new position
-                    Position pos;
-                    try {
-                        pos = new Position((byte) a, (byte) b);
-                    } catch (IllegalArgumentException e) {
-                        // the position is no longer valid, stop searching
-                        break;
-                    }
-                    try {
+                    Square pos = new Square((byte) row, (byte) column);
+
+                    if (chessboard.containsPiece(pos)) {
+                        // a piece was found
                         char targetSquarePieceId = chessboard.getPieceId(pos);
 
-                        // a piece found in the vectors, if the target square is
-                        // the opponents piece, add it to the valid moves
+                        // if the target square is the opponents piece, add it to the valid moves
                         if (!ChessPieceUtil.areSameColours(targetSquarePieceId, givenPieceId)) {
-                            positions.add(pos);
+                            squares.add(pos);
                         }
                         break;
-                    } catch (IllegalArgumentException ignored) {
-                        // no piece was found, add the position and move in the vectors vector
-                        positions.add(pos);
-                        a++;
-                        b++;
+                    } else {
+                        // no piece was found, add the position, and move in the vectors vector
+                        squares.add(pos);
+                        row++;
+                        column++;
                     }
                 }
 
             }
         }
-        return positions;
+        return squares;
     }
 
     @Override
-    public final boolean isValidMove(Chessboard chessboard, Position currentPosition,
-                                     Position destination) {
-        final Collection<Position> validMoves = getValidMoves(chessboard, currentPosition);
+    public Collection<Square> getAttackingSquares(Chessboard chessboard,
+                                                  Square piecesSquare) {
+        Collection<Square> attackingMoves = new HashSet<>();
+
+        // the valid move collection should return both valid moves and attacking moves
+        // we don't even have to check for colours here as if there's a piece on the move's
+        // square that means it's an attacking move of the piece
+        for (Square move : getValidMoves(chessboard, piecesSquare)) {
+            if (chessboard.containsPiece(move)) {
+                attackingMoves.add(move);
+            }
+        }
+
+        return attackingMoves;
+    }
+
+    @Override
+    public final boolean isValidMove(Chessboard chessboard, Square currentSquare,
+                                     Square destination) {
+        final Collection<Square> validMoves = getValidMoves(chessboard, currentSquare);
         if (validMoves == null) {
             throw new UnsupportedOperationException("Moves for this piece were not yet " +
                     "implemented!");

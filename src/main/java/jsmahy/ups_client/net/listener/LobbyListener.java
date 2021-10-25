@@ -1,5 +1,7 @@
 package jsmahy.ups_client.net.listener;
 
+import jsmahy.ups_client.exception.InvalidFENFormatException;
+import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
@@ -21,21 +23,23 @@ public class LobbyListener implements PacketListenerLobby {
     }
 
     @Override
-    public void onHandshake(final PacketLobbyInHandshake packet) {
+    public void onHandshake(final PacketLobbyInHandshake packet) throws
+            InvalidPacketFormatException {
         switch (packet.getResponseCode()) {
             case OK:
                 break;
             case REJECTED:
                 break;
             default:
-                throw new UnsupportedOperationException(
+                throw new InvalidPacketFormatException(
                         String.format("%s response code is not checked for",
                                 packet.getResponseCode()));
         }
     }
 
     @Override
-    public void onGameStart(final PacketLobbyInGameStart packet) {
+    public void onGameStart(final PacketLobbyInGameStart packet)
+            throws InvalidPacketFormatException {
         if (packet.getResponseCode() != ResponseCode.CONNECT) {
             return;
         }
@@ -46,7 +50,11 @@ public class LobbyListener implements PacketListenerLobby {
                     "not send a FEN string to update the board!");
         }
         final Chessboard chessboard = new Chessboard();
-        chessboard.setupBoard(fen);
+        try {
+            chessboard.setupBoard(fen);
+        } catch (InvalidFENFormatException e) {
+            throw new InvalidPacketFormatException(e);
+        }
 
         // set up the game and change the state
         final PlayerConnection player =

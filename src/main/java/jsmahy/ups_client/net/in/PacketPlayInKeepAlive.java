@@ -1,6 +1,7 @@
 package jsmahy.ups_client.net.in;
 
-import java.io.IOException;
+import jsmahy.ups_client.exception.InvalidPacketFormatException;
+import jsmahy.ups_client.net.listener.PacketListenerPlay;
 
 /**
  * @author Jakub Šmrha
@@ -14,7 +15,7 @@ public class PacketPlayInKeepAlive implements PacketInPlay {
     }
 
     @Override
-    public void broadcast(final PacketListenerPlay listener) {
+    public void broadcast(final PacketListenerPlay listener) throws InvalidPacketFormatException {
         listener.keepAlive(this);
     }
 }
