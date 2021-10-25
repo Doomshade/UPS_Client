@@ -8,9 +8,6 @@ import jsmahy.ups_client.util.Square;
 import java.util.Collection;
 import java.util.HashSet;
 
-/**
- * The type Pawn.
- */
 class Pawn extends AbstractChessPiece {
 
     Pawn() {
@@ -21,7 +18,6 @@ class Pawn extends AbstractChessPiece {
     public Collection<Square> getValidMoves(Chessboard chessboard, Square currentSquare) {
         Collection<Square> validMoves = new HashSet<>();
 
-        checkIsPawn(chessboard, currentSquare);
         addMoves(chessboard, currentSquare, validMoves);
         addAttackingMoves(chessboard, currentSquare, validMoves);
         return validMoves;
@@ -38,8 +34,8 @@ class Pawn extends AbstractChessPiece {
                                    Collection<Square> validMoves) {
         // TODO add en passant
         int direction = getDirection(chessboard, currentSquare);
-        Square right = currentSquare.add(direction, 1);
         Square left = currentSquare.add(direction, -1);
+        Square right = currentSquare.add(direction, 1);
 
         addAttackingMove(chessboard, currentSquare, validMoves, left);
         addAttackingMove(chessboard, currentSquare, validMoves, right);
@@ -48,17 +44,26 @@ class Pawn extends AbstractChessPiece {
     /**
      * Adds an attacking move of the pawn to the collection.
      *
-     * @param chessboard    the chessboard
-     * @param currentSquare the position of the pawn
-     * @param validMoves    the collection
-     * @param attackingPos  the attacking position to add
+     * @param chessboard     the chessboard
+     * @param currentSquare  the position of the pawn
+     * @param validMoves     the collection
+     * @param attackedSquare the attacked square to add
      */
     private void addAttackingMove(final Chessboard chessboard, final Square currentSquare,
                                   final Collection<Square> validMoves,
-                                  final Square attackingPos) {
+                                  final Square attackedSquare) {
+        char attackedPieceId;
+        try {
+            attackedPieceId = chessboard.getPieceId(attackedSquare);
+        } catch (IllegalArgumentException e) {
+            // no piece on the attacked square
+            return;
+        }
+
+        // check whether it's an opposite coloured piece
         if (!ChessPieceUtil.areSameColours(chessboard.getPieceId(currentSquare),
-                chessboard.getPieceId(attackingPos))) {
-            validMoves.add(attackingPos);
+                attackedPieceId)) {
+            validMoves.add(attackedSquare);
         }
     }
 
@@ -132,22 +137,5 @@ class Pawn extends AbstractChessPiece {
 
         // is black and 7th rank (row)
         return !chessboard.isWhite(currentSquare) && currentSquare.getRank() == 6;
-    }
-
-    /**
-     * Checks whether the piece on the position is a pawn
-     *
-     * @param chessboard    the chessboard
-     * @param currentSquare the position
-     *
-     * @throws IllegalArgumentException if the piece is not a pawn and of correct colour
-     */
-    private void checkIsPawn(final Chessboard chessboard, final Square currentSquare)
-            throws IllegalArgumentException {
-        if (!ChessPieceUtil.isCorrectPieceOnSquare(chessboard, ChessPieceEnum.PAWN,
-                currentSquare)) {
-            throw new IllegalArgumentException(
-                    String.format("The piece on position %s is not a pawn!", currentSquare));
-        }
     }
 }
