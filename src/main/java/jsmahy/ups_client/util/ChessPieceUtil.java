@@ -43,7 +43,7 @@ public final class ChessPieceUtil {
      */
     public static boolean isWhite(char c) throws IllegalArgumentException {
         validateId(c);
-        return Character.isUpperCase(c);
+        return Character.isLowerCase(c);
     }
 
     /**
@@ -79,7 +79,7 @@ public final class ChessPieceUtil {
      */
     public static char toBlack(char c) {
         validateId(c);
-        return Character.toLowerCase(c);
+        return Character.toUpperCase(c);
     }
 
     /**
@@ -136,7 +136,7 @@ public final class ChessPieceUtil {
      */
     public static char toWhite(char c) {
         validateId(c);
-        return Character.toUpperCase(c);
+        return Character.toLowerCase(c);
     }
 
     /**

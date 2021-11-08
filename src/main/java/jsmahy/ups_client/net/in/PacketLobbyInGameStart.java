@@ -3,13 +3,14 @@ package jsmahy.ups_client.net.in;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.ResponseCode;
 import jsmahy.ups_client.net.listener.PacketListenerLobby;
+import jsmahy.ups_client.util.Util;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class PacketLobbyInGameStart implements PacketInLobby {
     private ResponseCode responseCode = null;
     private boolean white = true;
     private String opponentName = "";
-    private String fenString = "";
+    private String fenString = Util.START_FEN;
 
     @Override
     public void read(final String[] in) throws InvalidPacketFormatException {
@@ -20,12 +21,12 @@ public class PacketLobbyInGameStart implements PacketInLobby {
         }
 
         if (this.responseCode == ResponseCode.CONNECT) {
-            if (in.length < 4) {
+            if (in.length < 3) {
                 throw new InvalidPacketFormatException("Invalid packet length received!");
             }
             this.white = in[1].equalsIgnoreCase("W");
             this.opponentName = in[2];
-            this.fenString = in[3];
+            //this.fenString = in[3];
         }
     }
 

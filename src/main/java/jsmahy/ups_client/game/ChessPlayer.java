@@ -34,7 +34,8 @@ public class ChessPlayer {
      */
     public boolean isWhite() throws IllegalStateException {
         if (!hasColour) {
-            throw new IllegalStateException("The chess player %s has no colour set!");
+            throw new IllegalStateException(
+                    String.format("The chess player %s has no colour set!", name));
         }
         return white;
     }

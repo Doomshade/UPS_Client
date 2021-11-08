@@ -152,7 +152,7 @@ public enum ProtocolState {
         }
         putId(direction, packetClass, packetId);
         putClass(direction, packetClass, packetId);
-        L.debug(format("Registered %s packet in %s direction with id %d",
+        L.debug(format("Registered %s packet in %s direction with id 0x%x",
                 packetClass.getSimpleName(), direction, packetId));
     }
 

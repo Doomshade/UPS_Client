@@ -31,7 +31,7 @@ public final class Chessboard {
     private final boolean[] allowedCastles = new boolean[4];
 
     /**
-     * Sets up the board to the default position once initialized.
+     * Instantiates a new chessboard
      */
     public Chessboard() {
         Arrays.fill(allowedCastles, true);
@@ -312,16 +312,18 @@ public final class Chessboard {
     }
 
     /**
-     * @param pos
+     * Returns the piece ID on the given square.
      *
-     * @return
+     * @param pos the square to look for
      *
-     * @throws IllegalArgumentException if there is no piece on the position
+     * @return the piece ID
+     *
+     * @throws IllegalArgumentException if there is no piece on the square
      */
     public char getPieceId(Square pos) throws IllegalArgumentException {
         final char c = board[pos.getRank()][pos.getFile()];
         if (!ChessPieceUtil.isPiece(c)) {
-            throw new IllegalArgumentException("No piece found on position " + pos);
+            throw new IllegalArgumentException("No piece found on square " + pos);
         }
         return c;
     }

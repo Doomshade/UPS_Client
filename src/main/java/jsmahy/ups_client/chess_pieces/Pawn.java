@@ -1,14 +1,18 @@
 package jsmahy.ups_client.chess_pieces;
 
+import jsmahy.ups_client.Main;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.util.ChessPieceUtil;
 import jsmahy.ups_client.util.Pair;
 import jsmahy.ups_client.util.Square;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Collection;
 import java.util.HashSet;
 
 class Pawn extends AbstractChessPiece {
+    private static final Logger L = LogManager.getLogger(Pawn.class);
 
     Pawn() {
         super('p');
@@ -59,7 +63,8 @@ class Pawn extends AbstractChessPiece {
             // no piece on the attacked square
             return;
         }
-
+        L.debug(String.format("Found %c piece on square %s, adding to attacking moves",
+                attackedPieceId, attackedSquare));
         // check whether it's an opposite coloured piece
         if (!ChessPieceUtil.areSameColours(chessboard.getPieceId(currentSquare),
                 attackedPieceId)) {
@@ -79,15 +84,20 @@ class Pawn extends AbstractChessPiece {
 
         // if the piece is white the pawn moves up (+1), black moves down (-1)
         int direction = getDirection(chessboard, currentSquare);
-
+        L.debug(String.format("Adding pieces for %s in %s direction", currentSquare,
+                direction > 0 ? "upwards" : "downwards"));
         // check if there's a piece one square up
         // if there is, don't add moves
-        if (chessboard.containsPiece(currentSquare.add(direction, 0))) {
+        final Square add = currentSquare.add(direction, 0);
+        if (chessboard.containsPiece(add)) {
+            L.debug(String.format("Found %c piece on square %s, no moves added",
+                    chessboard.getPieceId(add), add));
             return;
         }
 
         // check for the two-square move
         if (canMoveTwoSquares(chessboard, currentSquare)) {
+            L.debug("Can move by two squares, adding it to valid moves");
             byte by = (byte) (2 * getDirection(chessboard, currentSquare));
             validMoves.add(currentSquare.add(by, 0));
         }

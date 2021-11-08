@@ -40,6 +40,7 @@ public class PacketDeserializer implements Runnable {
             final String s;
             try {
                 s = readPacket();
+                L.debug(String.format("Received %s", s));
             } catch (IOException | InvalidPacketFormatException e) {
                 L.fatal(e);
                 break;
@@ -50,6 +51,7 @@ public class PacketDeserializer implements Runnable {
             final int packetId;
             try {
                 packetId = parsePacketId(s);
+                L.debug("Deserialized packet ID: " + packetId);
             } catch (NumberFormatException e) {
                 L.fatal("Could not read the packet ID!", e);
                 break;
@@ -59,6 +61,7 @@ public class PacketDeserializer implements Runnable {
             final PacketIn<? extends PacketListener> packet;
             try {
                 packet = getPacket(packetId);
+                L.debug(format("Found packet with ID %d and state %s", packetId, NM.getState()));
             } catch (InvalidPacketFormatException e) {
                 L.fatal("Received packet was not found in the lookup table!", e);
                 break;
@@ -110,16 +113,12 @@ public class PacketDeserializer implements Runnable {
      */
     private PacketIn<? extends PacketListener> getPacket(final int packetId)
             throws InvalidPacketFormatException {
-        final PacketIn<? extends PacketListener> packet = (PacketIn<? extends PacketListener>)
+        return (PacketIn<? extends PacketListener>)
                 NM.getState().getPacket(PacketDirection.CLIENT_BOUND, packetId);
-        L.debug(format("Found packet with ID %d and state %s", packetId, NM.getState()));
-        return packet;
     }
 
     private int parsePacketId(final String s) throws NumberFormatException {
-        final int packetId = Integer.parseUnsignedInt(s.substring(0, 2), 16);
-        L.debug("Deserialized packet ID: " + packetId);
-        return packetId;
+        return Integer.parseUnsignedInt(s.substring(0, 2), 16);
     }
 
     private String readPacket() throws IOException, InvalidPacketFormatException {
