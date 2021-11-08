@@ -21,12 +21,12 @@ public class PacketLobbyInGameStart implements PacketInLobby {
         }
 
         if (this.responseCode == ResponseCode.CONNECT) {
-            if (in.length < 3) {
+            if (in.length < 4) {
                 throw new InvalidPacketFormatException("Invalid packet length received!");
             }
             this.white = in[1].equalsIgnoreCase("W");
             this.opponentName = in[2];
-            //this.fenString = in[3];
+            this.fenString = in[3];
         }
     }
 
