@@ -7,7 +7,7 @@ import javafx.stage.Stage;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
-import jsmahy.ups_client.net.listener.impl.PlayerConnection;
+import jsmahy.ups_client.net.listener.impl.PlayListener;
 import jsmahy.ups_client.util.Square;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +34,7 @@ public class Main extends Application {
 
     private static void connectionTest() throws IOException {
         ChessPlayer white = new ChessPlayer("Testshade");
-        PlayerConnection c = new PlayerConnection(white);
+        PlayListener c = new PlayListener(white);
         NetworkManager.getInstance().setup(c, InetAddress.getLocalHost().getHostAddress(), 5000);
         c.disconnect("No reason");
     }
@@ -63,7 +63,7 @@ public class Main extends Application {
     }
 
     private void testPackets() throws IOException {
-        PlayerConnection con = new PlayerConnection(new ChessPlayer("test"));
+        PlayListener con = new PlayListener(new ChessPlayer("test"));
 
         File f = new File("C:\\Temp\\ups\\testt.txt");
         BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(f));

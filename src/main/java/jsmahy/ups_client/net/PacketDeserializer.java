@@ -3,7 +3,7 @@ package jsmahy.ups_client.net;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.in.PacketIn;
 import jsmahy.ups_client.net.listener.PacketListener;
-import jsmahy.ups_client.net.listener.impl.PlayerConnection;
+import jsmahy.ups_client.net.listener.impl.PlayListener;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,11 +32,11 @@ public class PacketDeserializer implements Runnable {
      * The messages from server that are received by this input stream.
      */
     private final InputStream in;
-    private final PlayerConnection client;
+    private final PlayListener client;
     private final StringBuilder sb = new StringBuilder(PACKET_HEADER_LENGTH);
     private final BufferedPacket bufferedPacket = new BufferedPacket();
 
-    public PacketDeserializer(final InputStream in, final PlayerConnection client) {
+    public PacketDeserializer(final InputStream in, final PlayListener client) {
         this.in = in;
         this.client = client;
         final String message = "TESTERONIKIASD\n";
@@ -63,7 +63,7 @@ public class PacketDeserializer implements Runnable {
                         L.debug("Received " + bufferedPacket);
                         // TODO call the packet ig
                         final PacketIn<? extends PacketListener> p = (PacketIn<? extends PacketListener>)
-                                NM.getState().getPacket(PacketDirection.CLIENT_BOUND, bufferedPacket.getPacketId());
+                                NM.getState().getPacket(bufferedPacket.getPacketId());
                         p.broadcast(NM.getCurrentListener());
                         bufferedPacket.reset();
                     } else {
@@ -102,7 +102,6 @@ public class PacketDeserializer implements Runnable {
             throw new InvalidPacketFormatException("No values received after packet ID!");
         }
         L.debug(format("Parsing %s arguments...", String.join(", ", split)));
-        packet.read(split);
     }
 
     /**
@@ -114,7 +113,7 @@ public class PacketDeserializer implements Runnable {
     private PacketIn<? extends PacketListener> getPacket(final int packetId)
             throws InvalidPacketFormatException {
         return (PacketIn<? extends PacketListener>)
-                NM.getState().getPacket(PacketDirection.CLIENT_BOUND, packetId);
+                NM.getState().getPacket(packetId);
     }
 
     private int parsePacketId(final String s) throws NumberFormatException {

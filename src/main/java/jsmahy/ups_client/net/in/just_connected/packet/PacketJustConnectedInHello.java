@@ -19,16 +19,14 @@ public class PacketJustConnectedInHello implements PacketInJustConnected {
     private String reason = "";
 
     @Override
-    public void read(final String[] in) throws InvalidPacketFormatException {
+    public void read(final String in) throws InvalidPacketFormatException {
         // we only need the last bit right now as we only have two response codes
         try {
-            this.responseCode = ResponseCode.getResponseCode(in[0]);
+            this.responseCode = ResponseCode.getResponseCode(in);
         } catch (IllegalArgumentException e) {
             throw new InvalidPacketFormatException(e);
         }
-        if (in.length > 1) {
-            reason = in[1];
-        }
+
     }
 
     @Override

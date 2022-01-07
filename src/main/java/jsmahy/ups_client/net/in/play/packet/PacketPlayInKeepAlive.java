@@ -12,7 +12,8 @@ import jsmahy.ups_client.net.listener.PacketListenerPlay;
 public class PacketPlayInKeepAlive implements PacketInPlay {
 
     @Override
-    public void read(final String[] in) {
+    public void read(final String in) {
+        // TODO
     }
 
     @Override

@@ -1,7 +1,7 @@
 package jsmahy.ups_client.net.listener;
 
 /**
- * @author Doomshade
+ * @author Jakub Šmrha
  * @version 1.0
  * @since 1.0
  */

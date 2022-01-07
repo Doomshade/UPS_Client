@@ -20,7 +20,7 @@ public interface PacketIn<T extends PacketListener> extends Packet {
      *
      * @throws InvalidPacketFormatException if thr received packet has an invalid format
      */
-    void read(String[] in) throws InvalidPacketFormatException;
+    void read(String in) throws InvalidPacketFormatException;
 
     void broadcast(T listener) throws InvalidPacketFormatException;
 }

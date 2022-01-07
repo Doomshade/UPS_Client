@@ -1,9 +1,9 @@
 package jsmahy.ups_client.net;
 
-import jsmahy.ups_client.net.listener.impl.LobbyListener;
+import jsmahy.ups_client.net.listener.impl.JustConnectedListener;
 import jsmahy.ups_client.net.listener.PacketListener;
 import jsmahy.ups_client.net.listener.PacketListenerPlay;
-import jsmahy.ups_client.net.listener.impl.PlayerConnection;
+import jsmahy.ups_client.net.listener.impl.PlayListener;
 import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
@@ -23,8 +23,8 @@ import static java.lang.String.format;
  * @author Jakub Šmrha
  * @version 1.0
  * @see PacketListener
- * @see LobbyListener
- * @see PlayerConnection
+ * @see JustConnectedListener
+ * @see PlayListener
  * @since 1.0
  */
 public final class NetworkManager {
@@ -38,7 +38,7 @@ public final class NetworkManager {
     private static final Map<ProtocolState, PacketListener> LISTENERS = new HashMap<>() {
         // test
         {
-            put(ProtocolState.JUST_CONNECTED, new LobbyListener());
+            put(ProtocolState.JUST_CONNECTED, new JustConnectedListener());
         }
     };
 
@@ -84,7 +84,7 @@ public final class NetworkManager {
      * @throws IOException           if the connection could not be established
      * @throws IllegalStateException if the connection has already been established
      */
-    public void setup(@NotNull final PlayerConnection client, @NotNull final String host, final int port)
+    public void setup(@NotNull final PlayListener client, @NotNull final String host, final int port)
             throws IOException, IllegalStateException {
         if (isConnectionSuccessful()) {
             throw new IllegalStateException("Already connected to a server!");
@@ -99,7 +99,7 @@ public final class NetworkManager {
         L.info("Successfully initialized connection");
     }
 
-    private void startListening(final InputStream in, final PlayerConnection client) {
+    private void startListening(final InputStream in, final PlayListener client) {
         Thread readThread = new Thread(new PacketDeserializer(in, client));
         readThread.setDaemon(true);
         readThread.start();
@@ -113,7 +113,7 @@ public final class NetworkManager {
      *
      * @throws IllegalStateException if the streams have already been initialized
      */
-    public void setupIO(@NotNull PlayerConnection client, @NotNull final InputStream in,
+    public void setupIO(@NotNull PlayListener client, @NotNull final InputStream in,
                         @NotNull final OutputStream out)
             throws IllegalStateException {
         if (isInitializedStreams()) {

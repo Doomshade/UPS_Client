@@ -10,11 +10,11 @@ import jsmahy.ups_client.net.listener.PacketListenerJustConnected;
  * @version 1.0
  * @since 1.0
  */
-public class LobbyListener implements PacketListenerJustConnected {
+public class JustConnectedListener implements PacketListenerJustConnected {
 
     private final NetworkManager netMan = NetworkManager.getInstance();
 
-    public LobbyListener() {
+    public JustConnectedListener() {
     }
 
     @Override

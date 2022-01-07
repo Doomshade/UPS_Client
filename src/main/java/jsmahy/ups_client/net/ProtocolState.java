@@ -2,14 +2,16 @@ package jsmahy.ups_client.net;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.in.just_connected.packet.PacketJustConnectedInHello;
-import jsmahy.ups_client.net.in.play.packet.PacketPlayInDrawOffer;
-import jsmahy.ups_client.net.in.play.packet.PacketPlayInKeepAlive;
-import jsmahy.ups_client.net.in.play.packet.PacketPlayInMove;
-import jsmahy.ups_client.net.out.PacketOutDisconnect;
+import jsmahy.ups_client.net.in.logged_in.packet.PacketLoggedInInJoinQueue;
+import jsmahy.ups_client.net.in.play.packet.*;
+import jsmahy.ups_client.net.in.queue.packet.PacketQueueInGameStart;
 import jsmahy.ups_client.net.out.just_connected.PacketJustConnectedOutHello;
-import jsmahy.ups_client.net.out.logged_in.PacketLoggedInOutQueue;
-import jsmahy.ups_client.net.out.play.PacketPlayOutKeepAlive;
+import jsmahy.ups_client.net.out.logged_in.PacketLoggedInOutJoinQueue;
+import jsmahy.ups_client.net.out.play.PacketPlayOutDrawOffer;
+import jsmahy.ups_client.net.out.play.PacketPlayOutMessage;
 import jsmahy.ups_client.net.out.play.PacketPlayOutMove;
+import jsmahy.ups_client.net.out.play.PacketPlayOutResign;
+import jsmahy.ups_client.net.out.queue.PacketQueueOutLeaveQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,47 +31,65 @@ public enum ProtocolState {
     JUST_CONNECTED {
         {
             // server bound
-            register(PacketDirection.SERVER_BOUND, PacketJustConnectedOutHello.class, 0x00);
+            register(PacketJustConnectedOutHello.class, JUST_CONNECTED_OFFSET);
 
             // client bound
-            register(PacketDirection.CLIENT_BOUND, PacketJustConnectedInHello.class, 0x80);
+            register(PacketJustConnectedInHello.class, JUST_CONNECTED_OFFSET + PACKET_IN_OFFSET);
         }
     },
     LOGGED_IN {
         {
             // server bound
-            register(PacketDirection.SERVER_BOUND, PacketLoggedInOutQueue.class, 0x20);
+            register(PacketLoggedInOutJoinQueue.class, LOGGED_IN_OFFSET);
 
+            // client bound
+            register(PacketLoggedInInJoinQueue.class, LOGGED_IN_OFFSET + PACKET_IN_OFFSET);
         }
     },
     QUEUE {
         {
+            // server bound
+            register(PacketQueueOutLeaveQueue.class, QUEUE_OFFSET);
+
+            // client bound
+            register(PacketQueueInGameStart.class, QUEUE_OFFSET + PACKET_IN_OFFSET);
         }
     },
     PLAY {
         {
-            register(PacketDirection.SERVER_BOUND, PacketPlayOutMove.class, 0x80);
-            register(PacketDirection.SERVER_BOUND, PacketPlayOutKeepAlive.class, 0x81);
-            register(PacketDirection.SERVER_BOUND, PacketOutDisconnect.class, 0x82);
+            // server bound
+            register(PacketPlayOutMove.class, PLAY_OFFSET);
+            register(PacketPlayOutDrawOffer.class, PLAY_OFFSET + 0x01);
+            register(PacketPlayOutResign.class, PLAY_OFFSET + 0x02);
+            register(PacketPlayOutMessage.class, PLAY_OFFSET + 0x03);
 
-            register(PacketDirection.CLIENT_BOUND, PacketPlayInMove.class, 0xC0);
-            register(PacketDirection.CLIENT_BOUND, PacketPlayInKeepAlive.class, 0xC1);
-            register(PacketDirection.CLIENT_BOUND, PacketPlayInDrawOffer.class, 0xC2);
+            // client bound
+            register(PacketPlayInMove.class, PLAY_OFFSET + PACKET_IN_OFFSET);
+            register(PacketPlayInDrawOffer.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x01);
+            register(PacketPlayInGameFinish.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x03);
+            register(PacketPlayInMessage.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x04);
+            register(PacketPlayInKeepAlive.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x05);
         }
     };
 
+    private static final int JUST_CONNECTED_OFFSET = 0x00;
+    private static final int LOGGED_IN_OFFSET = 0x20;
+    private static final int QUEUE_OFFSET = 0x40;
+    private static final int PLAY_OFFSET = 0x60;
+    private static final int PACKET_IN_OFFSET = 0x80;
+
     private static Logger L = null;
-    // a BiMap would be nice here
+
     /**
      * The ID-packet map.
      */
-    private final Map<PacketDirection, Map<Integer, Class<? extends Packet>>>
+    private final Map<ProtocolState, Map<Integer, Class<? extends Packet>>>
             packetRegistryById = new HashMap<>();
 
     /**
      * The packet-ID map.
      */
-    private final Map<PacketDirection, Map<Class<? extends Packet>, Integer>>
+    private final Map<ProtocolState, Map<Class<? extends Packet>, Integer>>
             packetRegistryByClass = new HashMap<>();
 
 
@@ -100,27 +120,25 @@ public enum ProtocolState {
     /**
      * Attempts to instantiate a packet.
      *
-     * @param direction the packet direction
-     * @param packetId  the packet id
+     * @param packetId the packet id
      * @return an instance of a packet
      * @throws InvalidPacketFormatException if the packet format is incorrect
      * @throws IllegalStateException        if the packet class could not be instantiated with the
      *                                      default constructor
      */
-    public Packet getPacket(PacketDirection direction, int packetId) throws
+    public Packet getPacket(int packetId) throws
             InvalidPacketFormatException {
-        final Map<Integer, Class<? extends Packet>> registry = packetRegistryById.get(direction);
+        final Map<Integer, Class<? extends Packet>> registry = packetRegistryById.get(this);
         if (registry == null || !registry.containsKey(packetId)) {
             throw new InvalidPacketFormatException(
-                    format("No packet with ID %d and direction %s found in %s state!", packetId,
-                            direction, this));
+                    format("No packet with ID %d found in %s state!", packetId, this));
         }
 
         try {
             return registry.get(packetId).getConstructor().newInstance();
         } catch (Exception e) {
-            String msg = "Could not instantiate a packet with ID %d, direction %s, and state %s";
-            L.error(format(msg, packetId, direction, this), e);
+            String msg = "Could not instantiate a packet with ID %d, and state %s";
+            L.error(format(msg, packetId, this), e);
             throw new IllegalStateException(msg, e);
         }
     }
@@ -148,67 +166,64 @@ public enum ProtocolState {
     /**
      * Registers a packet.
      *
-     * @param direction   the packet direction
      * @param packetClass the packet class
      * @param packetId    the packet id
      */
-    protected void register(PacketDirection direction, Class<? extends Packet> packetClass,
+    protected void register(Class<? extends Packet> packetClass,
                             int packetId) {
         if (L == null) {
             L = LogManager.getLogger(ProtocolState.class);
         }
-        putId(direction, packetClass, packetId);
-        putClass(direction, packetClass, packetId);
-        L.debug(format("Registered %s packet in %s direction with id 0x%x",
-                packetClass.getSimpleName(), direction, packetId));
+        putId(packetClass, packetId);
+        putClass(packetClass, packetId);
+        L.debug(format("Registered %s packet with id 0x%x",
+                packetClass.getSimpleName(), packetId));
     }
 
     /**
      * Registers a packet in the class-id map.
      *
-     * @param direction   the packet direction
      * @param packetClass the packet's class
      * @param packetId    the packet id
      */
-    private void putClass(final PacketDirection direction,
-                          final Class<? extends Packet> packetClass,
+    private void putClass(final Class<? extends Packet> packetClass,
                           final int packetId) {
-        putPacket(packetRegistryByClass, direction, packetClass, packetId);
+        putPacket(packetRegistryByClass, this, packetClass, packetId);
 
     }
 
     /**
      * Registers a packet in the id-class map.
      *
-     * @param direction   the packet direction
      * @param packetClass the packet's class
      * @param packetId    the packet id
      */
-    private void putId(final PacketDirection direction, final Class<? extends Packet> packetClass,
+    private void putId(final Class<? extends Packet> packetClass,
                        final int packetId) {
-        putPacket(packetRegistryById, direction, packetId, packetClass);
+        putPacket(packetRegistryById, this, packetId, packetClass);
     }
 
     /**
      * Puts a packet in the given map.
      *
-     * @param map       the map
-     * @param direction the direction
-     * @param key       the key
-     * @param value     the value
-     * @param <K>       the key type
-     * @param <V>       the value type
+     * @param map     the map
+     * @param mainKey the main key
+     * @param key     the key
+     * @param value   the value
+     * @param <MK>    the main key type
+     * @param <K>     the key type
+     * @param <V>     the value type
      * @throws IllegalStateException if the packet has already been registered in the map
      */
-    private <K, V> void putPacket(Map<PacketDirection, Map<K, V>> map, PacketDirection direction,
-                                  K key, V value) throws IllegalStateException {
-        final Map<K, V> m = map.getOrDefault(direction, new HashMap<>());
+    private <MK, K, V> void putPacket(Map<MK, Map<K, V>> map, MK mainKey,
+                                      K key, V value) throws IllegalStateException {
+        final Map<K, V> m = map.getOrDefault(mainKey, new HashMap<>());
         final V prev = m.putIfAbsent(key, value);
         if (prev != null) {
             throw new IllegalStateException(format("Attempted to register a packet in a map " +
-                            "(key=%s, value=%s) in %s direction, but it already exists!", key,
-                    value, direction));
+                            "(key=%s, value=%s) in %s state, but it already exists!", key,
+                    value, mainKey));
         }
-        map.putIfAbsent(direction, m);
+        map.putIfAbsent(mainKey, m);
     }
 }

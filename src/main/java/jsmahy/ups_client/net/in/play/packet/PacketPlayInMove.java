@@ -16,40 +16,21 @@ public class PacketPlayInMove implements PacketInPlay {
     }
 
     @Override
-    public void read(String[] in) throws InvalidPacketFormatException {
+    public void read(String in) throws InvalidPacketFormatException {
+        // the move was invalid
+        if (in.length() == 0) {
+            responseCode = ResponseCode.REJECTED;
+            return;
+        }
+        if (in.length() != 4) {
+            throw new InvalidPacketFormatException("The packet length is invalid!");
+        }
         try {
-            this.responseCode = ResponseCode.getResponseCode(in[0]);
+            this.from = Square.fromString(in.substring(0, 2));
+            this.to = Square.fromString(in.substring(2, 4));
         } catch (IllegalArgumentException e) {
             throw new InvalidPacketFormatException(e);
         }
-
-        // the server sent us back that the move was valid
-        if (this.responseCode == ResponseCode.OK) {
-            return;
-        }
-        if (in.length < 3) {
-            throw new InvalidPacketFormatException("Invalid packet size received!");
-        }
-        try {
-            this.from = Square.fromString(in[1]);
-            this.to = Square.fromString(in[2]);
-        } catch (IllegalArgumentException e) {
-            throw new InvalidPacketFormatException(e);
-        }
-
-        /*byte response = (byte) (in.readByte() & 0b11);
-        responseCode = ResponseCode.values()[response];
-        if (responseCode == ResponseCode.OK) {
-            return;
-        }
-        short position = in.readShort();
-        byte fromX = (byte) ((position >> 9) & 0b111);
-        byte fromY = (byte) ((position >> 6) & 0b111);
-        byte toX = (byte) ((position >> 3) & 0b111);
-        byte toY = (byte) (position & 0b111);
-
-        from = new Position(fromX, fromY);
-        to = new Position(toX, toY);*/
     }
 
     @Override

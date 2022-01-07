@@ -1,13 +1,13 @@
 package jsmahy.ups_client.game;
 
 import jsmahy.ups_client.net.NetworkManager;
-import jsmahy.ups_client.net.listener.impl.PlayerConnection;
+import jsmahy.ups_client.net.listener.impl.PlayListener;
 import jsmahy.ups_client.net.out.play.PacketPlayOutMove;
 import jsmahy.ups_client.util.Square;
 
 public final class ChessGame {
     private final Chessboard chessboard;
-    private final PlayerConnection client;
+    private final PlayListener client;
     private final ChessPlayer opponent;
 
     private boolean clientToMove = true;
@@ -19,7 +19,7 @@ public final class ChessGame {
      * @param client     the player
      * @param opponent   the opponent
      */
-    public ChessGame(Chessboard chessboard, PlayerConnection client, ChessPlayer opponent,
+    public ChessGame(Chessboard chessboard, PlayListener client, ChessPlayer opponent,
                      boolean clientIsWhite) {
         this.chessboard = chessboard;
         this.client = client;
@@ -51,7 +51,7 @@ public final class ChessGame {
         }
     }
 
-    public PlayerConnection getClient() {
+    public PlayListener getClient() {
         return client;
     }
 

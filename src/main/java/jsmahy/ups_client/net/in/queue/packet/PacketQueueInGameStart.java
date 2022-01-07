@@ -14,21 +14,9 @@ public class PacketQueueInGameStart implements PacketInQueue {
     private String fenString = Util.START_FEN;
 
     @Override
-    public void read(String[] in) throws InvalidPacketFormatException {
-        try {
-            this.responseCode = ResponseCode.getResponseCode(in[0]);
-        } catch (IllegalArgumentException e) {
-            throw new InvalidPacketFormatException(e);
-        }
-
-        if (this.responseCode == ResponseCode.CONNECT) {
-            if (in.length < 4) {
-                throw new InvalidPacketFormatException("Invalid packet length received!");
-            }
-            this.white = in[1].equalsIgnoreCase("W");
-            this.opponentName = in[2];
-            this.fenString = in[3];
-        }
+    public void read(String in) throws InvalidPacketFormatException {
+        this.white = in.toUpperCase().charAt(0) == '0';
+        this.opponentName = in.substring(1);
     }
 
     @Override

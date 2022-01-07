@@ -9,9 +9,9 @@ public class PacketPlayInDrawOffer implements PacketInPlay {
     private ResponseCode responseCode = ResponseCode.NONE;
 
     @Override
-    public void read(final String[] in) throws InvalidPacketFormatException {
+    public void read(final String in) throws InvalidPacketFormatException {
         try {
-            this.responseCode = ResponseCode.getResponseCode(in[0]);
+            this.responseCode = ResponseCode.getResponseCode(in);
         } catch (IllegalArgumentException e) {
             throw new InvalidPacketFormatException(e);
         }

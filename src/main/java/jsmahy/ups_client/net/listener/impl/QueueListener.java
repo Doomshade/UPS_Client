@@ -29,8 +29,8 @@ public class QueueListener implements PacketListenerQueue {
         }
 
         // set up the game and change the state
-        final PlayerConnection player =
-                new PlayerConnection(new ChessPlayer("Testshade"));
+        final PlayListener player =
+                new PlayListener(new ChessPlayer("Testshade"));
         final ChessPlayer opponent = new ChessPlayer(packet.getOpponentName());
         ChessGame game = new ChessGame(chessboard, player, opponent, packet.isWhite());
         player.startGame(game);
