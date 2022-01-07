@@ -1,15 +1,16 @@
-package jsmahy.ups_client.net.listener;
+package jsmahy.ups_client.net.listener.impl;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.ProtocolState;
-import jsmahy.ups_client.net.in.PacketPlayInDrawOffer;
-import jsmahy.ups_client.net.in.PacketPlayInKeepAlive;
-import jsmahy.ups_client.net.in.PacketPlayInMove;
+import jsmahy.ups_client.net.in.play.packet.PacketPlayInDrawOffer;
+import jsmahy.ups_client.net.in.play.packet.PacketPlayInKeepAlive;
+import jsmahy.ups_client.net.in.play.packet.PacketPlayInMove;
+import jsmahy.ups_client.net.listener.PacketListenerPlay;
 import jsmahy.ups_client.net.out.PacketOutDisconnect;
-import jsmahy.ups_client.net.out.PacketPlayOutKeepAlive;
+import jsmahy.ups_client.net.out.play.PacketPlayOutKeepAlive;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

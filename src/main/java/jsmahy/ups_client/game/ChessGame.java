@@ -1,8 +1,8 @@
 package jsmahy.ups_client.game;
 
 import jsmahy.ups_client.net.NetworkManager;
-import jsmahy.ups_client.net.listener.PlayerConnection;
-import jsmahy.ups_client.net.out.PacketPlayOutMove;
+import jsmahy.ups_client.net.listener.impl.PlayerConnection;
+import jsmahy.ups_client.net.out.play.PacketPlayOutMove;
 import jsmahy.ups_client.util.Square;
 
 public final class ChessGame {

@@ -3,18 +3,22 @@ package jsmahy.ups_client.net;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.in.PacketIn;
 import jsmahy.ups_client.net.listener.PacketListener;
-import jsmahy.ups_client.net.listener.PlayerConnection;
+import jsmahy.ups_client.net.listener.impl.PlayerConnection;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import static java.lang.String.format;
 
 public class PacketDeserializer implements Runnable {
-    public static final int MAX_PACKET_SIZE = 512;
+    private static final String PACKET_MAGIC = "CHESS";
+    private static final int PACKET_HEADER_LENGTH = PACKET_MAGIC.length() + 5;
+    private static final String PACKET_FORMAT = "%02x%03d%s";
+
     /**
      * The logger.
      */
@@ -23,64 +27,61 @@ public class PacketDeserializer implements Runnable {
      * The NetworkManager instance.
      */
     private static final NetworkManager NM = NetworkManager.getInstance();
+
     /**
      * The messages from server that are received by this input stream.
      */
     private final InputStream in;
     private final PlayerConnection client;
+    private final StringBuilder sb = new StringBuilder(PACKET_HEADER_LENGTH);
+    private final BufferedPacket bufferedPacket = new BufferedPacket();
 
     public PacketDeserializer(final InputStream in, final PlayerConnection client) {
         this.in = in;
         this.client = client;
+        final String message = "TESTERONIKIASD\n";
+        System.out.printf(PACKET_FORMAT, 0xa0, message.length(), message);
     }
 
     @Override
     public void run() {
         while (true) {
-            final String s;
+
+            String s;
+            int buffered;
             try {
-                s = readPacket();
-                L.debug(String.format("Received %s", s));
+                byte[] buf = new byte[4096];
+                if (in.read(buf) < 0) {
+                    // TODO this could cause some problems? idk
+                    continue;
+                }
+                s = new String(buf, StandardCharsets.UTF_8);
+                s = s.trim();
+                while (true) {
+                    buffered = bufferedPacket.append(s);
+                    if (bufferedPacket.isPacketReady()) {
+                        L.debug("Received " + bufferedPacket);
+                        // TODO call the packet ig
+                        final PacketIn<? extends PacketListener> p = (PacketIn<? extends PacketListener>)
+                                NM.getState().getPacket(PacketDirection.CLIENT_BOUND, bufferedPacket.getPacketId());
+                        p.broadcast(NM.getCurrentListener());
+                        bufferedPacket.reset();
+                    } else {
+                        break;
+                    }
+                    if (buffered < s.length()) {
+                        try {
+                            s = s.substring(buffered);
+                        } catch (Exception e) {
+                            break;
+                        }
+                    } else {
+                        break;
+                    }
+                }
             } catch (IOException | InvalidPacketFormatException e) {
                 L.fatal(e);
-                break;
-            }
-            // ID | data
-
-            // parse the packet ID
-            final int packetId;
-            try {
-                packetId = parsePacketId(s);
-                L.debug("Deserialized packet ID: " + packetId);
-            } catch (NumberFormatException e) {
-                L.fatal("Could not read the packet ID!", e);
-                break;
-            }
-
-            // attempt to look up the packet with the given ID and state
-            final PacketIn<? extends PacketListener> packet;
-            try {
-                packet = getPacket(packetId);
-                L.debug(format("Found packet with ID %d and state %s", packetId, NM.getState()));
-            } catch (InvalidPacketFormatException e) {
-                L.fatal("Received packet was not found in the lookup table!", e);
-                break;
-            }
-
-            // attempt to read the data section
-            try {
-                readPacket(s, packet);
-            } catch (InvalidPacketFormatException e) {
-                L.fatal("Could not read the packet from the input stream!", e);
-                break;
-            }
-
-            // packet is valid and data is read, broadcast it to the listener
-            L.info(format("Received %s packet, broadcasting to the listeners...", packet));
-            try {
-                packet.broadcast(NM.getCurrentListener());
-            } catch (InvalidPacketFormatException e) {
-                L.fatal(e);
+                bufferedPacket.reset();
                 break;
             }
         }
@@ -108,7 +109,6 @@ public class PacketDeserializer implements Runnable {
      * Attempts to look up the packet with the given ID.
      *
      * @param packetId the packet ID
-     *
      * @return the packet or {@code null} if it does not exist
      */
     private PacketIn<? extends PacketListener> getPacket(final int packetId)
@@ -119,30 +119,5 @@ public class PacketDeserializer implements Runnable {
 
     private int parsePacketId(final String s) throws NumberFormatException {
         return Integer.parseUnsignedInt(s.substring(0, 2), 16);
-    }
-
-    private String readPacket() throws IOException, InvalidPacketFormatException {
-        final byte[] buf = new byte[MAX_PACKET_SIZE];
-        int read = in.read(buf);
-        if (read < 3) {
-            throw new InvalidPacketFormatException("Invalid packet received! - packet " +
-                    "length: " + read);
-        }
-        return new String(buf, 0, read).trim();
-    }
-
-    private String getString() {
-        final byte[] s = new byte[MAX_PACKET_SIZE];
-        int read = -1;
-        try {
-            read = in.read(s);
-        } catch (IOException e) {
-            L.error(e);
-        }
-        if (read < 3) {
-            L.error("Invalid packet received! - invalid packet length: " + read);
-            return null;
-        }
-        return new String(s, 0, read).trim();
     }
 }

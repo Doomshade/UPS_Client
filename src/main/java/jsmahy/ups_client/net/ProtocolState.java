@@ -1,11 +1,15 @@
 package jsmahy.ups_client.net;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
-import jsmahy.ups_client.net.in.*;
-import jsmahy.ups_client.net.out.PacketLobbyOutHandshake;
+import jsmahy.ups_client.net.in.just_connected.packet.PacketJustConnectedInHello;
+import jsmahy.ups_client.net.in.play.packet.PacketPlayInDrawOffer;
+import jsmahy.ups_client.net.in.play.packet.PacketPlayInKeepAlive;
+import jsmahy.ups_client.net.in.play.packet.PacketPlayInMove;
 import jsmahy.ups_client.net.out.PacketOutDisconnect;
-import jsmahy.ups_client.net.out.PacketPlayOutKeepAlive;
-import jsmahy.ups_client.net.out.PacketPlayOutMove;
+import jsmahy.ups_client.net.out.just_connected.PacketJustConnectedOutHello;
+import jsmahy.ups_client.net.out.logged_in.PacketLoggedInOutQueue;
+import jsmahy.ups_client.net.out.play.PacketPlayOutKeepAlive;
+import jsmahy.ups_client.net.out.play.PacketPlayOutMove;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,13 +26,24 @@ import static java.lang.String.format;
  * @since 1.0
  */
 public enum ProtocolState {
-    LOBBY {
+    JUST_CONNECTED {
         {
-            register(PacketDirection.SERVER_BOUND, PacketLobbyOutHandshake.class, 0x00);
-            register(PacketDirection.SERVER_BOUND, PacketOutDisconnect.class, 0x01);
+            // server bound
+            register(PacketDirection.SERVER_BOUND, PacketJustConnectedOutHello.class, 0x00);
 
-            register(PacketDirection.CLIENT_BOUND, PacketLobbyInHandshake.class, 0x40);
-            register(PacketDirection.CLIENT_BOUND, PacketLobbyInGameStart.class, 0x41);
+            // client bound
+            register(PacketDirection.CLIENT_BOUND, PacketJustConnectedInHello.class, 0x80);
+        }
+    },
+    LOGGED_IN {
+        {
+            // server bound
+            register(PacketDirection.SERVER_BOUND, PacketLoggedInOutQueue.class, 0x20);
+
+        }
+    },
+    QUEUE {
+        {
         }
     },
     PLAY {
@@ -40,7 +55,6 @@ public enum ProtocolState {
             register(PacketDirection.CLIENT_BOUND, PacketPlayInMove.class, 0xC0);
             register(PacketDirection.CLIENT_BOUND, PacketPlayInKeepAlive.class, 0xC1);
             register(PacketDirection.CLIENT_BOUND, PacketPlayInDrawOffer.class, 0xC2);
-
         }
     };
 
@@ -63,9 +77,7 @@ public enum ProtocolState {
      * Gets the protocol state by ID.
      *
      * @param state the state ID
-     *
      * @return the protocol state based on the ID
-     *
      * @throws IllegalArgumentException if the state ID does not exist
      */
     public static ProtocolState getById(final int state) throws IllegalArgumentException {
@@ -79,7 +91,6 @@ public enum ProtocolState {
      * Checks whether the state ID is valid.
      *
      * @param state the state ID
-     *
      * @return {@code true} if it's in bounds of the protocol states
      */
     private static boolean isValidState(int state) {
@@ -91,9 +102,7 @@ public enum ProtocolState {
      *
      * @param direction the packet direction
      * @param packetId  the packet id
-     *
      * @return an instance of a packet
-     *
      * @throws InvalidPacketFormatException if the packet format is incorrect
      * @throws IllegalStateException        if the packet class could not be instantiated with the
      *                                      default constructor
@@ -122,9 +131,7 @@ public enum ProtocolState {
      *
      * @param direction   the packet direction
      * @param packetClass the packet's class
-     *
      * @return the packet ID
-     *
      * @throws IllegalArgumentException if the packet is not registered
      */
     public int getPacketId(PacketDirection direction, Class<?
@@ -191,7 +198,6 @@ public enum ProtocolState {
      * @param value     the value
      * @param <K>       the key type
      * @param <V>       the value type
-     *
      * @throws IllegalStateException if the packet has already been registered in the map
      */
     private <K, V> void putPacket(Map<PacketDirection, Map<K, V>> map, PacketDirection direction,

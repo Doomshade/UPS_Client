@@ -4,17 +4,14 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import jsmahy.ups_client.chess_pieces.ChessPieceEnum;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
-import jsmahy.ups_client.net.listener.PlayerConnection;
-import jsmahy.ups_client.util.ChessPieceUtil;
+import jsmahy.ups_client.net.listener.impl.PlayerConnection;
 import jsmahy.ups_client.util.Square;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.net.InetAddress;

@@ -1,19 +1,20 @@
-package jsmahy.ups_client.net.in;
+package jsmahy.ups_client.net.in.queue.packet;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.ResponseCode;
-import jsmahy.ups_client.net.listener.PacketListenerLobby;
+import jsmahy.ups_client.net.in.queue.PacketInQueue;
+import jsmahy.ups_client.net.listener.PacketListenerQueue;
 import jsmahy.ups_client.util.Util;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class PacketLobbyInGameStart implements PacketInLobby {
+public class PacketQueueInGameStart implements PacketInQueue {
     private ResponseCode responseCode = null;
     private boolean white = true;
     private String opponentName = "";
     private String fenString = Util.START_FEN;
 
     @Override
-    public void read(final String[] in) throws InvalidPacketFormatException {
+    public void read(String[] in) throws InvalidPacketFormatException {
         try {
             this.responseCode = ResponseCode.getResponseCode(in[0]);
         } catch (IllegalArgumentException e) {
@@ -31,7 +32,7 @@ public class PacketLobbyInGameStart implements PacketInLobby {
     }
 
     @Override
-    public void broadcast(final PacketListenerLobby listener) throws InvalidPacketFormatException {
+    public void broadcast(PacketListenerQueue listener) throws InvalidPacketFormatException {
         listener.onGameStart(this);
     }
 

@@ -1,5 +1,6 @@
-package jsmahy.ups_client.net.out;
+package jsmahy.ups_client.net.out.just_connected;
 
+import jsmahy.ups_client.net.out.PacketOut;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.BufferedOutputStream;
@@ -13,10 +14,10 @@ import java.nio.charset.StandardCharsets;
  * @version 1.0
  * @since 1.0
  */
-public class PacketLobbyOutHandshake implements PacketOut {
+public class PacketJustConnectedOutHello implements PacketOut {
     private final String playerName;
 
-    public PacketLobbyOutHandshake(final String playerName) {
+    public PacketJustConnectedOutHello(final String playerName) {
         this.playerName = playerName;
     }
 

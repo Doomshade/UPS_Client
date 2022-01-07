@@ -1,6 +1,7 @@
-package jsmahy.ups_client.net.out;
+package jsmahy.ups_client.net.out.play;
 
 import jsmahy.ups_client.net.ResponseCode;
+import jsmahy.ups_client.net.out.PacketOut;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.BufferedOutputStream;

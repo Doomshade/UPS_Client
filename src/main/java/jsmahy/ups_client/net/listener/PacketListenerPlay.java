@@ -1,10 +1,9 @@
 package jsmahy.ups_client.net.listener;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
-import jsmahy.ups_client.net.in.PacketPlayInDrawOffer;
-import jsmahy.ups_client.net.in.PacketPlayInKeepAlive;
-import jsmahy.ups_client.net.in.PacketPlayInMove;
-import jsmahy.ups_client.net.listener.PacketListener;
+import jsmahy.ups_client.net.in.play.packet.PacketPlayInDrawOffer;
+import jsmahy.ups_client.net.in.play.packet.PacketPlayInKeepAlive;
+import jsmahy.ups_client.net.in.play.packet.PacketPlayInMove;
 
 /**
  * @author Doomshade

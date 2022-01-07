@@ -1,4 +1,6 @@
-package jsmahy.ups_client.net.out;
+package jsmahy.ups_client.net.out.play;
+
+import jsmahy.ups_client.net.out.PacketOut;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;

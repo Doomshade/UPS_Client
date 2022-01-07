@@ -1,5 +1,7 @@
 package jsmahy.ups_client.net.out;
 
+import jsmahy.ups_client.net.out.PacketOut;
+
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

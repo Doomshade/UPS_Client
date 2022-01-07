@@ -1,5 +1,6 @@
-package jsmahy.ups_client.net.out;
+package jsmahy.ups_client.net.out.play;
 
+import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.util.Square;
 import jsmahy.ups_client.util.Util;
 import org.apache.commons.lang3.builder.ToStringBuilder;

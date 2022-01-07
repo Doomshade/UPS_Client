@@ -1,8 +1,9 @@
-package jsmahy.ups_client.net.in;
+package jsmahy.ups_client.net.in.just_connected.packet;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.ResponseCode;
-import jsmahy.ups_client.net.listener.PacketListenerLobby;
+import jsmahy.ups_client.net.in.just_connected.PacketInJustConnected;
+import jsmahy.ups_client.net.listener.PacketListenerJustConnected;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
@@ -13,7 +14,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * @version 1.0
  * @since 1.0
  */
-public class PacketLobbyInHandshake implements PacketInLobby {
+public class PacketJustConnectedInHello implements PacketInJustConnected {
     private ResponseCode responseCode = ResponseCode.NONE;
     private String reason = "";
 
@@ -31,8 +32,8 @@ public class PacketLobbyInHandshake implements PacketInLobby {
     }
 
     @Override
-    public void broadcast(final PacketListenerLobby listener) throws InvalidPacketFormatException {
-        listener.onHandshake(this);
+    public void broadcast(final PacketListenerJustConnected listener) throws InvalidPacketFormatException {
+        listener.onHello(this);
     }
 
     public ResponseCode getResponseCode() {

@@ -1,9 +1,9 @@
 package jsmahy.ups_client.net;
 
-import jsmahy.ups_client.net.listener.LobbyListener;
+import jsmahy.ups_client.net.listener.impl.LobbyListener;
 import jsmahy.ups_client.net.listener.PacketListener;
 import jsmahy.ups_client.net.listener.PacketListenerPlay;
-import jsmahy.ups_client.net.listener.PlayerConnection;
+import jsmahy.ups_client.net.listener.impl.PlayerConnection;
 import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
@@ -38,7 +38,7 @@ public final class NetworkManager {
     private static final Map<ProtocolState, PacketListener> LISTENERS = new HashMap<>() {
         // test
         {
-            put(ProtocolState.LOBBY, new LobbyListener());
+            put(ProtocolState.JUST_CONNECTED, new LobbyListener());
         }
     };
 
@@ -70,7 +70,7 @@ public final class NetworkManager {
     /**
      * The current state of the protocol.
      */
-    private ProtocolState state = ProtocolState.LOBBY;
+    private ProtocolState state = ProtocolState.JUST_CONNECTED;
 
     private NetworkManager() {
     }
