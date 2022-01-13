@@ -1,12 +1,13 @@
 package jsmahy.ups_client.net.out.play;
 
+import jsmahy.ups_client.net.out.PacketDataField;
 import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.util.Square;
 import jsmahy.ups_client.util.Util;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -17,7 +18,10 @@ import java.nio.charset.StandardCharsets;
  * @since 1.0
  */
 public class PacketPlayOutMove implements PacketOut {
-    private final Square from, to;
+    @PacketDataField(1)
+    private final Square from;
+    @PacketDataField(2)
+    private final Square to;
 
     public PacketPlayOutMove(final Square from, final Square to) {
         this.from = from;
@@ -25,14 +29,11 @@ public class PacketPlayOutMove implements PacketOut {
     }
 
     @Override
-    public void write(final BufferedOutputStream out) throws IOException {
+    public void write(final OutputStream out) throws IOException {
         out.write(from.toAsciiString()
                 .concat(String.valueOf(Util.SEPARATION_CHAR))
                 .concat(to.toAsciiString())
                 .getBytes(StandardCharsets.UTF_8));
-        // short pos = (short) ((from.getRow() << 9) | (from.getColumn() << 6) | (to.getRow() <<
-        // 3) | to.getColumn());
-        // out.writeShort(pos);
     }
 
     @Override

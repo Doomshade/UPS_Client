@@ -3,18 +3,19 @@ package jsmahy.ups_client.net.listener.impl;
 import jsmahy.ups_client.exception.InvalidFENFormatException;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.game.ChessGame;
-import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
-import jsmahy.ups_client.net.ResponseCode;
+import jsmahy.ups_client.net.NetworkManager;
+import jsmahy.ups_client.net.ProtocolState;
 import jsmahy.ups_client.net.in.queue.packet.PacketQueueInGameStart;
+import jsmahy.ups_client.net.in.queue.packet.PacketQueueInLeaveQueue;
 import jsmahy.ups_client.net.listener.PacketListenerQueue;
 
 public class QueueListener implements PacketListenerQueue {
+
+    private static final NetworkManager NM = NetworkManager.getInstance();
+
     @Override
     public void onGameStart(PacketQueueInGameStart packet) throws InvalidPacketFormatException {
-        if (packet.getResponseCode() != ResponseCode.CONNECT) {
-            return;
-        }
         // set up the board from the fen string
         final String fen = packet.getFenString();
         if (fen.isEmpty()) {
@@ -29,10 +30,24 @@ public class QueueListener implements PacketListenerQueue {
         }
 
         // set up the game and change the state
-        final PlayListener player =
-                new PlayListener(new ChessPlayer("Testshade"));
-        final ChessPlayer opponent = new ChessPlayer(packet.getOpponentName());
-        ChessGame game = new ChessGame(chessboard, player, opponent, packet.isWhite());
-        player.startGame(game);
+        Client c = Client.getClient();
+        c.getPlayer().setColour(packet.isWhite());
+        ChessGame game = new ChessGame(chessboard);
+        c.startGame(game);
+        NM.changeState(ProtocolState.PLAY);
+    }
+
+    @Override
+    public void onLeaveQueue(PacketQueueInLeaveQueue packet) throws InvalidPacketFormatException {
+        switch (packet.getResponseCode()){
+            case OK:
+                NM.changeState(ProtocolState.LOGGED_IN);
+                break;
+            case REJECTED:
+                // TODO
+                throw new IllegalStateException("Could not leave the queue!");
+            default:
+                throw new InvalidPacketFormatException("Invalid response code received!");
+        }
     }
 }

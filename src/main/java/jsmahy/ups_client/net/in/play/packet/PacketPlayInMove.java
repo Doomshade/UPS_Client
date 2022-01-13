@@ -22,6 +22,8 @@ public class PacketPlayInMove implements PacketInPlay {
             responseCode = ResponseCode.REJECTED;
             return;
         }
+
+        // we expect the length of the packet to be 4
         if (in.length() != 4) {
             throw new InvalidPacketFormatException("The packet length is invalid!");
         }

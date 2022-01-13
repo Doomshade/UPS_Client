@@ -1,14 +1,19 @@
 package jsmahy.ups_client.game;
 
 import jsmahy.ups_client.net.NetworkManager;
-import jsmahy.ups_client.net.listener.impl.PlayListener;
+import jsmahy.ups_client.net.listener.impl.Client;
 import jsmahy.ups_client.net.out.play.PacketPlayOutMove;
 import jsmahy.ups_client.util.Square;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class ChessGame {
+
+    private static final Logger L = LogManager.getLogger(ChessGame.class);
     private final Chessboard chessboard;
-    private final PlayListener client;
-    private final ChessPlayer opponent;
+    private ChessPlayer opponent = new ChessPlayer("Unknown");
+    private boolean hasOpponent = false;
 
     private boolean clientToMove = true;
 
@@ -16,16 +21,11 @@ public final class ChessGame {
      * Instantiates a new Chess game.
      *
      * @param chessboard the chessboard
-     * @param client     the player
-     * @param opponent   the opponent
      */
-    public ChessGame(Chessboard chessboard, PlayListener client, ChessPlayer opponent,
-                     boolean clientIsWhite) {
+    public ChessGame(Chessboard chessboard) {
         this.chessboard = chessboard;
-        this.client = client;
-        this.opponent = opponent;
-        this.client.getPlayer().setColour(clientIsWhite);
-        opponent.setColour(!clientIsWhite);
+        this.clientToMove = Client.getClient().getPlayer().isWhite();
+        L.debug("Instantiated a new game " + chessboard);
     }
 
     public Chessboard getChessboard() {
@@ -44,22 +44,45 @@ public final class ChessGame {
      */
     public void movePiece(Square from, Square to) {
         // the move to perform as
-        final ChessPlayer as = clientToMove ? getClient().getPlayer() : getOpponent();
+        final ChessPlayer as = clientToMove ? Client.getClient().getPlayer() : getOpponent();
         if (chessboard.move(from, to, as) != ChessMove.NO_MOVE && clientToMove) {
             // send packet to players
             NetworkManager.getInstance().sendPacket(new PacketPlayOutMove(from, to));
         }
     }
 
-    public PlayListener getClient() {
-        return client;
+    public ChessPlayer getOpponent() throws IllegalStateException {
+        if (!hasOpponent()) {
+            throw new IllegalStateException("Opponent not yet set in this game! " + this);
+        }
+        return opponent;
     }
 
-    public ChessPlayer getOpponent() {
-        return opponent;
+    public void setOpponent(ChessPlayer opponent) throws IllegalStateException {
+        if (hasOpponent()) {
+            throw new IllegalStateException("Opponent already set in this game! " + this);
+        }
+        this.opponent = opponent;
+        this.opponent.setColour(!Client.getClient().getPlayer().isWhite());
+        this.hasOpponent = true;
+        L.info("Set opponent to " + opponent);
+        L.info("Current game state: " + this);
+    }
+
+    public boolean hasOpponent() {
+        return hasOpponent;
     }
 
     public void nextTurn() {
         this.clientToMove = !this.clientToMove;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("chessboard", chessboard)
+                .append("opponent", opponent)
+                .append("clientToMove", clientToMove)
+                .toString();
     }
 }

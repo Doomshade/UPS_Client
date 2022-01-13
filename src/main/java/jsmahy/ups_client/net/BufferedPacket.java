@@ -5,9 +5,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public final class BufferedPacket {
 
-    private static final String PACKET_MAGIC = "CHESS";
-    private static final int PACKET_HEADER_LENGTH = PACKET_MAGIC.length() + 5;
-    private StringBuilder header = new StringBuilder(PACKET_HEADER_LENGTH);
+    private StringBuilder header = new StringBuilder(NetworkManager.PACKET_HEADER_LENGTH);
     private StringBuilder data = new StringBuilder(1000);
     private int packetId = -1;
     private int packetSize = -1;
@@ -16,12 +14,18 @@ public final class BufferedPacket {
         reset();
     }
 
+    public BufferedPacket(int packetId, String data) throws InvalidPacketFormatException, IllegalStateException {
+        this.packetId = packetId;
+        this.packetSize = data.length();
+        this.data.append(data);
+    }
+
     public int append(String s) throws InvalidPacketFormatException, IllegalStateException {
         if (isPacketReady()) {
             return 0;
         }
         if (!isHeaderFull()) {
-            int headerAppend = Math.min(s.length(), PACKET_HEADER_LENGTH - header.length());
+            int headerAppend = Math.min(s.length(), NetworkManager.PACKET_HEADER_LENGTH - header.length());
             header.append(s, 0, headerAppend);
             if (!isHeaderFull()) {
                 return headerAppend;
@@ -48,7 +52,7 @@ public final class BufferedPacket {
     }
 
     private boolean isHeaderFull() {
-        return header.length() == PACKET_HEADER_LENGTH;
+        return header.length() == NetworkManager.PACKET_HEADER_LENGTH;
     }
 
     public boolean isPacketReady() {
@@ -59,11 +63,15 @@ public final class BufferedPacket {
         if (!isHeaderFull()) {
             throw new IllegalStateException("Header not yet filled!");
         }
+        String packetMagic = header.substring(0, NetworkManager.PACKET_MAGIC.length());
+        if (!packetMagic.equals(NetworkManager.PACKET_MAGIC)) {
+            throw new InvalidPacketFormatException("Invalid packet magic!");
+        }
         try {
-            packetId = Integer.parseInt(header.substring(PACKET_MAGIC.length(), PACKET_MAGIC.length() + 2), 16);
-            packetSize = Integer.parseInt(header.substring(PACKET_MAGIC.length() + 2));
+            packetId = Integer.parseInt(header.substring(NetworkManager.PACKET_MAGIC.length(), NetworkManager.PACKET_MAGIC.length() + 2), 16);
+            packetSize = Integer.parseInt(header.substring(NetworkManager.PACKET_MAGIC.length() + 2));
         } catch (NumberFormatException e) {
-            throw new InvalidPacketFormatException(e);
+            throw new InvalidPacketFormatException("Invalid packet header!", e);
         }
     }
 
@@ -102,7 +110,7 @@ public final class BufferedPacket {
     public void reset() {
         packetId = -1;
         packetSize = -1;
-        header = new StringBuilder(PACKET_HEADER_LENGTH);
+        header = new StringBuilder(NetworkManager.PACKET_HEADER_LENGTH);
         data = new StringBuilder(1000);
     }
 }

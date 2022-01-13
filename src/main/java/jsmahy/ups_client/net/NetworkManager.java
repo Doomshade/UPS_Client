@@ -1,19 +1,30 @@
 package jsmahy.ups_client.net;
 
-import jsmahy.ups_client.net.listener.impl.JustConnectedListener;
+import javafx.application.Platform;
+import jsmahy.ups_client.exception.InvalidPacketFormatException;
+import jsmahy.ups_client.net.in.PacketIn;
 import jsmahy.ups_client.net.listener.PacketListener;
 import jsmahy.ups_client.net.listener.PacketListenerPlay;
-import jsmahy.ups_client.net.listener.impl.PlayListener;
+import jsmahy.ups_client.net.listener.impl.Client;
+import jsmahy.ups_client.net.listener.impl.JustConnectedListener;
+import jsmahy.ups_client.net.listener.impl.LoggedInListener;
+import jsmahy.ups_client.net.listener.impl.QueueListener;
+import jsmahy.ups_client.net.out.PacketData;
+import jsmahy.ups_client.net.out.PacketDataField;
 import jsmahy.ups_client.net.out.PacketOut;
-import jsmahy.ups_client.util.Util;
+import jsmahy.ups_client.util.LoggableOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.lang.annotation.AnnotationTypeMismatchException;
+import java.lang.reflect.Field;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.*;
 
 import static java.lang.String.format;
 
@@ -24,11 +35,15 @@ import static java.lang.String.format;
  * @version 1.0
  * @see PacketListener
  * @see JustConnectedListener
- * @see PlayListener
+ * @see Client
  * @since 1.0
  */
 public final class NetworkManager {
+    public static final String PACKET_MAGIC = "CHESS";
+    public static final int PACKET_HEADER_LENGTH = PACKET_MAGIC.length() + 5;
     private static final Logger L = LogManager.getLogger(NetworkManager.class);
+
+    private static final Queue<BufferedPacket> PACKET_QUEUE = new LinkedList<>();
 
     private static final NetworkManager INSTANCE = new NetworkManager();
 
@@ -39,6 +54,8 @@ public final class NetworkManager {
         // test
         {
             put(ProtocolState.JUST_CONNECTED, new JustConnectedListener());
+            put(ProtocolState.LOGGED_IN, new LoggedInListener());
+            put(ProtocolState.QUEUE, new QueueListener());
         }
     };
 
@@ -72,7 +89,25 @@ public final class NetworkManager {
      */
     private ProtocolState state = ProtocolState.JUST_CONNECTED;
 
+    private boolean receivedResponse = true;
+
     private NetworkManager() {
+    }
+
+    /**
+     * Sets up the packet listener in {@link ProtocolState#PLAY} state.
+     *
+     * @param listener the listener
+     */
+    public static void setClient(@NotNull PacketListenerPlay listener) {
+        LISTENERS.put(ProtocolState.PLAY, listener);
+    }
+
+    /**
+     * @return the instance
+     */
+    public static NetworkManager getInstance() {
+        return INSTANCE;
     }
 
     /**
@@ -80,11 +115,10 @@ public final class NetworkManager {
      *
      * @param host the host
      * @param port the port
-     *
      * @throws IOException           if the connection could not be established
      * @throws IllegalStateException if the connection has already been established
      */
-    public void setup(@NotNull final PlayListener client, @NotNull final String host, final int port)
+    public void setup(@NotNull final String host, final int port)
             throws IOException, IllegalStateException {
         if (isConnectionSuccessful()) {
             throw new IllegalStateException("Already connected to a server!");
@@ -93,14 +127,14 @@ public final class NetworkManager {
         this.socket = new Socket(host, port);
         this.socket.setSoTimeout(TIMEOUT);
         this.socket.setKeepAlive(true);
-        this.setupIO(client, socket.getInputStream(), socket.getOutputStream());
+        this.setupIO(socket.getInputStream(), socket.getOutputStream());
 
         connectionSuccessful = true;
         L.info("Successfully initialized connection");
     }
 
-    private void startListening(final InputStream in, final PlayListener client) {
-        Thread readThread = new Thread(new PacketDeserializer(in, client));
+    private void startListening(final InputStream in) {
+        Thread readThread = new Thread(new PacketDeserializer(in));
         readThread.setDaemon(true);
         readThread.start();
     }
@@ -110,19 +144,31 @@ public final class NetworkManager {
      *
      * @param in  the input stream
      * @param out the output stream
-     *
      * @throws IllegalStateException if the streams have already been initialized
      */
-    public void setupIO(@NotNull PlayListener client, @NotNull final InputStream in,
-                        @NotNull final OutputStream out)
+    public void setupIO(@NotNull final InputStream in,
+                        @Nullable OutputStream out)
             throws IllegalStateException {
         if (isInitializedStreams()) {
             throw new IllegalStateException("I/O streams have already been initialized!");
         }
         L.info("Setting up I/O...");
         this.in = new BufferedInputStream(in);
-        this.out = new BufferedOutputStream(out);
-        startListening(in, client);
+        if (out == null) {
+            try {
+                File tempOut = Files.createTempFile("out", null).toFile();
+                L.info("Created a new out temp file " + tempOut.getAbsolutePath());
+                startListening(new BufferedInputStream(new FileInputStream(tempOut)));
+            } catch (IOException e) {
+                L.fatal("Could not create a temp file", e);
+                throw new RuntimeException(e);
+            }
+            L.info("Using simulated output stream...");
+            this.out = new BufferedOutputStream(System.out);
+        } else {
+            this.out = new BufferedOutputStream(new LoggableOutputStream(out));
+        }
+        startListening(in);
         this.initializedStreams = true;
         L.info("I/O set up");
     }
@@ -142,26 +188,9 @@ public final class NetworkManager {
     }
 
     /**
-     * Sets up the packet listener in {@link ProtocolState#PLAY} state.
-     *
-     * @param listener the listener
-     */
-    public static void setPlayListener(@NotNull PacketListenerPlay listener) {
-        LISTENERS.put(ProtocolState.PLAY, listener);
-    }
-
-    /**
-     * @return the instance
-     */
-    public static NetworkManager getInstance() {
-        return INSTANCE;
-    }
-
-    /**
      * Gets the packet listener based on the current state.
      *
      * @param <T> the packet listener implementation
-     *
      * @return the packet listener
      */
     public <T extends PacketListener> T getCurrentListener() {
@@ -172,40 +201,105 @@ public final class NetworkManager {
      * Gets the packet listener based on the given state.
      *
      * @param state the state
-     *
      * @return the packet listener
      */
     private PacketListener getListener(@NotNull ProtocolState state) {
         return LISTENERS.get(state);
     }
 
+
+    public synchronized void receivePacket(BufferedPacket packet) throws InvalidPacketFormatException, IOException {
+        receivePacket(getState().getPacketIn(packet.getPacketId()), packet.getData());
+    }
+
+    public synchronized void receivePacket(PacketIn<?> p, String data) throws InvalidPacketFormatException, IOException {
+        p.read(data);
+        p.broadcast(getCurrentListener());
+        receivedResponse = true;
+
+        // poll another packet from the queue
+        _sendPacket(PACKET_QUEUE.poll());
+    }
+
+    public synchronized void sendPacket(BufferedPacket packet) throws InvalidPacketFormatException, IOException {
+
+        PACKET_QUEUE.add(packet);
+        if (!receivedResponse) {
+            return;
+        }
+
+        _sendPacket(PACKET_QUEUE.poll());
+    }
+
+    private synchronized void _sendPacket(BufferedPacket packet) throws IOException, IllegalStateException {
+        if (!isInitializedStreams()) {
+            throw new IllegalStateException("The I/O streams have not yet been initialized!");
+        }
+        if (packet == null) {
+            return;
+        }
+        // ID
+        out.write(PACKET_MAGIC.getBytes(StandardCharsets.UTF_8));
+        out.write(format("%02x", packet.getPacketId()).getBytes(StandardCharsets.UTF_8));
+
+        // Data length
+        out.write(format("%03d", packet.getPacketSize()).getBytes(StandardCharsets.UTF_8));
+
+        // Data
+        out.write(packet.getData().getBytes(StandardCharsets.UTF_8));
+        out.flush();
+        receivedResponse = false;
+        L.debug(format("Sending %s packet to the server...", packet));
+
+    }
+
     /**
      * Sends a packet to the server.
      *
      * @param packet the packet to send
-     *
      * @throws IllegalStateException if the network manager has not yet been initialized
      */
-    public void sendPacket(@NotNull PacketOut packet) throws IllegalStateException {
-        if (!isInitializedStreams()) {
-            throw new IllegalStateException("The I/O streams have not yet been initialized!");
+    public synchronized void sendPacket(@NotNull PacketOut packet) throws IllegalStateException, AnnotationTypeMismatchException {
+        // construct the packet based on annotated fields with PacketDataAnnotation
+        // in the order of its value
+        final TreeMap<Integer, StringBuilder> data = new TreeMap<>(Comparator.naturalOrder());
+        for (Field field : packet.getClass().getDeclaredFields()) {
+            if (!field.isAnnotationPresent(PacketDataField.class)) {
+                continue;
+            }
+            final Object obj;
+            try {
+                obj = field.get(packet);
+            } catch (IllegalAccessException e) {
+                L.fatal(e);
+                Platform.exit();
+                return;
+            }
+            final int value = field.getAnnotation(PacketDataField.class).value();
+            data.computeIfAbsent(value, x -> data.put(x, new StringBuilder()));
+
+            final StringBuilder sb = data.get(value);
+            final String s;
+            if (obj instanceof String) {
+                s = (String) obj;
+            } else if (obj instanceof PacketData) {
+                s = ((PacketData) obj).toDataString();
+            } else {
+                throw new AnnotationTypeMismatchException(null, obj.getClass().getSimpleName());
+            }
+            sb.append(s);
+        }
+
+        final StringBuilder sb = new StringBuilder();
+        for (StringBuilder queueSb : data.values()) {
+            sb.append(queueSb);
         }
         try {
-            // Packet format: [ID;Data]
-
-            // ID
-            final int id = state.getPacketId(PacketDirection.SERVER_BOUND, packet.getClass());
-            out.write(id);
-            out.write(Util.SEPARATION_CHAR);
-
-            // Data
-            packet.write(out);
-
-            // write
-            out.flush();
-            L.debug(format("Sending %s packet to the server...", packet));
+            _sendPacket(new BufferedPacket(getState().getPacketId(packet.getClass()), sb.toString()));
+        } catch (InvalidPacketFormatException e) {
+            throw new IllegalStateException(e);
         } catch (IOException e) {
-            L.error("Could not write to the output stream!", e);
+            L.fatal("Could not send a packet!", e);
         }
     }
 
@@ -216,7 +310,7 @@ public final class NetworkManager {
      */
     public void changeState(ProtocolState state) {
         this.state = state;
-        L.debug(format("Switching state to %s", state.name()));
+        L.info(format("Changing state to %s...", state.name()));
     }
 
     /**

@@ -79,7 +79,7 @@ public final class ChessPieceUtil {
      */
     public static char toBlack(char c) {
         validateId(c);
-        return Character.toUpperCase(c);
+        return Character.toLowerCase(c);
     }
 
     /**
@@ -136,7 +136,7 @@ public final class ChessPieceUtil {
      */
     public static char toWhite(char c) {
         validateId(c);
-        return Character.toLowerCase(c);
+        return Character.toUpperCase(c);
     }
 
     /**

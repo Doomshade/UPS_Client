@@ -4,12 +4,10 @@ import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.net.NetworkManager;
-import jsmahy.ups_client.net.ProtocolState;
-import jsmahy.ups_client.net.in.play.packet.PacketPlayInDrawOffer;
-import jsmahy.ups_client.net.in.play.packet.PacketPlayInKeepAlive;
-import jsmahy.ups_client.net.in.play.packet.PacketPlayInMove;
+import jsmahy.ups_client.net.in.play.packet.*;
 import jsmahy.ups_client.net.listener.PacketListenerPlay;
 import jsmahy.ups_client.net.out.play.PacketPlayOutKeepAlive;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,22 +15,53 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class PlayListener implements PacketListenerPlay {
+public class Client implements PacketListenerPlay {
     public static final int SERVER_RESPONSE_LIMIT = 25_000;
     public static final int KEEPALIVE_CHECK_PERIOD = 1_000;
-    private static final Logger L = LogManager.getLogger(PlayListener.class);
+    private static final Logger L = LogManager.getLogger(Client.class);
     private static final NetworkManager NET_MAN = NetworkManager.getInstance();
     // TODO rename
     private static final int DRAW_OFFER_MAX_DELAY = 15_000;
+    private static Client instance = null;
+    private static String name = "";
     private final ChessPlayer player;
     private boolean awaitingKeepAlive = false;
     private long keepAlive = System.currentTimeMillis();
     private ChessGame chessGame = null;
     private long timeSinceLastDrawOffer = 0L;
 
-    public PlayListener(ChessPlayer player) {
-        this.player = player;
-        NetworkManager.setPlayListener(this);
+    private Client() {
+        this.player = new ChessPlayer(name);
+        NetworkManager.setClient(this);
+        L.info("Logged in as " + this);
+    }
+
+    public static Client getClient() {
+        if (instance == null) {
+            throw new IllegalStateException("Not yet logged in!");
+        }
+        return instance;
+    }
+
+    public static void setLoginName(String name) throws NullPointerException, IllegalArgumentException {
+        if (name == null) {
+            throw new NullPointerException("Name cannot be null");
+        }
+        if (name.isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be empty!");
+        }
+        Client.name = name;
+    }
+
+    public static void login() {
+        if (instance != null) {
+            throw new IllegalStateException("Already logged in as " + instance.getPlayer().getName());
+        }
+        if (name.isEmpty()) {
+            throw new IllegalStateException("Haven't set the login name yet!");
+        }
+        L.info(String.format("Logging in as %s...", name));
+        instance = new Client();
     }
 
     public void startGame(ChessGame chessGame) {
@@ -40,7 +69,7 @@ public class PlayListener implements PacketListenerPlay {
             throw new IllegalStateException("A chess game is already in play!");
         }
         this.chessGame = chessGame;
-        NET_MAN.changeState(ProtocolState.PLAY);
+        L.info("Started a new game: " + chessGame);
         //startKeepAlive();
     }
 
@@ -48,18 +77,18 @@ public class PlayListener implements PacketListenerPlay {
         final TimerTask keepAlive = new TimerTask() {
             @Override
             public void run() {
-                long currKeepAlive = System.currentTimeMillis() - PlayListener.this.keepAlive;
+                long currKeepAlive = System.currentTimeMillis() - Client.this.keepAlive;
                 // check if the server is still alive
                 if (currKeepAlive >= SERVER_RESPONSE_LIMIT) {
                     if (awaitingKeepAlive) {
                         disconnect("Have not received keepAlive packet in a while");
                     } else {
                         awaitingKeepAlive = true;
-                        PlayListener.this.keepAlive = System.currentTimeMillis();
+                        Client.this.keepAlive = System.currentTimeMillis();
                     }
                 }
 
-                PlayListener.this.keepAlive = System.currentTimeMillis();
+                Client.this.keepAlive = System.currentTimeMillis();
                 NET_MAN.sendPacket(new PacketPlayOutKeepAlive());
 
             }
@@ -114,5 +143,26 @@ public class PlayListener implements PacketListenerPlay {
             timeSinceLastDrawOffer = millis;
             L.debug("Showing draw offer available responses...");
         }
+    }
+
+    @Override
+    public void onMessage(PacketPlayInMessage packet) {
+        L.info("Message recvd: " + packet.getMessage());
+    }
+
+    @Override
+    public void onOpponentName(PacketPlayInOpponentName packet) {
+        chessGame.setOpponent(new ChessPlayer(packet.getOpponentName()));
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("player", player)
+                .append("awaitingKeepAlive", awaitingKeepAlive)
+                .append("keepAlive", keepAlive)
+                .append("chessGame", chessGame)
+                .append("timeSinceLastDrawOffer", timeSinceLastDrawOffer)
+                .toString();
     }
 }

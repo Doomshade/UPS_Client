@@ -1,5 +1,6 @@
 package jsmahy.ups_client.net;
 
+import jsmahy.ups_client.net.out.PacketData;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -7,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
  * @version 1.0
  * @since 1.0
  */
-public enum ResponseCode {
+public enum ResponseCode implements PacketData {
     NONE,
     OK,
     MOVE,
@@ -32,5 +33,15 @@ public enum ResponseCode {
             }
         }
         throw new IllegalArgumentException(String.format("No response code found for %s!", s));
+    }
+
+    @Override
+    public String toDataString() {
+        return name();
+    }
+
+    @Override
+    public PacketData fromDataString(String data) {
+        return getResponseCode(data);
     }
 }

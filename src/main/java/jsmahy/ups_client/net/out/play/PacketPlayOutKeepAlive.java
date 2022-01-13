@@ -2,8 +2,8 @@ package jsmahy.ups_client.net.out.play;
 
 import jsmahy.ups_client.net.out.PacketOut;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * This packet is sent periodically to check whether the connection is still up
@@ -15,7 +15,7 @@ import java.io.IOException;
 public class PacketPlayOutKeepAlive implements PacketOut {
 
     @Override
-    public void write(final BufferedOutputStream out) throws IOException {
+    public void write(final OutputStream out) throws IOException {
     }
 
 }

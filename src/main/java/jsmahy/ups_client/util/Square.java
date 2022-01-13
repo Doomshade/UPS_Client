@@ -1,9 +1,16 @@
 package jsmahy.ups_client.util;
 
+import jsmahy.ups_client.net.out.PacketData;
+
 import java.util.Objects;
 
-public final class Square {
-    private final int rank, file;
+public final class Square implements PacketData {
+    private int rank, file;
+
+    public Square() {
+        this.rank = -1;
+        this.file = -1;
+    }
 
     public Square(Square other) {
         this(other.rank, other.file);
@@ -14,7 +21,6 @@ public final class Square {
      *
      * @param rank the row
      * @param file the column
-     *
      * @throws IllegalArgumentException if either row or column are out of bounds
      */
     public Square(int rank, int file) throws IllegalArgumentException {
@@ -28,7 +34,6 @@ public final class Square {
      *
      * @param rank the rank
      * @param file the file
-     *
      * @return {@code true} if both arguments are within 0-7 (inclusive) range
      */
     public static boolean isValidPosition(int rank, int file) {
@@ -56,20 +61,6 @@ public final class Square {
     }
 
     /**
-     * Encodes the position to a single short value
-     *
-     * @param from the position the piece moved from
-     * @param to   the position the piece moved to
-     *
-     * @return the encoded square
-     */
-    @Deprecated
-    public static short encode(Square from, Square to) {
-        return (short) ((from.getRank() << 9) | (from.getFile() << 6) | (to.getRank() << 3) |
-                to.getFile());
-    }
-
-    /**
      * @return the row
      */
     public int getRank() {
@@ -83,28 +74,8 @@ public final class Square {
         return file;
     }
 
-    /**
-     * Decodes a position
-     *
-     * @param position the position to decode
-     *
-     * @return a pair of positions; A = from, B = to
-     */
-    @Deprecated
-    public static Pair<Square, Square> decode(short position) {
-        byte fromX = (byte) ((position >> 9) & 0b111);
-        byte fromY = (byte) ((position >> 6) & 0b111);
-        byte toX = (byte) ((position >> 3) & 0b111);
-        byte toY = (byte) (position & 0b111);
-
-        Square from = new Square(fromX, fromY);
-        Square to = new Square(toX, toY);
-
-        return new Pair<>(from, to);
-    }
-
     public String toAsciiString() {
-        return new String(new char[] {toChar(rank), toChar(file)});
+        return new String(new char[]{toChar(rank), toChar(file)});
     }
 
     private char toChar(int num) {
@@ -139,12 +110,20 @@ public final class Square {
     /**
      * @param rank the rank
      * @param file the file
-     *
      * @return a new position with the new coords
-     *
      * @throws IllegalArgumentException if the new position is invalid
      */
     public Square add(int rank, int file) throws IllegalArgumentException {
         return new Square(this.rank + rank, this.file + file);
+    }
+
+    @Override
+    public String toDataString() {
+        return new String(new char[]{toChar(rank), toChar(file)});
+    }
+
+    @Override
+    public PacketData fromDataString(String data) {
+        return fromString(data);
     }
 }

@@ -6,6 +6,7 @@ import jsmahy.ups_client.exception.InvalidFENFormatException;
 import jsmahy.ups_client.util.ChessPieceUtil;
 import jsmahy.ups_client.util.Square;
 import jsmahy.ups_client.util.Util;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -41,7 +42,6 @@ public final class Chessboard {
      * Sets up a board from a fen string.
      *
      * @param fen the fen string
-     *
      * @throws InvalidFENFormatException if the fen string is invalid
      */
     public void setupBoard(String fen) throws InvalidFENFormatException {
@@ -63,6 +63,12 @@ public final class Chessboard {
             throw new InvalidFENFormatException("Attempted to parse an invalid FEN String");
         }
 
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board.length; j++) {
+                board[i][j] = ' ';
+            }
+
+        }
         for (int i = 0; i < split.length; i++) {
             int rowIdx = 0;
             for (char c : split[i].toCharArray()) {
@@ -95,6 +101,7 @@ public final class Chessboard {
         L.trace("Chessboard after first FEN part: " + Arrays.deepToString(board));
         // end of chessboard piece parsing
 
+        L.info("Successfully set up chessboard. Board:\n" + Arrays.deepToString(board));
     }
 
     public void modifyCastlesPrivilege(boolean white, boolean shortCastles, boolean allow) {
@@ -141,7 +148,6 @@ public final class Chessboard {
      *
      * @param from the square from
      * @param to   the square to
-     *
      * @return the chess move that was performed
      */
     public ChessMove move(Square from, Square to, ChessPlayer as) {
@@ -162,9 +168,7 @@ public final class Chessboard {
      *
      * @param from the starting pos
      * @param to   the ending pos
-     *
      * @return a chess move type
-     *
      * @throws IllegalStateException if there's no piece on the starting position
      * @throws IllegalAccessError    if the client attempted to move opponents piece and the
      *                               client called this method for some reason
@@ -204,7 +208,6 @@ public final class Chessboard {
      *
      * @param kingsPos the king's position
      * @param to       the king's destination
-     *
      * @return {@code true} if the two squares next to the king based on the castle type are not
      * under attack of the opponent
      */
@@ -239,7 +242,6 @@ public final class Chessboard {
      * @param from      the king's source position
      * @param to        the king's destination
      * @param chessMove the current chess move
-     *
      * @return {@link ChessMove#CASTLES_SHORT} or {@link ChessMove#CASTLES_LONG} or chessMove if
      * the move was either not a castles move or the king cannot castle
      */
@@ -266,7 +268,6 @@ public final class Chessboard {
 
     /**
      * @param square the square
-     *
      * @return an {@link Optional#of(Object)} a chess piece if there's one or
      * {@link Optional#empty()}
      */
@@ -281,7 +282,6 @@ public final class Chessboard {
      * Checks whether there's a piece on the given square
      *
      * @param pos the square
-     *
      * @return {@code true} if there's a piece
      */
     public boolean containsPiece(Square pos) {
@@ -299,9 +299,7 @@ public final class Chessboard {
      * Checks whether the piece on the given position is white or black
      *
      * @param pos the position
-     *
      * @return {@code true} if the piece is white, {@code false} otherwise
-     *
      * @throws IllegalArgumentException if there's no piece on the position
      */
     public boolean isWhite(Square pos) throws IllegalArgumentException {
@@ -315,9 +313,7 @@ public final class Chessboard {
      * Returns the piece ID on the given square.
      *
      * @param pos the square to look for
-     *
      * @return the piece ID
-     *
      * @throws IllegalArgumentException if there is no piece on the square
      */
     public char getPieceId(Square pos) throws IllegalArgumentException {
@@ -328,4 +324,11 @@ public final class Chessboard {
         return c;
     }
 
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("board", board)
+                .append("allowedCastles", allowedCastles)
+                .toString();
+    }
 }

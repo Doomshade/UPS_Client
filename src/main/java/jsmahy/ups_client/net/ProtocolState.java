@@ -1,10 +1,15 @@
 package jsmahy.ups_client.net;
 
+import javafx.application.Platform;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
+import jsmahy.ups_client.net.in.PacketIn;
 import jsmahy.ups_client.net.in.just_connected.packet.PacketJustConnectedInHello;
 import jsmahy.ups_client.net.in.logged_in.packet.PacketLoggedInInJoinQueue;
 import jsmahy.ups_client.net.in.play.packet.*;
 import jsmahy.ups_client.net.in.queue.packet.PacketQueueInGameStart;
+import jsmahy.ups_client.net.in.queue.packet.PacketQueueInLeaveQueue;
+import jsmahy.ups_client.net.listener.PacketListener;
+import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.net.out.just_connected.PacketJustConnectedOutHello;
 import jsmahy.ups_client.net.out.logged_in.PacketLoggedInOutJoinQueue;
 import jsmahy.ups_client.net.out.play.PacketPlayOutDrawOffer;
@@ -12,9 +17,13 @@ import jsmahy.ups_client.net.out.play.PacketPlayOutMessage;
 import jsmahy.ups_client.net.out.play.PacketPlayOutMove;
 import jsmahy.ups_client.net.out.play.PacketPlayOutResign;
 import jsmahy.ups_client.net.out.queue.PacketQueueOutLeaveQueue;
+import jsmahy.ups_client.util.Square;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +40,7 @@ public enum ProtocolState {
     JUST_CONNECTED {
         {
             // server bound
-            register(PacketJustConnectedOutHello.class, JUST_CONNECTED_OFFSET);
+            register(PacketJustConnectedOutHello.class, JUST_CONNECTED_OFFSET, String.class);
 
             // client bound
             register(PacketJustConnectedInHello.class, JUST_CONNECTED_OFFSET + PACKET_IN_OFFSET);
@@ -52,14 +61,15 @@ public enum ProtocolState {
             register(PacketQueueOutLeaveQueue.class, QUEUE_OFFSET);
 
             // client bound
-            register(PacketQueueInGameStart.class, QUEUE_OFFSET + PACKET_IN_OFFSET);
+            register(PacketQueueInLeaveQueue.class, QUEUE_OFFSET + PACKET_IN_OFFSET);
+            register(PacketQueueInGameStart.class, QUEUE_OFFSET + PACKET_IN_OFFSET + 0x01);
         }
     },
     PLAY {
         {
             // server bound
-            register(PacketPlayOutMove.class, PLAY_OFFSET);
-            register(PacketPlayOutDrawOffer.class, PLAY_OFFSET + 0x01);
+            register(PacketPlayOutMove.class, PLAY_OFFSET, Square.class, Square.class);
+            register(PacketPlayOutDrawOffer.class, PLAY_OFFSET + 0x01, ResponseCode.class);
             register(PacketPlayOutResign.class, PLAY_OFFSET + 0x02);
             register(PacketPlayOutMessage.class, PLAY_OFFSET + 0x03);
 
@@ -69,16 +79,17 @@ public enum ProtocolState {
             register(PacketPlayInGameFinish.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x03);
             register(PacketPlayInMessage.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x04);
             register(PacketPlayInKeepAlive.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x05);
+            register(PacketPlayInOpponentName.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x06);
         }
     };
 
+    public static final String DESERIALIZE_METHOD = "deserializeParams";
+    public static final int PACKET_IN_OFFSET = 0x80;
     private static final int JUST_CONNECTED_OFFSET = 0x00;
     private static final int LOGGED_IN_OFFSET = 0x20;
     private static final int QUEUE_OFFSET = 0x40;
     private static final int PLAY_OFFSET = 0x60;
-    private static final int PACKET_IN_OFFSET = 0x80;
-
-    private static Logger L = null;
+    private static Logger L = LogManager.getLogger(ProtocolState.class);
 
     /**
      * The ID-packet map.
@@ -92,6 +103,8 @@ public enum ProtocolState {
     private final Map<ProtocolState, Map<Class<? extends Packet>, Integer>>
             packetRegistryByClass = new HashMap<>();
 
+    private final Map<ProtocolState, Map<Integer, Constructor<? extends PacketOut>>>
+            packetOutRegistry = new HashMap<>();
 
     /**
      * Gets the protocol state by ID.
@@ -117,6 +130,53 @@ public enum ProtocolState {
         return state >= 0 && state < values().length;
     }
 
+
+    public PacketOut getPacketOut(int packetId, String data) throws InvalidPacketFormatException {
+        final Map<Integer, Constructor<? extends PacketOut>> registry = packetOutRegistry.get(this);
+        if (registry == null || !registry.containsKey(packetId)) {
+            throw new InvalidPacketFormatException(
+                    format("No packet with ID %d found in %s state!", packetId, this));
+        }
+        final Class<? extends Packet> clazz = packetRegistryById.get(this).get(packetId);
+
+        // get the deserialization method
+        final Method m;
+        try {
+            m = clazz.getDeclaredMethod(DESERIALIZE_METHOD, String.class);
+        } catch (NoSuchMethodException e) {
+            L.fatal(String.format("Packet %s does not implement '%s' method!", clazz.getSimpleName(), DESERIALIZE_METHOD), e);
+            Platform.exit();
+            return null;
+        }
+
+        // invoke the deserialization method
+        final Object[] params;
+        try {
+            params = (Object[]) m.invoke(null, data);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            L.fatal(String.format("Could not instantiate '%s' method!", DESERIALIZE_METHOD), e);
+            Platform.exit();
+            return null;
+        } catch (Exception e) {
+            L.fatal(String.format("An exception occurred when deserializing %s data!", data), e);
+            Platform.exit();
+            return null;
+        }
+
+        // invoke the packet's constructor
+        try {
+            return registry.get(packetId).newInstance(params);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            L.fatal(String.format("Could not instantiate %s's constructor!", clazz.getSimpleName()), e);
+            Platform.exit();
+            return null;
+        } catch (Exception e) {
+            L.fatal(String.format("An exception occurred when instantiating %s's constructor!", clazz.getSimpleName()), e);
+            Platform.exit();
+            return null;
+        }
+    }
+
     /**
      * Attempts to instantiate a packet.
      *
@@ -126,8 +186,8 @@ public enum ProtocolState {
      * @throws IllegalStateException        if the packet class could not be instantiated with the
      *                                      default constructor
      */
-    public Packet getPacket(int packetId) throws
-            InvalidPacketFormatException {
+    public <T extends PacketListener> PacketIn<T> getPacketIn(int packetId) throws
+            InvalidPacketFormatException, IllegalArgumentException {
         final Map<Integer, Class<? extends Packet>> registry = packetRegistryById.get(this);
         if (registry == null || !registry.containsKey(packetId)) {
             throw new InvalidPacketFormatException(
@@ -135,10 +195,9 @@ public enum ProtocolState {
         }
 
         try {
-            return registry.get(packetId).getConstructor().newInstance();
+            return (PacketIn<T>) registry.get(packetId).getConstructor().newInstance();
         } catch (Exception e) {
-            String msg = "Could not instantiate a packet with ID %d, and state %s";
-            L.error(format(msg, packetId, this), e);
+            String msg = "Could not instantiate an 'in' packet with ID %d, and state %s";
             throw new IllegalStateException(msg, e);
         }
     }
@@ -147,18 +206,17 @@ public enum ProtocolState {
     /**
      * Attempts to retrieve the packet's ID based on the direction and the class.
      *
-     * @param direction   the packet direction
      * @param packetClass the packet's class
      * @return the packet ID
      * @throws IllegalArgumentException if the packet is not registered
      */
-    public int getPacketId(PacketDirection direction, Class<?
+    public int getPacketId(Class<?
             extends Packet> packetClass) throws IllegalArgumentException {
-        Map<Class<? extends Packet>, Integer> map = packetRegistryByClass.get(direction);
+        Map<Class<? extends Packet>, Integer> map = packetRegistryByClass.get(this);
         if (map == null || !map.containsKey(packetClass)) {
             throw new IllegalArgumentException(
                     format("No packet %s registered in %s direction and state %s!",
-                            packetClass.getSimpleName(), direction, this));
+                            packetClass.getSimpleName(), this, this));
         }
         return map.get(packetClass);
     }
@@ -169,15 +227,29 @@ public enum ProtocolState {
      * @param packetClass the packet class
      * @param packetId    the packet id
      */
-    protected void register(Class<? extends Packet> packetClass,
-                            int packetId) {
+    protected final void register(Class<? extends Packet> packetClass,
+                                  int packetId,
+                                  Class<?>... ctorParams) {
         if (L == null) {
             L = LogManager.getLogger(ProtocolState.class);
         }
         putId(packetClass, packetId);
         putClass(packetClass, packetId);
+        if (packetId < PACKET_IN_OFFSET) {
+            try {
+                putOut(packetId, (Constructor<? extends PacketOut>) packetClass.getDeclaredConstructor(ctorParams));
+            } catch (Exception e) {
+                L.fatal(String.format("%s does not have the specified constructor!", packetClass.getSimpleName()), e);
+                Platform.exit();
+            }
+        }
         L.debug(format("Registered %s packet with id 0x%x",
                 packetClass.getSimpleName(), packetId));
+    }
+
+    private void putOut(final int packetId,
+                        Constructor<? extends PacketOut> packetCtor) {
+        putPacket(packetOutRegistry, this, packetId, packetCtor);
     }
 
     /**

@@ -16,7 +16,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 public class PacketJustConnectedInHello implements PacketInJustConnected {
     private ResponseCode responseCode = ResponseCode.NONE;
-    private String reason = "";
 
     @Override
     public void read(final String in) throws InvalidPacketFormatException {
@@ -38,15 +37,10 @@ public class PacketJustConnectedInHello implements PacketInJustConnected {
         return responseCode;
     }
 
-    public String getReason() {
-        return reason;
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this)
                 .append("responseCode", responseCode)
-                .append("reason", reason)
                 .toString();
     }
 }

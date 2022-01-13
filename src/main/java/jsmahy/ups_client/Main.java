@@ -4,10 +4,12 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
-import jsmahy.ups_client.net.listener.impl.PlayListener;
+import jsmahy.ups_client.net.listener.impl.Client;
+import jsmahy.ups_client.net.out.just_connected.PacketJustConnectedOutHello;
 import jsmahy.ups_client.util.Square;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
@@ -15,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.InetAddress;
+import java.nio.file.Files;
 
 /**
  * The type Hello application.
@@ -33,10 +36,7 @@ public class Main extends Application {
     }
 
     private static void connectionTest() throws IOException {
-        ChessPlayer white = new ChessPlayer("Testshade");
-        PlayListener c = new PlayListener(white);
-        NetworkManager.getInstance().setup(c, InetAddress.getLocalHost().getHostAddress(), 5000);
-        c.disconnect("No reason");
+        NetworkManager.getInstance().setup(InetAddress.getLocalHost().getHostAddress(), 5000);
     }
 
     @Override
@@ -63,11 +63,13 @@ public class Main extends Application {
     }
 
     private void testPackets() throws IOException {
-        PlayListener con = new PlayListener(new ChessPlayer("test"));
 
-        File f = new File("C:\\Temp\\ups\\testt.txt");
-        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(f));
-        NetworkManager.getInstance().setupIO(con, System.in, out);
+        File tempIn = Files.createTempFile("in", null).toFile();
+        tempIn.deleteOnExit();
+        L.info("Created a new in temp file " + tempIn.getAbsolutePath());
+        BufferedInputStream in = new BufferedInputStream(new FileInputStream(tempIn));
+        NetworkManager.getInstance().setupIO(in, null);
+        //NetworkManager.getInstance().sendPacket(new PacketJustConnectedOutHello("Doomshade"));
         /*// packet ID
         out.write(
                 "81".concat(String.valueOf(Util.SEPARATION_CHAR)).getBytes(StandardCharsets.UTF_8));
