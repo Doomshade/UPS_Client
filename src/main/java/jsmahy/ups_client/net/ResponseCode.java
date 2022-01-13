@@ -1,7 +1,8 @@
 package jsmahy.ups_client.net;
 
-import jsmahy.ups_client.net.out.PacketData;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Doomshade
@@ -35,13 +36,13 @@ public enum ResponseCode implements PacketData {
         throw new IllegalArgumentException(String.format("No response code found for %s!", s));
     }
 
-    @Override
-    public String toDataString() {
-        return name();
+    public static ResponseCode deserialize(String data, AtomicInteger amountRead) {
+        amountRead.addAndGet(data.length());
+        return getResponseCode(data);
     }
 
     @Override
-    public PacketData fromDataString(String data) {
-        return getResponseCode(data);
+    public String toDataString() {
+        return name();
     }
 }

@@ -6,8 +6,4 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class PacketPlayOutMessage implements PacketOut {
-    @Override
-    public void write(OutputStream out) throws IOException {
-        // TODO
-    }
 }

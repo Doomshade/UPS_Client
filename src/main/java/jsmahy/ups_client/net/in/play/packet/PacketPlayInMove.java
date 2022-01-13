@@ -1,21 +1,22 @@
 package jsmahy.ups_client.net.in.play.packet;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
+import jsmahy.ups_client.net.PacketDataField;
 import jsmahy.ups_client.net.ResponseCode;
 import jsmahy.ups_client.net.in.play.PacketInPlay;
-import jsmahy.ups_client.net.listener.PacketListenerPlay;
 import jsmahy.ups_client.util.Square;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class PacketPlayInMove implements PacketInPlay {
+    @PacketDataField(1)
     private Square from = null;
+    @PacketDataField(2)
     private Square to = null;
     private ResponseCode responseCode = ResponseCode.REJECTED;
 
     public PacketPlayInMove() {
     }
 
-    @Override
     public void read(String in) throws InvalidPacketFormatException {
         // the move was invalid
         if (in.length() == 0) {
@@ -33,11 +34,6 @@ public class PacketPlayInMove implements PacketInPlay {
         } catch (IllegalArgumentException e) {
             throw new InvalidPacketFormatException(e);
         }
-    }
-
-    @Override
-    public void broadcast(final PacketListenerPlay listener) throws InvalidPacketFormatException {
-        listener.onMove(this);
     }
 
     public Square getFrom() {

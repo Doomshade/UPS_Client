@@ -4,13 +4,10 @@ import javafx.application.Platform;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.in.PacketIn;
 import jsmahy.ups_client.net.listener.PacketListener;
-import jsmahy.ups_client.net.listener.PacketListenerPlay;
 import jsmahy.ups_client.net.listener.impl.Client;
 import jsmahy.ups_client.net.listener.impl.JustConnectedListener;
 import jsmahy.ups_client.net.listener.impl.LoggedInListener;
 import jsmahy.ups_client.net.listener.impl.QueueListener;
-import jsmahy.ups_client.net.out.PacketData;
-import jsmahy.ups_client.net.out.PacketDataField;
 import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.util.LoggableOutputStream;
 import org.apache.logging.log4j.LogManager;
@@ -21,10 +18,13 @@ import org.jetbrains.annotations.Nullable;
 import java.io.*;
 import java.lang.annotation.AnnotationTypeMismatchException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
 
@@ -99,7 +99,7 @@ public final class NetworkManager {
      *
      * @param listener the listener
      */
-    public static void setClient(@NotNull PacketListenerPlay listener) {
+    public static void setClient(@NotNull Client listener) {
         LISTENERS.put(ProtocolState.PLAY, listener);
     }
 
@@ -190,11 +190,10 @@ public final class NetworkManager {
     /**
      * Gets the packet listener based on the current state.
      *
-     * @param <T> the packet listener implementation
      * @return the packet listener
      */
-    public <T extends PacketListener> T getCurrentListener() {
-        return (T) getListener(state);
+    public PacketListener getCurrentListener() {
+        return getListener(state);
     }
 
     /**
@@ -212,9 +211,69 @@ public final class NetworkManager {
         receivePacket(getState().getPacketIn(packet.getPacketId()), packet.getData());
     }
 
-    public synchronized void receivePacket(PacketIn<?> p, String data) throws InvalidPacketFormatException, IOException {
-        p.read(data);
-        p.broadcast(getCurrentListener());
+    public synchronized void receivePacket(PacketIn p, String data) throws InvalidPacketFormatException, IOException {
+        final TreeMap<Integer, LinkedHashMap<Field, Object>> map = new TreeMap<>(Comparator.naturalOrder());
+        final AtomicInteger amountRead = new AtomicInteger();
+
+        // get all the fields annotated with packet data field
+        // and register them to the tree map
+        for (Field field : p.getClass().getDeclaredFields()) {
+            if (!field.isAnnotationPresent(PacketDataField.class)) {
+                continue;
+            }
+
+            int value = field.getAnnotation(PacketDataField.class).value();
+            final Object obj;
+            try {
+                field.setAccessible(true);
+                obj = field.get(p);
+            } catch (IllegalAccessException e) {
+                L.fatal(String.format("Could not access %s field in class %s!", field.getName(), p.getClass().getSimpleName()));
+                Platform.exit();
+                return;
+            }
+
+            if (!(obj instanceof PacketData)) {
+                throw new IllegalStateException("Field must be of packet data type!");
+            }
+            map.computeIfAbsent(value, x -> map.put(x, new LinkedHashMap<>()));
+            map.get(value).put(field, obj);
+        }
+
+        // then iterate through the fields and call their "deserialize" method
+        for (Map<Field, Object> q : map.values()) {
+            for (Map.Entry<Field, Object> entry : q.entrySet()) {
+
+                final Method deserializeMethod;
+                final Object packetData = entry.getValue();
+                try {
+                    deserializeMethod = packetData.getClass().getDeclaredMethod("deserialize", String.class, AtomicInteger.class);
+                } catch (NoSuchMethodException e) {
+                    L.fatal(String.format("%s does not implement %s method!", p.getClass().getSimpleName(), "deserialize"));
+                    Platform.exit();
+                    return;
+                }
+
+                try {
+                    final Field field = entry.getKey();
+                    field.setAccessible(true);
+                    System.out.println(field.get(p));
+                    System.out.println("->");
+                    final Object invokedObj = deserializeMethod.invoke(null, data.substring(amountRead.get()), amountRead);
+                    System.out.println(invokedObj);
+                    System.out.println();
+                    field.set(p, invokedObj);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    L.fatal(String.format("Failed to invoke %s method in %s!", "deserialize", p.getClass().getSimpleName()), e);
+                    Platform.exit();
+                    return;
+                }
+            }
+        }
+
+        // now that the packet is deserialized we can handle it
+        L.info("Handling " + p);
+        getCurrentListener().handle(p);
         receivedResponse = true;
 
         // poll another packet from the queue
@@ -267,6 +326,7 @@ public final class NetworkManager {
             if (!field.isAnnotationPresent(PacketDataField.class)) {
                 continue;
             }
+            field.setAccessible(true);
             final Object obj;
             try {
                 obj = field.get(packet);
@@ -280,7 +340,11 @@ public final class NetworkManager {
 
             final StringBuilder sb = data.get(value);
             final String s;
-            if (obj instanceof String) {
+            if (obj instanceof Boolean) {
+                s = (Boolean) obj ? "1" : "0";
+            } else if (obj instanceof Number) {
+                s = obj.toString();
+            } else if (obj instanceof String) {
                 s = (String) obj;
             } else if (obj instanceof PacketData) {
                 s = ((PacketData) obj).toDataString();

@@ -14,8 +14,4 @@ import java.io.OutputStream;
  */
 public class PacketPlayOutKeepAlive implements PacketOut {
 
-    @Override
-    public void write(final OutputStream out) throws IOException {
-    }
-
 }

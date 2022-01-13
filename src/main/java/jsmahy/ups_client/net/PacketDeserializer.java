@@ -33,7 +33,11 @@ public class PacketDeserializer implements Runnable {
             try {
                 byte[] buf = new byte[1024];
                 while (in.read(buf) == -1) {
-                    Thread.onSpinWait();
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
                 s = new String(buf, StandardCharsets.UTF_8);
                 s = s.trim();

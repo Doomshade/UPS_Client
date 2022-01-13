@@ -1,4 +1,4 @@
-package jsmahy.ups_client.net.out;
+package jsmahy.ups_client.net;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

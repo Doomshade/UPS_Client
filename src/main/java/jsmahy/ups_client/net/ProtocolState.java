@@ -8,7 +8,6 @@ import jsmahy.ups_client.net.in.logged_in.packet.PacketLoggedInInJoinQueue;
 import jsmahy.ups_client.net.in.play.packet.*;
 import jsmahy.ups_client.net.in.queue.packet.PacketQueueInGameStart;
 import jsmahy.ups_client.net.in.queue.packet.PacketQueueInLeaveQueue;
-import jsmahy.ups_client.net.listener.PacketListener;
 import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.net.out.just_connected.PacketJustConnectedOutHello;
 import jsmahy.ups_client.net.out.logged_in.PacketLoggedInOutJoinQueue;
@@ -186,7 +185,7 @@ public enum ProtocolState {
      * @throws IllegalStateException        if the packet class could not be instantiated with the
      *                                      default constructor
      */
-    public <T extends PacketListener> PacketIn<T> getPacketIn(int packetId) throws
+    public PacketIn getPacketIn(int packetId) throws
             InvalidPacketFormatException, IllegalArgumentException {
         final Map<Integer, Class<? extends Packet>> registry = packetRegistryById.get(this);
         if (registry == null || !registry.containsKey(packetId)) {
@@ -195,7 +194,7 @@ public enum ProtocolState {
         }
 
         try {
-            return (PacketIn<T>) registry.get(packetId).getConstructor().newInstance();
+            return (PacketIn) registry.get(packetId).getConstructor().newInstance();
         } catch (Exception e) {
             String msg = "Could not instantiate an 'in' packet with ID %d, and state %s";
             throw new IllegalStateException(msg, e);

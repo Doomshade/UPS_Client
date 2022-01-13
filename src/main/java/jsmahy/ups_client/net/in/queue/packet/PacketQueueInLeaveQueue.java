@@ -2,12 +2,11 @@ package jsmahy.ups_client.net.in.queue.packet;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.net.ResponseCode;
-import jsmahy.ups_client.net.in.PacketIn;
-import jsmahy.ups_client.net.listener.impl.QueueListener;
+import jsmahy.ups_client.net.in.queue.PacketInQueue;
 
-public class PacketQueueInLeaveQueue implements PacketIn<QueueListener> {
+public class PacketQueueInLeaveQueue implements PacketInQueue {
     private ResponseCode rc = ResponseCode.NONE;
-    @Override
+
     public void read(String in) throws InvalidPacketFormatException {
         try {
             rc = ResponseCode.getResponseCode(in);
@@ -20,8 +19,4 @@ public class PacketQueueInLeaveQueue implements PacketIn<QueueListener> {
         return rc;
     }
 
-    @Override
-    public void broadcast(QueueListener listener) throws InvalidPacketFormatException {
-        listener.onLeaveQueue(this);
-    }
 }

@@ -1,7 +1,7 @@
 package jsmahy.ups_client.net.out.play;
 
 import jsmahy.ups_client.net.ResponseCode;
-import jsmahy.ups_client.net.out.PacketDataField;
+import jsmahy.ups_client.net.PacketDataField;
 import jsmahy.ups_client.net.out.PacketOut;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -15,11 +15,6 @@ public class PacketPlayOutDrawOffer implements PacketOut {
 
     public PacketPlayOutDrawOffer(final ResponseCode response) {
         this.response = response;
-    }
-
-    @Override
-    public void write(final OutputStream out) throws IOException {
-        out.write(response.name().getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

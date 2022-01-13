@@ -4,7 +4,6 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
@@ -15,7 +14,10 @@ import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Files;
 
@@ -69,6 +71,8 @@ public class Main extends Application {
         L.info("Created a new in temp file " + tempIn.getAbsolutePath());
         BufferedInputStream in = new BufferedInputStream(new FileInputStream(tempIn));
         NetworkManager.getInstance().setupIO(in, null);
+        Client.setLoginName("Doomshade");
+        NetworkManager.getInstance().sendPacket(new PacketJustConnectedOutHello("Doomshade"));
         //NetworkManager.getInstance().sendPacket(new PacketJustConnectedOutHello("Doomshade"));
         /*// packet ID
         out.write(

@@ -1,16 +1,13 @@
 package jsmahy.ups_client.util;
 
-import jsmahy.ups_client.net.out.PacketData;
+import jsmahy.ups_client.net.PacketData;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Square implements PacketData {
-    private int rank, file;
+    private final int rank, file;
 
-    public Square() {
-        this.rank = -1;
-        this.file = -1;
-    }
 
     public Square(Square other) {
         this(other.rank, other.file);
@@ -42,21 +39,21 @@ public final class Square implements PacketData {
     }
 
     public static Square fromString(String s) throws IllegalArgumentException {
-        if (s.length() != 2) {
-            throw new IllegalArgumentException(String.format("Invalid position %s! The position " +
-                    "length " +
-                    "must be 2!", s));
-        }
-        char file = s.charAt(0);
+        return Square.deserialize(s, new AtomicInteger(0));
+    }
+
+    public static Square deserialize(String data, AtomicInteger amountRead) {
+        char file = data.charAt(0);
         if (file < 'A' || file > 'H') {
             throw new IllegalArgumentException(
                     String.format("Invalid file in position (%c)", file));
         }
-        char rank = s.charAt(1);
+        char rank = data.charAt(1);
         if (rank < '0' || rank > '8') {
             throw new IllegalArgumentException(String.format("Invalid rank in position (%c)",
                     rank));
         }
+        amountRead.addAndGet(2);
         return new Square(file - 'A', rank - '0');
     }
 
@@ -72,10 +69,6 @@ public final class Square implements PacketData {
      */
     public int getFile() {
         return file;
-    }
-
-    public String toAsciiString() {
-        return new String(new char[]{toChar(rank), toChar(file)});
     }
 
     private char toChar(int num) {
@@ -120,10 +113,5 @@ public final class Square implements PacketData {
     @Override
     public String toDataString() {
         return new String(new char[]{toChar(rank), toChar(file)});
-    }
-
-    @Override
-    public PacketData fromDataString(String data) {
-        return fromString(data);
     }
 }

@@ -5,7 +5,6 @@ import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.in.play.packet.*;
-import jsmahy.ups_client.net.listener.PacketListenerPlay;
 import jsmahy.ups_client.net.out.play.PacketPlayOutKeepAlive;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -15,7 +14,7 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class Client implements PacketListenerPlay {
+public class Client extends AbstractListener {
     public static final int SERVER_RESPONSE_LIMIT = 25_000;
     public static final int KEEPALIVE_CHECK_PERIOD = 1_000;
     private static final Logger L = LogManager.getLogger(Client.class);
@@ -30,7 +29,14 @@ public class Client implements PacketListenerPlay {
     private ChessGame chessGame = null;
     private long timeSinceLastDrawOffer = 0L;
 
-    private Client() {
+    {
+        register(PacketPlayInMove.class, this::onMove);
+        register(PacketPlayInKeepAlive.class, this::keepAlive);
+        register(PacketPlayInOpponentName.class, this::onOpponentName);
+        register(PacketPlayInMessage.class, this::onMessage);
+        register(PacketPlayInDrawOffer.class, this::onDrawOffer);
+        register(PacketPlayInGameFinish.class, this::onGameFinish);
+
         this.player = new ChessPlayer(name);
         NetworkManager.setClient(this);
         L.info("Logged in as " + this);
@@ -62,6 +68,10 @@ public class Client implements PacketListenerPlay {
         }
         L.info(String.format("Logging in as %s...", name));
         instance = new Client();
+    }
+
+    private void onGameFinish(PacketPlayInGameFinish packet) {
+
     }
 
     public void startGame(ChessGame chessGame) {
@@ -110,8 +120,7 @@ public class Client implements PacketListenerPlay {
         return player;
     }
 
-    @Override
-    public void onMove(final PacketPlayInMove packetPlayInMove)
+    private void onMove(final PacketPlayInMove packetPlayInMove)
             throws InvalidPacketFormatException {
         switch (packetPlayInMove.getResponseCode()) {
             case REJECTED:
@@ -130,13 +139,11 @@ public class Client implements PacketListenerPlay {
         }
     }
 
-    @Override
-    public void keepAlive(final PacketPlayInKeepAlive packetPlayInKeepAlive) {
+    private void keepAlive(final PacketPlayInKeepAlive packetPlayInKeepAlive) {
         awaitingKeepAlive = false;
     }
 
-    @Override
-    public void onDrawOffer(final PacketPlayInDrawOffer packetPlayInDrawOffer) {
+    private void onDrawOffer(final PacketPlayInDrawOffer packetPlayInDrawOffer) {
         L.trace("Received a draw offer");
         final long millis = System.currentTimeMillis();
         if (millis - timeSinceLastDrawOffer > DRAW_OFFER_MAX_DELAY) {
@@ -145,13 +152,11 @@ public class Client implements PacketListenerPlay {
         }
     }
 
-    @Override
-    public void onMessage(PacketPlayInMessage packet) {
+    private void onMessage(PacketPlayInMessage packet) {
         L.info("Message recvd: " + packet.getMessage());
     }
 
-    @Override
-    public void onOpponentName(PacketPlayInOpponentName packet) {
+    private void onOpponentName(PacketPlayInOpponentName packet) {
         chessGame.setOpponent(new ChessPlayer(packet.getOpponentName()));
     }
 

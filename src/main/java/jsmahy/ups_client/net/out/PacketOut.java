@@ -14,13 +14,4 @@ import java.util.Collection;
  * @since 1.0
  */
 public interface PacketOut extends Packet {
-
-    /**
-     * Writes the packet data to the output stream.
-     *
-     * @param out the output stream
-     *
-     * @throws IOException if the data could not be written into the stream
-     */
-    void write(final OutputStream out) throws IOException;
 }

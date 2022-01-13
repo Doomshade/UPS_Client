@@ -1,6 +1,6 @@
 package jsmahy.ups_client.exception;
 
-public class InvalidPacketFormatException extends Exception {
+public class InvalidPacketFormatException extends RuntimeException {
     public InvalidPacketFormatException() {
     }
 

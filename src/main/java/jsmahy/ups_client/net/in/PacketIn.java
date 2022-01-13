@@ -11,16 +11,5 @@ import jsmahy.ups_client.net.listener.PacketListener;
  * @version 1.0
  * @since 1.0
  */
-public interface PacketIn<T extends PacketListener> extends Packet {
-
-    /**
-     * Reads the packet from the input String array.
-     *
-     * @param in the String array
-     *
-     * @throws InvalidPacketFormatException if thr received packet has an invalid format
-     */
-    void read(String in) throws InvalidPacketFormatException;
-
-    void broadcast(T listener) throws InvalidPacketFormatException;
+public interface PacketIn extends Packet {
 }
