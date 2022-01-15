@@ -23,7 +23,11 @@ import java.lang.reflect.Method;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
@@ -41,16 +45,17 @@ import static java.lang.String.format;
 public final class NetworkManager {
     public static final String PACKET_MAGIC = "CHESS";
     public static final int PACKET_HEADER_LENGTH = PACKET_MAGIC.length() + 5;
-    private static final Logger L = LogManager.getLogger(NetworkManager.class);
-
-    private static final Queue<BufferedPacket> PACKET_QUEUE = new LinkedList<>();
-
+    public static final int MAXIMUM_ID_LENGTH = 3;
     private static final NetworkManager INSTANCE = new NetworkManager();
-
+    /**
+     * The timeout limit for server to answer.
+     */
+    private static final int TIMEOUT = 30_000;
+    private final Logger L = LogManager.getLogger(NetworkManager.class);
     /**
      * The packet listener based on the protocol state.
      */
-    private static final Map<ProtocolState, PacketListener> LISTENERS = new HashMap<>() {
+    private final Map<ProtocolState, PacketListener> LISTENERS = new ConcurrentHashMap<>() {
         // test
         {
             put(ProtocolState.JUST_CONNECTED, new JustConnectedListener());
@@ -58,12 +63,6 @@ public final class NetworkManager {
             put(ProtocolState.QUEUE, new QueueListener());
         }
     };
-
-    /**
-     * The timeout limit for server to answer.
-     */
-    private static final int TIMEOUT = 30_000;
-
     /**
      * Indicates whether the connection was successfully instantiated.
      */
@@ -89,8 +88,6 @@ public final class NetworkManager {
      */
     private ProtocolState state = ProtocolState.JUST_CONNECTED;
 
-    private boolean receivedResponse = true;
-
     private NetworkManager() {
     }
 
@@ -100,7 +97,7 @@ public final class NetworkManager {
      * @param listener the listener
      */
     public static void setClient(@NotNull Client listener) {
-        LISTENERS.put(ProtocolState.PLAY, listener);
+        getInstance().LISTENERS.put(ProtocolState.PLAY, listener);
     }
 
     /**
@@ -164,7 +161,7 @@ public final class NetworkManager {
                 throw new RuntimeException(e);
             }
             L.info("Using simulated output stream...");
-            this.out = new BufferedOutputStream(System.out);
+            //this.out = new BufferedOutputStream(System.out);
         } else {
             this.out = new BufferedOutputStream(new LoggableOutputStream(out));
         }
@@ -233,8 +230,8 @@ public final class NetworkManager {
                 return;
             }
 
-            if (!(obj instanceof PacketData)) {
-                throw new IllegalStateException("Field must be of packet data type!");
+            if (!(obj instanceof PacketData || obj instanceof String || obj instanceof Boolean || obj instanceof Number)) {
+                throw new AnnotationTypeMismatchException(null, obj.getClass().getSimpleName());
             }
             map.computeIfAbsent(value, x -> map.put(x, new LinkedHashMap<>()));
             map.get(value).put(field, obj);
@@ -243,28 +240,41 @@ public final class NetworkManager {
         // then iterate through the fields and call their "deserialize" method
         for (Map<Field, Object> q : map.values()) {
             for (Map.Entry<Field, Object> entry : q.entrySet()) {
-
-                final Method deserializeMethod;
+                final Field field = entry.getKey();
+                field.setAccessible(true);
                 final Object packetData = entry.getValue();
-                try {
-                    deserializeMethod = packetData.getClass().getDeclaredMethod("deserialize", String.class, AtomicInteger.class);
-                } catch (NoSuchMethodException e) {
-                    L.fatal(String.format("%s does not implement %s method!", p.getClass().getSimpleName(), "deserialize"));
-                    Platform.exit();
-                    return;
-                }
+                final Method deserializeMethod;
 
                 try {
-                    final Field field = entry.getKey();
-                    field.setAccessible(true);
-                    System.out.println(field.get(p));
-                    System.out.println("->");
+                    if (packetData instanceof Boolean) {
+                        // check if the start of the string is either a 1 or a 0
+                        field.setBoolean(p, data.substring(amountRead.get()).charAt(0) == '1');
+                        amountRead.incrementAndGet();
+                        continue;
+                    } else if (packetData instanceof String) {
+                        // get the whole data
+                        field.set(p, data.substring(amountRead.get()));
+                        amountRead.addAndGet(data.length());
+                        continue;
+                    } else if (packetData instanceof Integer) {
+                        // check for maximum id length bytes
+                        field.setInt(p, Integer.parseInt(data.substring(amountRead.get(), amountRead.get() + MAXIMUM_ID_LENGTH)));
+                        amountRead.addAndGet(MAXIMUM_ID_LENGTH);
+                        continue;
+                    }
+
+                    deserializeMethod = packetData.getClass().getDeclaredMethod("deserialize", String.class, AtomicInteger.class);
+                    System.out.print(field.get(p));
+                    System.out.print(" -> ");
                     final Object invokedObj = deserializeMethod.invoke(null, data.substring(amountRead.get()), amountRead);
                     System.out.println(invokedObj);
-                    System.out.println();
                     field.set(p, invokedObj);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     L.fatal(String.format("Failed to invoke %s method in %s!", "deserialize", p.getClass().getSimpleName()), e);
+                    Platform.exit();
+                    return;
+                } catch (NoSuchMethodException e) {
+                    L.fatal(String.format("%s does not implement %s method!", entry.getKey().getClass().getSimpleName(), "deserialize"));
                     Platform.exit();
                     return;
                 }
@@ -272,22 +282,12 @@ public final class NetworkManager {
         }
 
         // now that the packet is deserialized we can handle it
-        L.info("Handling " + p);
+        L.debug("Handling " + p);
         getCurrentListener().handle(p);
-        receivedResponse = true;
-
-        // poll another packet from the queue
-        _sendPacket(PACKET_QUEUE.poll());
     }
 
-    public synchronized void sendPacket(BufferedPacket packet) throws InvalidPacketFormatException, IOException {
-
-        PACKET_QUEUE.add(packet);
-        if (!receivedResponse) {
-            return;
-        }
-
-        _sendPacket(PACKET_QUEUE.poll());
+    public void sendPacket(BufferedPacket packet) throws InvalidPacketFormatException, IOException {
+        _sendPacket(packet);
     }
 
     private synchronized void _sendPacket(BufferedPacket packet) throws IOException, IllegalStateException {
@@ -297,19 +297,21 @@ public final class NetworkManager {
         if (packet == null) {
             return;
         }
-        // ID
-        out.write(PACKET_MAGIC.getBytes(StandardCharsets.UTF_8));
-        out.write(format("%02x", packet.getPacketId()).getBytes(StandardCharsets.UTF_8));
-
-        // Data length
-        out.write(format("%03d", packet.getPacketSize()).getBytes(StandardCharsets.UTF_8));
-
-        // Data
-        out.write(packet.getData().getBytes(StandardCharsets.UTF_8));
-        out.flush();
-        receivedResponse = false;
         L.debug(format("Sending %s packet to the server...", packet));
+        if (out != null) {
+            // ID
+            out.write(PACKET_MAGIC.getBytes(StandardCharsets.UTF_8));
+            out.write(format("%02x", packet.getPacketId()).getBytes(StandardCharsets.UTF_8));
 
+            // Data length
+            out.write(format("%03d", packet.getPacketSize()).getBytes(StandardCharsets.UTF_8));
+
+            // Data
+            out.write(packet.getData().getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            L.debug(format("Sent %s packet to the server...", packet));
+        }
+        L.debug("Awaiting response from the server...");
     }
 
     /**
@@ -342,8 +344,6 @@ public final class NetworkManager {
             final String s;
             if (obj instanceof Boolean) {
                 s = (Boolean) obj ? "1" : "0";
-            } else if (obj instanceof Number) {
-                s = obj.toString();
             } else if (obj instanceof String) {
                 s = (String) obj;
             } else if (obj instanceof PacketData) {
@@ -359,7 +359,8 @@ public final class NetworkManager {
             sb.append(queueSb);
         }
         try {
-            _sendPacket(new BufferedPacket(getState().getPacketId(packet.getClass()), sb.toString()));
+            L.info(String.format("Sending packet %s (%s). Payload: %s", packet, packet.getClass().getSimpleName(), sb));
+            sendPacket(new BufferedPacket(getState().getPacketId(packet.getClass()), sb.toString()));
         } catch (InvalidPacketFormatException e) {
             throw new IllegalStateException(e);
         } catch (IOException e) {

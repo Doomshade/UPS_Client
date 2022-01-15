@@ -54,7 +54,7 @@ public final class Square implements PacketData {
                     rank));
         }
         amountRead.addAndGet(2);
-        return new Square(file - 'A', rank - '0');
+        return new Square(rank - '0', file - 'A');
     }
 
     /**

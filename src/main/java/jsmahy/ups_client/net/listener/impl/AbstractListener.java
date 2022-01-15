@@ -25,7 +25,7 @@ abstract class AbstractListener implements PacketListener {
         if (handler == null) {
             throw new IllegalStateException("No handler found for " + packet.getClass().getSimpleName());
         }
-        L.info(String.format("Using %s handler for %s packet", handler, packet));
+        L.debug(String.format("Found handler for %s packet in class %s", packet, getClass().getSimpleName()));
         handler.accept(packet);
     }
 }

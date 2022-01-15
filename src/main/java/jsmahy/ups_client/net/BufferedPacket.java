@@ -3,7 +3,7 @@ package jsmahy.ups_client.net;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public final class BufferedPacket {
+public final class BufferedPacket implements Cloneable {
 
     private StringBuilder header = new StringBuilder(NetworkManager.PACKET_HEADER_LENGTH);
     private StringBuilder data = new StringBuilder(1000);
@@ -20,7 +20,7 @@ public final class BufferedPacket {
         this.data.append(data);
     }
 
-    public int append(String s) throws InvalidPacketFormatException, IllegalStateException {
+    public synchronized int append(String s) throws InvalidPacketFormatException, IllegalStateException {
         if (isPacketReady()) {
             return 0;
         }
@@ -77,7 +77,7 @@ public final class BufferedPacket {
 
     private void validatePacketReady() {
         if (!isPacketReady()) {
-            throw new IllegalStateException("Packet not yet parsed!");
+            throw new IllegalStateException("Packet not yet parsed! (" + this + ")");
 
         }
     }
@@ -107,10 +107,21 @@ public final class BufferedPacket {
                 .toString();
     }
 
-    public void reset() {
+    public synchronized void reset() {
         packetId = -1;
         packetSize = -1;
         header = new StringBuilder(NetworkManager.PACKET_HEADER_LENGTH);
         data = new StringBuilder(1000);
+    }
+
+    @Override
+    public BufferedPacket clone() throws CloneNotSupportedException {
+        BufferedPacket clone = (BufferedPacket) super.clone();
+        clone.header = header;
+        clone.data = data;
+        clone.packetSize = packetSize;
+        clone.packetId = packetId;
+
+        return clone;
     }
 }

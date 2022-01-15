@@ -1,8 +1,6 @@
 package jsmahy.ups_client.net;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
-import jsmahy.ups_client.net.in.PacketIn;
-import jsmahy.ups_client.net.out.PacketOut;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 
 public class PacketDeserializer implements Runnable {
     private static final Logger L = LogManager.getLogger(PacketDeserializer.class);
-    private static final NetworkManager NM = NetworkManager.getInstance();
 
     /**
      * The messages from server that are received by this input stream.
@@ -46,14 +43,17 @@ public class PacketDeserializer implements Runnable {
                     // the data is fully buffered -> the packet is ready
                     // we can handle the packet now
                     if (bufferedPacket.isPacketReady()) {
+                        L.debug("Handling packet " + bufferedPacket);
 
                         // 0-0x7F = packet out, 0x80-0xFF = packet in
                         if (bufferedPacket.getPacketId() < ProtocolState.PACKET_IN_OFFSET) {
-                            L.debug("Sending " + bufferedPacket);
-                            NM.sendPacket(bufferedPacket);
-                        } else {
+                            L.debug("Queueing " + bufferedPacket);
+                            NetworkManager.getInstance().sendPacket(bufferedPacket);
+                        } else if (bufferedPacket.getPacketId() >= 0) {
                             L.debug("Received " + bufferedPacket);
-                            NM.receivePacket(bufferedPacket);
+                            NetworkManager.getInstance().receivePacket(bufferedPacket);
+                        } else {
+                            L.fatal("Packet is ready. but also not ready?? - " + bufferedPacket);
                         }
                         bufferedPacket.reset();
                     } else {

@@ -13,6 +13,10 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * @since 1.0
  */
 public class PacketPlayOutMove implements PacketOut {
+    private static int MOVE_IDS = 0;
+
+    @PacketDataField(0)
+    private final int moveId = MOVE_IDS++;
     @PacketDataField(1)
     private final Square from;
     @PacketDataField(2)
@@ -23,6 +27,22 @@ public class PacketPlayOutMove implements PacketOut {
         this.to = to;
     }
 
+    public static Object[] deserializeParams(String data) {
+        return null;
+    }
+
+    public int getMoveId() {
+        return moveId;
+    }
+
+    public Square getFrom() {
+        return from;
+    }
+
+    public Square getTo() {
+        return to;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
@@ -30,4 +50,5 @@ public class PacketPlayOutMove implements PacketOut {
                 .append("to", to)
                 .toString();
     }
+
 }

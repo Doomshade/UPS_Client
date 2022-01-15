@@ -19,10 +19,6 @@ public class PacketJustConnectedOutHello implements PacketOut {
         this.playerName = playerName;
     }
 
-    public static Object[] deserializeParams(String data) {
-        return new Object[]{data};
-    }
-
     @Override
     public String toString() {
         return new ToStringBuilder(this)

@@ -11,8 +11,6 @@ import jsmahy.ups_client.net.in.queue.packet.PacketQueueInLeaveQueue;
 
 public class QueueListener extends AbstractListener {
 
-    private static final NetworkManager NM = NetworkManager.getInstance();
-
     {
         register(PacketQueueInGameStart.class, this::onGameStart);
         register(PacketQueueInLeaveQueue.class, this::onLeaveQueue);
@@ -37,13 +35,13 @@ public class QueueListener extends AbstractListener {
         c.getPlayer().setColour(packet.isWhite());
         ChessGame game = new ChessGame(chessboard);
         c.startGame(game);
-        NM.changeState(ProtocolState.PLAY);
+        NetworkManager.getInstance().changeState(ProtocolState.PLAY);
     }
 
     private void onLeaveQueue(PacketQueueInLeaveQueue packet) throws InvalidPacketFormatException {
         switch (packet.getResponseCode()) {
             case OK:
-                NM.changeState(ProtocolState.LOGGED_IN);
+                NetworkManager.getInstance().changeState(ProtocolState.LOGGED_IN);
                 break;
             case REJECTED:
                 // TODO

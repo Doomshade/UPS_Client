@@ -9,9 +9,7 @@ import jsmahy.ups_client.net.in.just_connected.packet.PacketJustConnectedInHello
  * @version 1.0
  * @since 1.0
  */
-public class JustConnectedListener extends AbstractListener {
-
-    private final NetworkManager NM = NetworkManager.getInstance();
+public final class JustConnectedListener extends AbstractListener {
 
     {
         register(PacketJustConnectedInHello.class, this::onHello);
@@ -21,7 +19,7 @@ public class JustConnectedListener extends AbstractListener {
         switch (packet.getResponseCode()) {
             case OK:
                 Client.login();
-                NM.changeState(ProtocolState.LOGGED_IN);
+                NetworkManager.getInstance().changeState(ProtocolState.LOGGED_IN);
                 break;
             case REJECTED:
                 // TODO prompt the user again

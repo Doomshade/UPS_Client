@@ -160,7 +160,11 @@ public final class Chessboard {
             return ChessMove.NO_MOVE;
         }
 
-        return moveOnBoard(from, to, as);
+        // check if the player was actually holding his piece
+        if (as.isWhite() ^ isWhite(from)) {
+            return ChessMove.NO_MOVE;
+        }
+        return moveOnBoard(from, to);
     }
 
     /**
@@ -173,7 +177,7 @@ public final class Chessboard {
      * @throws IllegalAccessError    if the client attempted to move opponents piece and the
      *                               client called this method for some reason
      */
-    private ChessMove moveOnBoard(Square from, Square to, ChessPlayer as)
+    public ChessMove moveOnBoard(Square from, Square to)
             throws IllegalStateException {
         final Optional<IChessPiece> opt = getPiece(from);
         if (opt.isEmpty()) {
@@ -181,16 +185,9 @@ public final class Chessboard {
         }
         final IChessPiece piece = opt.get();
 
-        // check if the player was actually holding his piece
-        if (as.isWhite() ^ isWhite(from)) {
-            throw new IllegalAccessError("Attempted to move a piece that was the incorrect " +
-                    "colour!");
-        }
-
         ChessMove chessMove = ChessMove.MOVE;
 
         if (ChessPieceUtil.isKing(piece)) {
-
             chessMove = checkIfCastles(from, to, chessMove);
         }
 
