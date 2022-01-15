@@ -11,10 +11,7 @@ import jsmahy.ups_client.net.in.queue.packet.PacketQueueInLeaveQueue;
 import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.net.out.just_connected.PacketJustConnectedOutHello;
 import jsmahy.ups_client.net.out.logged_in.PacketLoggedInOutJoinQueue;
-import jsmahy.ups_client.net.out.play.PacketPlayOutDrawOffer;
-import jsmahy.ups_client.net.out.play.PacketPlayOutMessage;
-import jsmahy.ups_client.net.out.play.PacketPlayOutMove;
-import jsmahy.ups_client.net.out.play.PacketPlayOutResign;
+import jsmahy.ups_client.net.out.play.*;
 import jsmahy.ups_client.net.out.queue.PacketQueueOutLeaveQueue;
 import jsmahy.ups_client.util.Square;
 import org.apache.logging.log4j.LogManager;
@@ -71,16 +68,18 @@ public enum ProtocolState {
             register(PacketPlayOutDrawOffer.class, PLAY_OFFSET + 0x01, ResponseCode.class);
             register(PacketPlayOutResign.class, PLAY_OFFSET + 0x02);
             register(PacketPlayOutMessage.class, PLAY_OFFSET + 0x03);
+            register(PacketPlayOutDrawOfferResponse.class, PLAY_OFFSET + 0x04);
+            register(PacketPlayOutKeepAlive.class, PLAY_OFFSET + 0x1F);
 
             // client bound
             register(PacketPlayInMove.class, PLAY_OFFSET + PACKET_IN_OFFSET);
             register(PacketPlayInDrawOffer.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x01);
-            register(PacketPlayInGameFinish.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x03);
-            register(PacketPlayInMessage.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x04);
-            register(PacketPlayInKeepAlive.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x05);
-            register(PacketPlayInOpponentName.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x06);
-            register(PacketPlayInMoveResponse.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x07);
-            register(PacketPlayInCastles.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x08);
+            register(PacketPlayInGameFinish.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x02);
+            register(PacketPlayInMessage.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x03);
+            register(PacketPlayInOpponentName.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x04);
+            register(PacketPlayInMoveResponse.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x05);
+            register(PacketPlayInCastles.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x06);
+            register(PacketPlayInKeepAlive.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x1F);
         }
     };
 
