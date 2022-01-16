@@ -15,9 +15,4 @@ public class Util {
             Pattern.compile(
                     "((([rnbqkpRNBQKP1-8]+)\\/){7}([rnbqkpRNBQKP1-8]+)) ([wb]) (K?Q?k?q?|\\-) (" +
                             "([a-h][0-7])|\\-) (\\d+) (\\d+)");
-
-    /**
-     * The separation char in packets.
-     */
-    public static final char SEPARATION_CHAR = ';';
 }

@@ -54,31 +54,28 @@ public class ServerConnectionController implements Initializable {
         }
 
         final NetworkManager NM = NetworkManager.getInstance();
-        L.info("A");
         try {
-            L.info("A");
             setProgress(true);
-            L.info("A");
-            NM.setup(ipTF.getText(), port,
-                    () -> {
-                        setProgress(false);
-                        L.error("Failed to join to the server!");
-                        sendInvalidInputAlert("Server does not exist!", "Invalid input");
-                    },
-                    () -> {
-                        System.out.println("AAAAA");
-                        setProgress(false);
-                        L.info("Successfully connected to the server");
-                        Client.setLoginName(nameTF.getText());
-                        NM.sendPacket(new PacketJustConnectedOutHello(nameTF.getText()), null, null, null, null);
-                    });
-            L.info("A");
+            Client.setLoginName(nameTF.getText());
+            if (ipTF.getText().equalsIgnoreCase("null")) {
+                NM.setupIO(System.in, null);
+            } else {
+                NM.setup(ipTF.getText(), port,
+                        () -> {
+                            setProgress(false);
+                            L.error("Failed to join to the server!");
+                            sendInvalidInputAlert("Server does not exist!", "Invalid input");
+                        },
+                        () -> {
+                            L.info("Successfully connected to the server");
+                            NM.sendPacket(new PacketJustConnectedOutHello(nameTF.getText()), null, null, form, progress);
+                        });
+            }
         } catch (Exception e) {
             setProgress(false);
             L.error("Failed to join to the server!", e);
             sendInvalidInputAlert("Already connected to a server!", "Invalid input");
         }
-        L.info("ROFL");
     }
 
     private void setProgress(boolean progress) {

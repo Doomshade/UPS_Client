@@ -332,6 +332,10 @@ public final class NetworkManager {
     public synchronized void sendPacket(PacketOut packet, Runnable onFail, Runnable onSuccess, Node node,
                                         ProgressIndicator indicator)
             throws IllegalStateException, AnnotationTypeMismatchException, InvalidProtocolStateException {
+
+        if (!isInitializedStreams()) {
+            throw new IllegalStateException("The I/O streams have not yet been initialized!");
+        }
         // construct the packet based on annotated fields with PacketDataAnnotation
         // in the order of its value
         final TreeMap<Integer, StringBuilder> data = new TreeMap<>(Comparator.naturalOrder());
@@ -397,14 +401,6 @@ public final class NetworkManager {
 
         new Thread(() -> {
             try {
-                if (node != null && indicator != null) {
-                    Platform.runLater(() -> {
-                        node.setDisable(true);
-                        indicator.setProgress(-1);
-                        indicator.setDisable(false);
-                        indicator.setVisible(true);
-                    });
-                }
                 // CHESS
                 out.write(PACKET_MAGIC.getBytes(StandardCharsets.UTF_8));
 
@@ -417,13 +413,6 @@ public final class NetworkManager {
                 // Data
                 out.write(packet.getData().getBytes(StandardCharsets.UTF_8));
                 out.flush();
-                if (node != null && indicator != null) {
-                    Platform.runLater(() -> {
-                        node.setDisable(false);
-                        indicator.setDisable(true);
-                        indicator.setVisible(false);
-                    });
-                }
                 if (onSuccess != null) {
                     Platform.runLater(onSuccess);
                 }
@@ -464,6 +453,17 @@ public final class NetworkManager {
         L.info(format("Changing state to %s...", state.name()));
         for (Consumer<ProtocolState> listener : changedStateListeners) {
             listener.accept(state);
+        }
+        switch (state) {
+            case JUST_CONNECTED:
+                SceneManager.changeScene(SceneManager.Scenes.SERVER_CONNECTION);
+                break;
+            case PLAY:
+                SceneManager.changeScene(SceneManager.Scenes.GAME_SCENE);
+                break;
+            case QUEUE:
+                SceneManager.changeScene(SceneManager.Scenes.PLAY_SCENE);
+                break;
         }
     }
 

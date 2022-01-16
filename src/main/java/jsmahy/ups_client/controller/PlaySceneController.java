@@ -1,5 +1,6 @@
 package jsmahy.ups_client.controller;
 
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -49,13 +50,17 @@ public class PlaySceneController implements Initializable {
 	}
 
 	public void leaveQueue(final ActionEvent actionEvent) {
-		NetworkManager.getInstance().sendPacket(new PacketQueueOutLeaveQueue());
+		NetworkManager.getInstance().sendPacket(new PacketQueueOutLeaveQueue(), null, null, nodes, indicator);
 	}
 
 	@Override
 	public void initialize(final URL location, final ResourceBundle resources) {
 		NetworkManager.getInstance().addChangedStateListener(x -> updateButtons());
 		updateButtons();
+		final ObservableList<String> list = gameTypeChoiceBox.getItems();
+		list.add("BLITZ");
+		list.add("RAPID");
+		list.add("CLASSICAL");
 	}
 
 	public void updateButtons() {

@@ -1,6 +1,7 @@
 package jsmahy.ups_client.net;
 
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
+import jsmahy.ups_client.exception.InvalidProtocolStateException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -69,7 +70,7 @@ public class PacketDeserializer implements Runnable {
                         break;
                     }
                 }
-            } catch (IOException | InvalidPacketFormatException e) {
+            } catch (IOException | InvalidPacketFormatException | InvalidProtocolStateException e) {
                 L.fatal(e);
                 bufferedPacket.reset();
                 // L.info("Disconnecting...");

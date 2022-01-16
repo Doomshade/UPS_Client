@@ -5,6 +5,7 @@ import javafx.stage.Stage;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
+import jsmahy.ups_client.net.ProtocolState;
 import jsmahy.ups_client.util.Square;
 import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
@@ -38,7 +39,7 @@ public class Main extends Application {
 		Main.stage = stage;
 		testPieces();
 		testPackets();
-		SceneManager.changeScene(SceneManager.Scenes.SERVER_CONNECTION);
+		NetworkManager.getInstance().changeState(ProtocolState.JUST_CONNECTED);
 		stage.setTitle("Semestrální práce - Šachy (Jakub Šmrha jsmahy@students.zcu.cz)");
 		stage.show();
 	}

@@ -17,7 +17,6 @@
         <Label text="Game type"/>
         <ChoiceBox fx:id="gameTypeChoiceBox" prefWidth="150.0"/>
         <HBox>
-
             <HBox alignment="CENTER_LEFT">
                 <Button fx:id="zpetButton" mnemonicParsing="false" onAction="#goBack"
                         text="Back" prefHeight="30"/>
