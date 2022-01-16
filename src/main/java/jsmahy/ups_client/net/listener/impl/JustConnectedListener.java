@@ -1,5 +1,7 @@
 package jsmahy.ups_client.net.listener.impl;
 
+import jsmahy.ups_client.SceneManager;
+import jsmahy.ups_client.controller.ServerConnectionController;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.ProtocolState;
 import jsmahy.ups_client.net.in.just_connected.packet.PacketJustConnectedInHello;
@@ -20,9 +22,10 @@ public final class JustConnectedListener extends AbstractListener {
             case OK:
                 Client.login();
                 NetworkManager.getInstance().changeState(ProtocolState.LOGGED_IN);
+                SceneManager.changeScene(SceneManager.Scenes.MAIN_MENU);
                 break;
             case REJECTED:
-                // TODO prompt the user again
+                ServerConnectionController.getInstance().errorUsernameExists();
                 break;
         }
     }

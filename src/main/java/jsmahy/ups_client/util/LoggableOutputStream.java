@@ -19,19 +19,20 @@ public class LoggableOutputStream extends OutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        L.debug(String.format("Writing %d to %s...%n", b, out.toString()));
+        L.debug(String.format("Writing %d to %s...", b, out.toString()));
         out.write(b);
     }
 
     @Override
     public void write(byte @NotNull [] b) throws IOException {
-        L.debug(String.format("Writing %s to %s...%n", new String(b, StandardCharsets.UTF_8), out.toString()));
+        L.debug(String.format("Writing %s to %s...", new String(b, StandardCharsets.UTF_8).trim(), out.toString()));
         out.write(b);
     }
 
     @Override
     public void write(byte @NotNull [] b, int off, int len) throws IOException {
-        L.debug(String.format("Writing %s to %s (off=%d, len=%d)...%n", new String(b, StandardCharsets.UTF_8), out.toString(), off, len));
+        L.debug(String.format("Writing %s to %s (off=%d, len=%d)...", new String(b, StandardCharsets.UTF_8).trim(),
+                out.toString(), off, len));
         out.write(b, off, len);
     }
 }

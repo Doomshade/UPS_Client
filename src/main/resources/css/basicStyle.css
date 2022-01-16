@@ -1,0 +1,38 @@
+* {
+    -fx-background-primary-color: #99cc99;
+    -fx-background-secondary-color: #669933;
+    -fx-background-tertiary-color: #336633;
+    -fx-text-primary-color: #252545;
+    -fx-text-secondary-color: #353555;
+    -fx-text-tertiary-color: #454565;
+}
+
+.button {
+    -fx-text-fill: -fx-text-primary-color;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 5 10 5 10;
+}
+
+.label {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-primary-color;
+    -fx-effect: dropshadow(gaussian, rgba(255, 255, 255, 0.5), 0, 0, 0, 1);
+}
+
+.choice-box .menu-item:focused {
+    -fx-background-color: orange;
+}
+
+.choice-box .menu-item > .label {
+    -fx-text-fill: black;
+}
+
+.choice-box .menu-item:focused > .label {
+    -fx-text-fill: white;
+}
+
+.choice-box > .label {
+    -fx-text-fill: black;
+}

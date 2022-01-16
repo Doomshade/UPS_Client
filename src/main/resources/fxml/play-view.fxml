@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<StackPane stylesheets="@../css/basicStyle.css,@../css/bg.css" xmlns="http://javafx.com/javafx/10.0.2-internal"
+           xmlns:fx="http://javafx.com/fxml/1" fx:controller="jsmahy.ups_client.controller.PlaySceneController">
+    <padding>
+        <Insets top="10" bottom="10" right="50" left="30"/>
+    </padding>
+
+    <ProgressIndicator fx:id="indicator" disable="true" visible="false"/>
+    <HBox fx:id="nodes">
+        <FlowPane>
+            <Label text="Game type"/>
+            <ChoiceBox fx:id="gameTypeChoiceBox" prefWidth="150.0"/>
+        </FlowPane>
+
+        <padding>
+            <Insets top="10" bottom="10" right="50" left="30"/>
+        </padding>
+        <FlowPane alignment="CENTER_LEFT">
+            <Button fx:id="zpetButton" mnemonicParsing="false" onAction="#goBack"
+                    text="Back" prefHeight="30"/>
+        </FlowPane>
+
+        <FlowPane alignment="CENTER_RIGHT" vgap="5">
+            <Button fx:id="leaveQueueButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#leaveQueue"
+                    text="Leave Queue" prefHeight="30" disable="true" cancelButton="true"/>
+            <Button fx:id="startButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#joinQueue"
+                    text="Start" prefHeight="30" defaultButton="true"/>
+        </FlowPane>
+    </HBox>
+
+
+</StackPane>

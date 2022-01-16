@@ -1,5 +1,6 @@
 package jsmahy.ups_client.net.listener.impl;
 
+import jsmahy.ups_client.SceneManager;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.ProtocolState;
 import jsmahy.ups_client.net.ResponseCode;
@@ -17,7 +18,7 @@ public class LoggedInListener extends AbstractListener {
     private void onQueue(PacketLoggedInInJoinQueue packet) {
         if (packet.getResponseCode() == ResponseCode.OK) {
             NetworkManager.getInstance().changeState(ProtocolState.QUEUE);
-            // TODO change the window
+            SceneManager.changeScene(SceneManager.Scenes.PLAY_SCENE);
         }
     }
 
