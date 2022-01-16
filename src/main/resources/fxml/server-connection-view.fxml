@@ -25,10 +25,10 @@
             </rowConstraints>
 
             <Label text="Name" textAlignment="JUSTIFY" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-            <TextField fx:id="nameTF" text="Doomshade" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+            <TextField fx:id="nameTF" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
 
             <Label text="IP" textAlignment="JUSTIFY" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-            <TextField fx:id="ipTF" text="192.168.125.133" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+            <TextField fx:id="ipTF" text="192.168.125.165" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
 
             <Label text="Port" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
             <TextField fx:id="portTF" text="10001" GridPane.columnIndex="1" GridPane.rowIndex="2"/>

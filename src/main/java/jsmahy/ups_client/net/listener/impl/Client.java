@@ -1,5 +1,6 @@
 package jsmahy.ups_client.net.listener.impl;
 
+import jsmahy.ups_client.controller.GameController;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessMove;
@@ -219,6 +220,7 @@ public class Client extends AbstractListener {
 
 	private void onMessage(PacketPlayInMessage packet) {
 		L.info("Message recvd: " + packet.getMessage());
+		GameController.getInstance().opponentChat.appendText(packet.getMessage() + "\n");
 	}
 
 	private void onOpponentName(PacketPlayInOpponentName packet) {

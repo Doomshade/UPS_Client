@@ -1,5 +1,6 @@
 package jsmahy.ups_client.net.listener.impl;
 
+import jsmahy.ups_client.SceneManager;
 import jsmahy.ups_client.exception.InvalidFENFormatException;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.game.ChessGame;
@@ -36,6 +37,7 @@ public class QueueListener extends AbstractListener {
         ChessGame game = new ChessGame(chessboard);
         c.startGame(game);
         NetworkManager.getInstance().changeState(ProtocolState.PLAY);
+        SceneManager.changeScene(SceneManager.Scenes.GAME_SCENE);
     }
 
     private void onLeaveQueue(PacketQueueInLeaveQueue packet) throws InvalidPacketFormatException {

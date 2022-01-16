@@ -68,7 +68,7 @@ public enum ProtocolState {
 			register(PacketPlayOutMove.class, PLAY_OFFSET, Square.class, Square.class);
 			register(PacketPlayOutDrawOffer.class, PLAY_OFFSET + 0x01, ResponseCode.class);
 			register(PacketPlayOutResign.class, PLAY_OFFSET + 0x02);
-			register(PacketPlayOutMessage.class, PLAY_OFFSET + 0x03);
+			register(PacketPlayOutMessage.class, PLAY_OFFSET + 0x03, String.class);
 			register(PacketPlayOutDrawOfferResponse.class, PLAY_OFFSET + 0x04);
 			register(PacketPlayOutKeepAlive.class, PLAY_OFFSET + 0x1F);
 

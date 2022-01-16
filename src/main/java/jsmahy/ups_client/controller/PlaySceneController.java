@@ -8,6 +8,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import jsmahy.ups_client.SceneManager;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.ProtocolState;
@@ -25,10 +26,6 @@ import java.util.ResourceBundle;
 public class PlaySceneController implements Initializable {
 	private static PlaySceneController instance = null;
 	@FXML
-	public TextField whiteNameTF;
-	@FXML
-	public TextField blackNameTF;
-	@FXML
 	public Button zpetButton;
 	@FXML
 	public Button startButton;
@@ -38,7 +35,7 @@ public class PlaySceneController implements Initializable {
 	public ChoiceBox<String> gameTypeChoiceBox;
 
 	@FXML
-	public HBox nodes;
+	public VBox nodes;
 	@FXML
 	public ProgressIndicator indicator;
 

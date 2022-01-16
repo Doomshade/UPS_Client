@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="jsmahy.ups_client.controller.GameController"
+            prefHeight="400.0" prefWidth="600.0">
+    <FlowPane>
+        <TextField fx:id="chat" onKeyPressed="#sendMessageEnter"/>
+        <Button defaultButton="true" text="Send" fx:id="chatSend" onAction="#sendMessage"/>
+    </FlowPane>
+    <TextArea editable="false" fx:id="opponentChat" />
+</VBox>
