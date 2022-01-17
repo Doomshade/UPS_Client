@@ -53,8 +53,6 @@ public class PacketDeserializer implements Runnable {
                         } else if (bufferedPacket.getPacketId() >= 0) {
                             L.debug("Received " + bufferedPacket);
                             NetworkManager.getInstance().receivePacket(bufferedPacket);
-                        } else {
-                            L.fatal("Packet is ready. but also not ready?? - " + bufferedPacket);
                         }
                         bufferedPacket.reset();
                     } else {
@@ -73,6 +71,7 @@ public class PacketDeserializer implements Runnable {
             } catch (IOException | InvalidPacketFormatException | InvalidProtocolStateException e) {
                 L.fatal(e);
                 bufferedPacket.reset();
+                // TODO
                 // L.info("Disconnecting...");
                 // break;
             }

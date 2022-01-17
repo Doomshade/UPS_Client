@@ -40,21 +40,6 @@ public final class ChessGame {
         return clientToMove;
     }
 
-    /**
-     * Moves a piece and propagates the move to the server if source of the movement was the client
-     *
-     * @param from the from
-     * @param to   the to
-     */
-    public void movePiece(Square from, Square to) {
-        // the move to perform as
-        final ChessPlayer as = clientToMove ? Client.getClient().getPlayer() : getOpponent();
-        if (chessboard.move(from, to, as) != ChessMove.NO_MOVE && clientToMove) {
-            // send packet to players
-            NetworkManager.getInstance().sendPacket(new PacketPlayOutMove(from, to));
-        }
-    }
-
     public ChessPlayer getOpponent() throws IllegalStateException {
         if (!hasOpponent()) {
             throw new IllegalStateException("Opponent not yet set in this game! " + this);

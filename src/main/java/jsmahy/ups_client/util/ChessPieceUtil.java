@@ -43,7 +43,7 @@ public final class ChessPieceUtil {
      */
     public static boolean isWhite(char c) throws IllegalArgumentException {
         validateId(c);
-        return Character.isLowerCase(c);
+        return Character.isUpperCase(c);
     }
 
     /**

@@ -1,6 +1,7 @@
 package jsmahy.ups_client.net.out.play;
 
 import jsmahy.ups_client.net.PacketDataField;
+import jsmahy.ups_client.net.listener.impl.Client;
 import jsmahy.ups_client.net.out.PacketOut;
 import jsmahy.ups_client.util.Square;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -25,10 +26,6 @@ public class PacketPlayOutMove implements PacketOut {
     public PacketPlayOutMove(final Square from, final Square to) {
         this.from = from;
         this.to = to;
-    }
-
-    public static Object[] deserializeParams(String data) {
-        return null;
     }
 
     public int getMoveId() {

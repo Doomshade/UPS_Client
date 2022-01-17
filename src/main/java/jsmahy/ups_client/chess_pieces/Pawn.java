@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 class Pawn extends AbstractChessPiece {
-    private static final Logger L = LogManager.getLogger(Pawn.class);
+    private static final transient Logger L = LogManager.getLogger(Pawn.class);
 
     Pawn() {
         super('p');

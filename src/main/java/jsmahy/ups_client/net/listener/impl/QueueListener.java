@@ -24,16 +24,17 @@ public class QueueListener extends AbstractListener {
             throw new IllegalStateException("The server sent a reconnect packet, but did " +
                     "not send a FEN string to update the board!");
         }
+
+        // set up the game and change the state
+        Client c = Client.getClient();
+        c.getPlayer().setColour(packet.isWhite());
+
         final Chessboard chessboard = new Chessboard();
         try {
             chessboard.setupBoard(fen);
         } catch (InvalidFENFormatException e) {
             throw new InvalidPacketFormatException(e);
         }
-
-        // set up the game and change the state
-        Client c = Client.getClient();
-        c.getPlayer().setColour(packet.isWhite());
         ChessGame game = new ChessGame(chessboard);
         c.startGame(game);
         NetworkManager.getInstance().changeState(ProtocolState.PLAY);

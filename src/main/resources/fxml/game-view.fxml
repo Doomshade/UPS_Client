@@ -3,15 +3,21 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.VBox?>
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="jsmahy.ups_client.controller.GameController"
-      prefHeight="400.0" prefWidth="600.0">
-    <FlowPane>
-        <TextField fx:id="chat"/>
-        <Button defaultButton="true" text="Send" fx:id="chatSend" onAction="#sendMessage"/>
-    </FlowPane>
-    <TextArea editable="false" fx:id="opponentChat"/>
-</VBox>
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="jsmahy.ups_client.controller.GameController"
+            prefHeight="400.0" prefWidth="600.0" fx:id="rootPane">
+
+    <bottom>
+        <VBox>
+            <FlowPane>
+                <TextField fx:id="chat"/>
+                <Button defaultButton="true" text="Send" fx:id="chatSend" onAction="#sendMessage"/>
+            </FlowPane>
+            <TextArea editable="false" fx:id="opponentChat"/>
+        </VBox>
+    </bottom>
+</BorderPane>

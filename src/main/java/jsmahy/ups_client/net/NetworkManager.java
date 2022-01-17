@@ -366,7 +366,7 @@ public final class NetworkManager {
             } else if (obj instanceof PacketData) {
                 s = ((PacketData) obj).toDataString();
             } else if (obj instanceof Integer) {
-                s = String.format("%d03", obj);
+                s = String.format("%03d", obj);
             } else {
                 throw new AnnotationTypeMismatchException(null, obj.getClass().getSimpleName());
             }
