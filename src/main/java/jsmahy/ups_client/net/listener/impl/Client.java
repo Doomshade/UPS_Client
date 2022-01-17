@@ -3,7 +3,6 @@ package jsmahy.ups_client.net.listener.impl;
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import jsmahy.ups_client.SceneManager;
-import jsmahy.ups_client.chess_pieces.IChessPiece;
 import jsmahy.ups_client.controller.GameController;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.game.ChessGame;
@@ -14,13 +13,13 @@ import jsmahy.ups_client.net.in.play.packet.*;
 import jsmahy.ups_client.net.out.play.PacketPlayOutKeepAlive;
 import jsmahy.ups_client.net.out.play.PacketPlayOutMove;
 import jsmahy.ups_client.util.AlertBuilder;
-import jsmahy.ups_client.util.Pair;
 import jsmahy.ups_client.util.Square;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.*;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Client extends AbstractListener {
 	public static final int SERVER_RESPONSE_LIMIT = 25_000;
@@ -31,7 +30,6 @@ public class Client extends AbstractListener {
 	private static Client instance = null;
 	private static String name = "";
 	private final ChessPlayer player;
-	private final Map<Integer, Pair<PacketPlayOutMove, Optional<IChessPiece>>> lastMoves = new HashMap<>();
 	private boolean awaitingKeepAlive = false;
 	private long keepAlive = System.currentTimeMillis();
 	private ChessGame chessGame = null;
@@ -90,25 +88,6 @@ public class Client extends AbstractListener {
 			case OK:
 				break;
 			case REJECTED:
-				// TODO uncomment once we stop debugging via external file
-				/*if (!lastMoves.containsKey(packet.getMoveId())) {
-					throw new IllegalStateException("Received a move response with an invalid ID!");
-				}
-				final Pair<PacketPlayOutMove, Optional<IChessPiece>> pair =
-						lastMoves.get(packet.getMoveId());
-				PacketPlayOutMove move = pair.a;
-				// TODO fix
-				//final Optional<IChessPiece> piece = pair.b;
-
-				final boolean clientWhite = Client.getClient().getPlayer().isWhite();
-				final Square to = clientWhite ? move.getTo() : move.getTo().flip();
-				final Square from = clientWhite ? move.getFrom() : move.getFrom().flip();
-
-				// TODO fix
-				//piece.ifPresent(x -> chessGame.getChessboard().setPiece(to, clientWhite ? x.getBlack() :
-				//	x.getWhite()));
-
-				movePiece(to, from);*/
 				break;
 			default:
 				throw new IllegalStateException("Invalid response received!");
@@ -161,6 +140,7 @@ public class Client extends AbstractListener {
 		});
 		NetworkManager.getInstance().changeState(ProtocolState.LOGGED_IN);
 		SceneManager.changeScene(SceneManager.Scenes.PLAY_SCENE);
+		chessGame = null;
 	}
 
 	public void startGame(ChessGame chessGame) {
@@ -218,7 +198,6 @@ public class Client extends AbstractListener {
 		from = clientWhite ? from : from.flip();
 		to = clientWhite ? to : to.flip();
 		final PacketPlayOutMove packet = new PacketPlayOutMove(from, to);
-		lastMoves.put(packet.getMoveId(), new Pair<>(packet, chessGame.getChessboard().getPiece(to)));
 		NetworkManager.getInstance().sendPacket(packet);
 	}
 

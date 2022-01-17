@@ -13,6 +13,7 @@ import javafx.scene.layout.GridPane;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.listener.impl.Client;
 import jsmahy.ups_client.net.out.play.PacketPlayOutMessage;
+import jsmahy.ups_client.net.out.play.PacketPlayOutResign;
 import jsmahy.ups_client.util.AlertBuilder;
 
 import java.net.URL;
@@ -22,17 +23,17 @@ public class GameController implements Initializable {
 
 	private static final int MAX_MESSAGE_LENGTH = 50;
 	private static GameController instance = null;
+
 	@FXML
 	public TextField chat;
-
 	@FXML
 	public TextArea opponentChat;
-
 	@FXML
 	public Button chatSend;
-
 	@FXML
 	public BorderPane rootPane;
+	@FXML
+	public Button resign;
 
 	public DraggableGrid draggableGrid = null;
 
@@ -75,4 +76,7 @@ public class GameController implements Initializable {
 		chat.clear();
 	}
 
+	public void resign(final ActionEvent actionEvent) {
+		NetworkManager.getInstance().sendPacket(new PacketPlayOutResign());
+	}
 }

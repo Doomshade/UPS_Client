@@ -9,11 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class Square implements PacketData, Serializable {
 	private final int rank, file;
 
-
-	public Square(Square other) {
-		this(other.rank, other.file);
-	}
-
 	/**
 	 * Instantiates a new position (square)
 	 *
@@ -23,7 +18,12 @@ public final class Square implements PacketData, Serializable {
 	 * @throws IllegalArgumentException if either row or column are out of bounds
 	 */
 	public Square(int rank, int file) throws IllegalArgumentException {
-		ChessPieceUtil.validatePosition(rank, file);
+		if (!isValidPosition(rank, file)) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Both parameters must be within the range of 0-7 (inclusive)! row=%d," +
+									" column=%d", rank, file));
+		}
 		this.rank = rank;
 		this.file = file;
 	}

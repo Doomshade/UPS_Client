@@ -29,7 +29,7 @@ public final class SceneManager {
 					new FXMLLoader(Main.class.getResource(String.format("/fxml/%s.fxml", scenes.scene)));
 			Scene scene;
 			try {
-				scene = new Scene(fxmlLoader.load(), 320, 240);
+				scene = new Scene(fxmlLoader.load(), 640, 480);
 			} catch (IOException e) {
 				L.fatal("Failed to load a scene!", e);
 				Platform.exit();

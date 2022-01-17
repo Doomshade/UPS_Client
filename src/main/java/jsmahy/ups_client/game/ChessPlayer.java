@@ -25,9 +25,6 @@ public class ChessPlayer {
      * @throws IllegalStateException
      */
     public void setColour(boolean white) throws IllegalStateException {
-        if (hasColour) {
-            throw new IllegalStateException("Already set up the colour!");
-        }
         this.hasColour = true;
         this.white = white;
         L.debug(String.format("Set %s's colour to %s", name, white ? "white" : "black"));

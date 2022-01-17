@@ -10,16 +10,13 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import jsmahy.ups_client.chess_pieces.IChessPiece;
-import jsmahy.ups_client.game.ChessMove;
 import jsmahy.ups_client.game.Chessboard;
-import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.listener.impl.Client;
-import jsmahy.ups_client.net.out.play.PacketPlayOutMove;
-import jsmahy.ups_client.util.ChessPieceUtil;
 import jsmahy.ups_client.util.Square;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.Optional;
+import java.util.HashMap;
 
 /**
  * @author Jakub Šmrha
@@ -27,12 +24,34 @@ import java.util.Optional;
  * @since 1.0
  */
 public class DraggableGrid {
+	private static final Logger L = LogManager.getLogger(DraggableGrid.class);
 
-	private static final DataFormat FIGURE_FORMAT = new DataFormat("figure");
+	private static final DataFormat PIECE = new DataFormat("figure");
 	private static final DataFormat SQUARE_FORMAT = new DataFormat("square");
 	private static final DataFormat COLOUR_FORMAT = new DataFormat("colour");
-	private final GridPane gridPane = new GridPane();
+	private static final HashMap<Character, Image> PIECE_IMAGES = new HashMap<>() {
+		{
+			// yes this is awful but idgaf anymore
+			put('p', createImage("pawn", false));
+			put('P', createImage("pawn", true));
 
+			put('r', createImage("rook", false));
+			put('R', createImage("rook", true));
+
+			put('n', createImage("knight", false));
+			put('N', createImage("knight", true));
+
+			put('b', createImage("bishop", false));
+			put('B', createImage("bishop", true));
+
+			put('k', createImage("king", false));
+			put('K', createImage("king", true));
+
+			put('q', createImage("queen", false));
+			put('Q', createImage("queen", true));
+		}
+	};
+	private final GridPane gridPane = new GridPane();
 	private final Chessboard cb;
 
 	public DraggableGrid(Chessboard cb) {
@@ -48,30 +67,31 @@ public class DraggableGrid {
 				final Image bg = black ? blackBG : whiteBG;
 				final ImageView bgImageView = new ImageView(bg);
 				final Square sq = new Square(y, x);
-				final Optional<IChessPiece> opt = cb.getPiece(sq);
+				final char pieceId = cb.getPieceId(sq);
 
-				final boolean pieceColour = opt.isPresent() && ChessPieceUtil.isWhite(cb.getPieceId(sq));
-				final Image img = opt.map(m -> m.getImage(pieceColour)).orElse(null);
+				final Image img = PIECE_IMAGES.get(pieceId);
 				final ImageView imageView = new ImageView(img);
 
 				group.setOnDragDetected(e -> {
-					final Optional<IChessPiece> currPieceOpt = cb.getPiece(sq);
+					L.debug("Started dragging");
+					final char piece = cb.getPieceId(sq);
+					final Image currImg = getImage(piece);
 
-					if (currPieceOpt.isEmpty()) {
+					// no piece
+					if (currImg == null) {
+						L.debug("No image, stopped dragging");
 						e.consume();
 						return;
 					}
-					final IChessPiece currPiece = currPieceOpt.get();
 
-					final boolean currPieceColour = ChessPieceUtil.isWhite(cb.getPieceId(sq));
-					final Image currImg = currPiece.getImage(currPieceColour);
-
+					L.debug("Image found, dragging...");
 					final Dragboard dragboard = imageView.startDragAndDrop(TransferMode.MOVE);
 					dragboard.setDragView(currImg, currImg.getWidth() / 2d, currImg.getHeight() / 2d);
+
 					final ClipboardContent clipboardContent = new ClipboardContent();
-					clipboardContent.put(FIGURE_FORMAT, currPieceOpt.get());
+					clipboardContent.put(PIECE, piece);
 					clipboardContent.put(SQUARE_FORMAT, sq);
-					clipboardContent.put(COLOUR_FORMAT, currPieceColour);
+
 					imageView.setImage(null);
 					dragboard.setContent(clipboardContent);
 					e.consume();
@@ -84,33 +104,31 @@ public class DraggableGrid {
 				});
 
 				group.setOnDragDropped(e -> {
+					L.debug("Drag dropped");
 					final Dragboard dragboard = e.getDragboard();
-					final ImageView node = (ImageView) group.getChildren().get(1);
+					final ImageView imgView = (ImageView) group.getChildren().get(1);
 					final ImageView gestureSource = (ImageView) e.getGestureSource();
-					final IChessPiece piece = (IChessPiece) dragboard.getContent(FIGURE_FORMAT);
+
+					final Image image = getImage((char) dragboard.getContent(PIECE));
 					final Square from = (Square) dragboard.getContent(SQUARE_FORMAT);
 
-					if (piece == null) {
+					if (gestureSource.equals(imgView)) {
+						L.debug("Same gesture source to image view");
+						imgView.setImage(image);
 						e.consume();
 						return;
 					}
 
-					final boolean currPieceColour = ChessPieceUtil.isWhite(cb.getPieceId(from));
-					final Image image = piece.getImage(currPieceColour);
-					if (gestureSource.equals(node)) {
-						node.setImage(image);
-						e.consume();
-						return;
-					}
-
+					L.debug("Drag drop - move");
 					System.out.println("Drag Drop:");
 					System.out.println(from + " -> " + sq);
 					Client.getClient().move(from, sq);
 					e.setDropCompleted(true);
 					e.consume();
+					update();
 				});
 
-				group.setOnDragDone(Event::consume);
+				group.setOnDragDone(e -> update());
 
 				group.getChildren().addAll(bgImageView, imageView);
 				gridPane.add(group, x, 7 - y);
@@ -129,48 +147,28 @@ public class DraggableGrid {
 
 	}
 
+	private static Image getImage(char piece) {
+		return PIECE_IMAGES.get(piece);
+	}
+
+	private static Image createImage(String piece, boolean white) {
+		return new Image(String.format("/pieces/%s_%s.png", piece, white ? "white" : "black"), 50, 50, true, true);
+	}
+
 	public GridPane getGridPane() {
 		return gridPane;
 	}
 
 	public void update() {
-		final boolean clientBlack = !Client.getClient().getPlayer().isWhite();
 		for (int y = 0; y < 8; y++) {
 			for (int x = 0; x < 8; x++) {
-
 				int index = (y * 8 + x);
 				final Group group = (Group) gridPane.getChildren().get(index);
 				final ImageView imageView = (ImageView) group.getChildren().get(1);
 				final Square pos = new Square(y, x);
-				final Optional<IChessPiece> figure = cb.getPiece(pos);
-				if (figure.isEmpty()) {
-					imageView.setImage(null);
-					continue;
-				}
-				imageView.setImage(figure.get().getImage(ChessPieceUtil.isWhite(cb.getPieceId(pos))));
+				final Image img = getImage(cb.getPieceId(pos));
+				imageView.setImage(img);
 			}
 		}
-	}
-
-	public void moveOnGrid(Square from, Square to) {
-		cb.getPiece(from).ifPresent(x -> {
-			updateImage(null, from);
-			updateImage(x.getImage(ChessPieceUtil.isWhite(cb.getPieceId(from))), to);
-		});
-	}
-
-	private void updateImage(Image image, Square position) {
-		// 0 = left white rook
-		// 7 = right white rook
-		// 8-15 = white pawns
-		// 48-55 = black pawns
-		// 56 = left black rook
-		// 63 = right black rook
-		int index = (position.getRank() * 8 + position.getFile());
-
-		Group group = (Group) gridPane.getChildren().get(index);
-
-		final ImageView toImage = (ImageView) group.getChildren().get(1);
-		toImage.setImage(image);
 	}
 }
