@@ -35,7 +35,7 @@ public final class SceneManager {
 				Platform.exit();
 				return;
 			}
-			Main.stage.setScene(scene);
+			Main.getStage().setScene(scene);
 			currentScene = scenes;
 		});
 	}

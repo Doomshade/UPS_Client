@@ -14,5 +14,5 @@ public class Util {
     public static final Pattern FEN_PATTERN =
             Pattern.compile(
                     "((([rnbqkpRNBQKP1-8]+)\\/){7}([rnbqkpRNBQKP1-8]+)) ([wb]) (K?Q?k?q?|\\-) (" +
-                            "([a-h][0-7])|\\-) (\\d+) (\\d+)");
+                            "([a-hA-H][0-7])|\\-) (\\d+) (\\d+)");
 }

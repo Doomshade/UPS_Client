@@ -11,5 +11,6 @@
       xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="jsmahy.ups_client.controller.MainMenuController">
     <Button fx:id="playButton" mnemonicParsing="false" onAction="#showPlayScene" styleClass="button" text="Play"/>
+    <Button fx:id="logoutButton" mnemonicParsing="false" onAction="#logout" styleClass="button" text="Logout"/>
     <Button fx:id="exitButton" mnemonicParsing="false" onAction="#exit" text="Exit"/>
 </VBox>

@@ -10,7 +10,6 @@ import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.ProtocolState;
 import jsmahy.ups_client.net.in.play.packet.*;
-import jsmahy.ups_client.net.out.play.PacketPlayOutKeepAlive;
 import jsmahy.ups_client.net.out.play.PacketPlayOutMove;
 import jsmahy.ups_client.util.AlertBuilder;
 import jsmahy.ups_client.util.Square;
@@ -18,26 +17,18 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 public class Client extends AbstractListener {
-	public static final int SERVER_RESPONSE_LIMIT = 25_000;
-	public static final int KEEPALIVE_CHECK_PERIOD = 1_000;
 	private static final Logger L = LogManager.getLogger(Client.class);
 	// TODO rename
 	private static final int DRAW_OFFER_MAX_DELAY = 15_000;
 	private static Client instance = null;
 	private static String name = "";
 	private final ChessPlayer player;
-	private boolean awaitingKeepAlive = false;
-	private long keepAlive = System.currentTimeMillis();
 	private ChessGame chessGame = null;
 	private long timeSinceLastDrawOffer = 0L;
 
 	{
 		register(PacketPlayInMove.class, this::onMove);
-		register(PacketPlayInKeepAlive.class, this::keepAlive);
 		register(PacketPlayInOpponentName.class, this::onOpponentName);
 		register(PacketPlayInMessage.class, this::onMessage);
 		register(PacketPlayInDrawOffer.class, this::onDrawOffer);
@@ -95,29 +86,6 @@ public class Client extends AbstractListener {
 		GameController.getInstance().draggableGrid.update();
 	}
 
-	/**
-	 * Attempts to move a piece on the board. Firstly it validates the move client-side, then it sends a packet to the
-	 * server for confirmation.
-	 *
-	 * @param from
-	 * @param to
-	 *
-	 * @return {@code true} if the move was successful, false otherwise
-	 */
-	private void movePiece(Square from, Square to) {
-		chessGame.getChessboard().moveOnBoard(from, to);
-		//chessGame.nextTurn();
-		// TODO make this better
-		GameController.getInstance().draggableGrid.update();
-	}
-
-	public static Client getClient() {
-		if (instance == null) {
-			throw new IllegalStateException("Not yet logged in!");
-		}
-		return instance;
-	}
-
 	private void onGameFinish(PacketPlayInGameFinish packet) {
 		Platform.runLater(() -> {
 
@@ -156,35 +124,6 @@ public class Client extends AbstractListener {
 		return chessGame;
 	}
 
-	private void startKeepAlive() {
-		final TimerTask keepAlive = new TimerTask() {
-			@Override
-			public void run() {
-				long currKeepAlive = System.currentTimeMillis() - Client.this.keepAlive;
-				// check if the server is still alive
-				if (currKeepAlive >= SERVER_RESPONSE_LIMIT) {
-					if (awaitingKeepAlive) {
-						disconnect("Have not received keepAlive packet in a while");
-					} else {
-						awaitingKeepAlive = true;
-						Client.this.keepAlive = System.currentTimeMillis();
-					}
-				}
-
-				Client.this.keepAlive = System.currentTimeMillis();
-				NetworkManager.getInstance().sendPacket(new PacketPlayOutKeepAlive());
-
-			}
-		};
-		Timer timer = new Timer("keepAlive", true);
-		timer.schedule(keepAlive, 0, KEEPALIVE_CHECK_PERIOD);
-	}
-
-	public void disconnect(String reason) {
-		L.info("Disconnecting from the server...");
-		NetworkManager.getInstance().stopListening();
-	}
-
 	private void onMove(final PacketPlayInMove packet)
 			throws InvalidPacketFormatException {
 		final boolean clientWhite = Client.getClient().getPlayer().isWhite();
@@ -193,16 +132,35 @@ public class Client extends AbstractListener {
 		movePiece(clientWhite ? from : from.flip(), clientWhite ? to : to.flip());
 	}
 
+	/**
+	 * Attempts to move a piece on the board. Firstly it validates the move client-side, then it sends a packet to the
+	 * server for confirmation.
+	 *
+	 * @param from
+	 * @param to
+	 *
+	 * @return {@code true} if the move was successful, false otherwise
+	 */
+	private void movePiece(Square from, Square to) {
+		chessGame.getChessboard().moveOnBoard(from, to);
+		//chessGame.nextTurn();
+		// TODO make this better
+		GameController.getInstance().draggableGrid.update();
+	}
+
+	public static Client getClient() {
+		if (instance == null) {
+			throw new IllegalStateException("Not yet logged in!");
+		}
+		return instance;
+	}
+
 	public void move(Square from, Square to) {
 		final boolean clientWhite = Client.getClient().getPlayer().isWhite();
 		from = clientWhite ? from : from.flip();
 		to = clientWhite ? to : to.flip();
 		final PacketPlayOutMove packet = new PacketPlayOutMove(from, to);
 		NetworkManager.getInstance().sendPacket(packet);
-	}
-
-	private void keepAlive(final PacketPlayInKeepAlive packetPlayInKeepAlive) {
-		awaitingKeepAlive = false;
 	}
 
 	private void onDrawOffer(final PacketPlayInDrawOffer packetPlayInDrawOffer) {
@@ -235,8 +193,6 @@ public class Client extends AbstractListener {
 	public String toString() {
 		return new ToStringBuilder(this)
 				.append("player", player)
-				.append("awaitingKeepAlive", awaitingKeepAlive)
-				.append("keepAlive", keepAlive)
 				.append("chessGame", chessGame)
 				.append("timeSinceLastDrawOffer", timeSinceLastDrawOffer)
 				.toString();

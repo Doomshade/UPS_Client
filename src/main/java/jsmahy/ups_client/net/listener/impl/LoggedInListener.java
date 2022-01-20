@@ -9,20 +9,20 @@ import jsmahy.ups_client.net.in.logged_in.packet.PacketLoggedInInReconnect;
 
 public class LoggedInListener extends AbstractListener {
 
-    {
-        register(PacketLoggedInInJoinQueue.class, this::onQueue);
-        register(PacketLoggedInInReconnect.class, this::onReconnect);
-    }
+	{
+		register(PacketLoggedInInJoinQueue.class, this::onQueue);
+		register(PacketLoggedInInReconnect.class, this::onReconnect);
+	}
 
 
-    private void onQueue(PacketLoggedInInJoinQueue packet) {
-        if (packet.getResponseCode() == ResponseCode.OK) {
-            NetworkManager.getInstance().changeState(ProtocolState.QUEUE);
-            SceneManager.changeScene(SceneManager.Scenes.PLAY_SCENE);
-        }
-    }
+	private void onQueue(PacketLoggedInInJoinQueue packet) {
+		if (packet.getResponseCode() == ResponseCode.OK) {
+			NetworkManager.getInstance().changeState(ProtocolState.QUEUE);
+			SceneManager.changeScene(SceneManager.Scenes.PLAY_SCENE);
+		}
+	}
 
-    private void onReconnect(PacketLoggedInInReconnect packet) {
-        NetworkManager.getInstance().changeState(ProtocolState.PLAY);
-    }
+	private void onReconnect(PacketLoggedInInReconnect packet) {
+		NetworkManager.getInstance().changeState(ProtocolState.QUEUE);
+	}
 }

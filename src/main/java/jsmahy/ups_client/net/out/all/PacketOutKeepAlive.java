@@ -1,4 +1,4 @@
-package jsmahy.ups_client.net.out.play;
+package jsmahy.ups_client.net.out.all;
 
 import jsmahy.ups_client.net.out.PacketOut;
 
@@ -12,6 +12,6 @@ import java.io.OutputStream;
  * @version 1.0
  * @since 1.0
  */
-public class PacketPlayOutKeepAlive implements PacketOut {
+public class PacketOutKeepAlive implements PacketOut {
 
 }

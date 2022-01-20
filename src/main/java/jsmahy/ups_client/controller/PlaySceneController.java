@@ -7,8 +7,6 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import jsmahy.ups_client.SceneManager;
 import jsmahy.ups_client.net.NetworkManager;
@@ -45,12 +43,15 @@ public class PlaySceneController implements Initializable {
 		SceneManager.changeScene(SceneManager.Scenes.MAIN_MENU);
 	}
 
-	public void joinQueue(final ActionEvent actionEvent) {
-		NetworkManager.getInstance().sendPacket(new PacketLoggedInOutJoinQueue(), null, null, nodes, indicator);
+	public void leaveQueue(final ActionEvent actionEvent) {
+		final NetworkManager nm = NetworkManager.getInstance();
+		if (nm.getState() == ProtocolState.QUEUE) {
+			nm.sendPacket(new PacketQueueOutLeaveQueue(), null, null, nodes, indicator);
+		}
 	}
 
-	public void leaveQueue(final ActionEvent actionEvent) {
-		NetworkManager.getInstance().sendPacket(new PacketQueueOutLeaveQueue(), null, null, nodes, indicator);
+	public void joinQueue(final ActionEvent actionEvent) {
+		NetworkManager.getInstance().sendPacket(new PacketLoggedInOutJoinQueue(), null, null, nodes, indicator);
 	}
 
 	@Override

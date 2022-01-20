@@ -55,7 +55,7 @@ public final class BufferedPacket implements Cloneable {
         return header.length() == NetworkManager.PACKET_HEADER_LENGTH;
     }
 
-    public boolean isPacketReady() {
+    public synchronized boolean isPacketReady() {
         return packetId >= 0 && packetSize >= 0 && data.length() == packetSize;
     }
 

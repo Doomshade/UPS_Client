@@ -1,4 +1,4 @@
-package jsmahy.ups_client.net.in.play.packet;
+package jsmahy.ups_client.net.in.all;
 
 import jsmahy.ups_client.net.in.play.PacketInPlay;
 
@@ -7,6 +7,6 @@ import jsmahy.ups_client.net.in.play.PacketInPlay;
  * @version 1.0
  * @since 1.0
  */
-public class PacketPlayInKeepAlive implements PacketInPlay {
+public class PacketInKeepAlive implements PacketInPlay {
 
 }

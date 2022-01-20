@@ -1,7 +1,9 @@
 package jsmahy.ups_client;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
@@ -19,7 +21,7 @@ import java.net.InetAddress;
  */
 public class Main extends Application {
 	private static final Logger L = LogManager.getLogger(Main.class);
-	public static Stage stage = null;
+	private static Stage stage = null;
 
 	/**
 	 * The entry point of application.
@@ -34,10 +36,18 @@ public class Main extends Application {
 		NetworkManager.getInstance().setup(InetAddress.getLocalHost().getHostAddress(), 5000, null, null);
 	}
 
+	public static Stage getStage() {
+		return stage;
+	}
+
 	@Override
 	public void start(Stage stage) throws IOException {
 		Main.stage = stage;
 		NetworkManager.getInstance().changeState(ProtocolState.JUST_CONNECTED);
+		stage.setOnCloseRequest(x -> {
+			Platform.exit();
+			System.exit(0);
+		});
 		stage.setTitle("Semestrální práce - Šachy (Jakub Šmrha jsmahy@students.zcu.cz)");
 		stage.show();
 	}
