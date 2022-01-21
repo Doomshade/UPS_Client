@@ -79,6 +79,7 @@ public enum ProtocolState {
 			register(PacketPlayInOpponentName.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x04);
 			register(PacketPlayInMoveResponse.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x05);
 			register(PacketPlayInCastles.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x06);
+			register(PacketPlayInOpponentDisconnect.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x07);
 		}
 	};
 

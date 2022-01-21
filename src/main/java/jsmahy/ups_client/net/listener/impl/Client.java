@@ -39,6 +39,7 @@ public class Client extends AbstractListener {
 		register(PacketPlayInGameFinish.class, this::onGameFinish);
 		register(PacketPlayInMoveResponse.class, this::onMoveResponse);
 		register(PacketPlayInCastles.class, this::onCastles);
+		register(PacketPlayInOpponentDisconnect.class, this::onOpponentDisconnect);
 
 		this.player = new ChessPlayer(name);
 		NetworkManager.setClient(this);
@@ -138,6 +139,16 @@ public class Client extends AbstractListener {
 				throw new IllegalStateException("Invalid response received!");
 		}
 		GameController.getInstance().draggableGrid.update();
+	}
+
+	private void onOpponentDisconnect(PacketPlayInOpponentDisconnect packet) {
+		Platform.runLater(() -> {
+
+			AlertBuilder ab = new AlertBuilder(Alert.AlertType.INFORMATION)
+					.title("Opponent disconnected")
+					.header("Please wait for the opponent to reconnect");
+			ab.build().show();
+		});
 	}
 
 	private void onGameFinish(PacketPlayInGameFinish packet) {
