@@ -80,7 +80,9 @@ public enum ProtocolState {
 			register(PacketPlayInMoveResponse.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x05);
 			register(PacketPlayInCastles.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x06);
 			register(PacketPlayInOpponentDisconnect.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x07);
+			register(PacketPlayInEnPassant.class, PLAY_OFFSET + PACKET_IN_OFFSET + 0x08);
 		}
+
 	};
 
 	public static final int PACKET_IN_OFFSET = 0x80;

@@ -450,8 +450,8 @@ public final class NetworkManager {
 	}
 
 	public void disconnect(String title, String header, String content) {
-		Client.logout();
 		Client.stopKeepAlive();
+		Client.logout();
 		stopListening();
 		changeState(ProtocolState.JUST_CONNECTED);
 		SceneManager.changeScene(SceneManager.Scenes.SERVER_CONNECTION);

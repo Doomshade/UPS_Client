@@ -102,11 +102,15 @@ public final class Chessboard {
 	 */
 	public void moveOnBoard(Square from, Square to) {
 		L.trace(format("Moving from %s to %s", from, to));
-		board[to.getRank()][to.getFile()] = board[from.getRank()][from.getFile()];
-		board[from.getRank()][from.getFile()] = 0;
+		setOnBoard(to, board[from.getRank()][from.getFile()]);
+		setOnBoard(from, ' ');
 
 		L.debug("Current board state:");
 		L.debug(Arrays.deepToString(board));
+	}
+
+	public void setOnBoard(Square sq, char piece) {
+		board[sq.getRank()][sq.getFile()] = piece;
 	}
 
 	/**

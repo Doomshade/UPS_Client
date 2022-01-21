@@ -40,6 +40,7 @@ public class Client extends AbstractListener {
 		register(PacketPlayInMoveResponse.class, this::onMoveResponse);
 		register(PacketPlayInCastles.class, this::onCastles);
 		register(PacketPlayInOpponentDisconnect.class, this::onOpponentDisconnect);
+		register(PacketPlayInEnPassant.class, this::onEnPassant);
 
 		this.player = new ChessPlayer(name);
 		NetworkManager.setClient(this);
@@ -75,8 +76,21 @@ public class Client extends AbstractListener {
 		return player;
 	}
 
+	private void onEnPassant(PacketPlayInEnPassant packet) {
+		final boolean white = getPlayer().isWhite();
+		final Square pawnSquare = packet.getPawnSquare();
+		L.info("Pawn square: " + pawnSquare);
+		getChessGame().getChessboard().setOnBoard(white ? pawnSquare :
+				pawnSquare.flip(), ' ');
+		update();
+	}
+
+	public ChessGame getChessGame() {
+		return chessGame;
+	}
+
 	private void onCastles(PacketPlayInCastles packet) {
-		final boolean clientWhite = Client.getClient().getPlayer().isWhite();
+		final boolean clientWhite = getPlayer().isWhite();
 
 		boolean whiteCastles = packet.isWhite();
 		boolean longCastles = packet.isLongCastles();
@@ -118,14 +132,11 @@ public class Client extends AbstractListener {
 		chessGame.getChessboard().moveOnBoard(from, to);
 		//chessGame.nextTurn();
 		// TODO make this better
-		GameController.getInstance().draggableGrid.update();
+		update();
 	}
 
-	public static Client getClient() {
-		if (instance == null) {
-			throw new IllegalStateException("Not yet logged in!");
-		}
-		return instance;
+	private void update() {
+		GameController.getInstance().draggableGrid.update();
 	}
 
 	private void onMoveResponse(PacketPlayInMoveResponse packet) {
@@ -138,7 +149,7 @@ public class Client extends AbstractListener {
 			default:
 				throw new IllegalStateException("Invalid response received!");
 		}
-		GameController.getInstance().draggableGrid.update();
+		update();
 	}
 
 	private void onOpponentDisconnect(PacketPlayInOpponentDisconnect packet) {
@@ -186,16 +197,19 @@ public class Client extends AbstractListener {
 		//startKeepAlive();
 	}
 
-	public ChessGame getChessGame() {
-		return chessGame;
-	}
-
 	private void onMove(final PacketPlayInMove packet)
 			throws InvalidPacketFormatException {
 		final boolean clientWhite = Client.getClient().getPlayer().isWhite();
 		final Square from = packet.getFrom();
 		final Square to = packet.getTo();
 		movePiece(clientWhite ? from : from.flip(), clientWhite ? to : to.flip());
+	}
+
+	public static Client getClient() {
+		if (instance == null) {
+			throw new IllegalStateException("Not yet logged in!");
+		}
+		return instance;
 	}
 
 	public void move(Square from, Square to) {
@@ -217,15 +231,8 @@ public class Client extends AbstractListener {
 
 	private void onMessage(PacketPlayInMessage packet) {
 		L.info("Message recvd: " + packet.getMessage());
-		final ChessPlayer opponent;
-		try {
-			opponent = chessGame.getOpponent();
-		} catch (IllegalStateException e) {
-			L.error("Failed to get the game opponent. Reason:", e);
-			return;
-		}
 		GameController.getInstance().opponentChat.appendText(
-				String.format("[%s]:\t%s%n", opponent.getName(), packet.getMessage()));
+				String.format("%s%n", packet.getMessage()));
 	}
 
 	private void onOpponentName(PacketPlayInOpponentName packet) {

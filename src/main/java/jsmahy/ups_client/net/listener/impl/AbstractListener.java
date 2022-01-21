@@ -36,8 +36,7 @@ abstract class AbstractListener implements PacketListener {
 	}
 
 	protected static void startKeepAlive() {
-		final NetworkManager NM = NetworkManager.getInstance();
-		if (sendingKeepAlive || NM.getState() == ProtocolState.JUST_CONNECTED) {
+		if (sendingKeepAlive || NetworkManager.getInstance().getState() == ProtocolState.JUST_CONNECTED) {
 			return;
 		}
 		sendingKeepAlive = true;
@@ -50,13 +49,13 @@ abstract class AbstractListener implements PacketListener {
 				}
 				// the server hasn't responded in over 30 seconds, disconnect the client
 				if (System.currentTimeMillis() - lastKeepAlive >= SERVER_RESPONSE_LIMIT) {
-					NM.disconnect("Disconnected", "Could not reach the server",
+					NetworkManager.getInstance().disconnect("Disconnected", "Could not reach the server",
 							String.format("Reason: have not received a keep alive packet in %ds",
 									SERVER_RESPONSE_LIMIT / 1000));
 					return;
 				}
 				try {
-					NM.sendPacket(new PacketOutKeepAlive());
+					NetworkManager.getInstance().sendPacket(new PacketOutKeepAlive());
 				} catch (Exception e) {
 					L.error("Error sending packet", e);
 					stopKeepAlive();
@@ -64,6 +63,7 @@ abstract class AbstractListener implements PacketListener {
 			}
 		};
 		timer = new Timer("keepAlive", true);
+		lastKeepAlive = System.currentTimeMillis();
 		timer.schedule(task, 0, KEEPALIVE_CHECK_PERIOD);
 	}
 
