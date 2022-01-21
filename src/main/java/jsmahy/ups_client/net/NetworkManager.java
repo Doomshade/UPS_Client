@@ -259,7 +259,7 @@ public final class NetworkManager {
 					L.debug(String.format("Deserializing %s", substring));
 					if (packetData instanceof Boolean) {
 						// check if the start of the string is either a 1 or a 0
-						final boolean val = data.charAt(0) == '1';
+						final boolean val = substring.charAt(0) == '1';
 						L.debug(String.format("Setting %s to %s", field.getName(), val));
 						field.setBoolean(p, val);
 						amountRead.incrementAndGet();

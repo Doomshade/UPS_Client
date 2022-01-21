@@ -17,4 +17,12 @@ public class PacketPlayInCastles implements PacketInPlay {
                 .append("longCastles", longCastles)
                 .toString();
     }
+
+    public boolean isLongCastles() {
+        return longCastles;
+    }
+
+    public boolean isWhite() {
+        return white;
+    }
 }

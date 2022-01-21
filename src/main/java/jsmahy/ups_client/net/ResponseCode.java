@@ -12,20 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public enum ResponseCode implements PacketData {
     NONE,
     OK,
-    MOVE,
-    REJECTED,
-    CONNECT;
-
-    public static ResponseCode getResponseCode(int id) throws IllegalArgumentException {
-        validateId(id);
-        return values()[id];
-    }
-
-    private static void validateId(final int id) throws IllegalArgumentException {
-        if (id < 0 || id >= values().length) {
-            throw new IllegalArgumentException(String.format("Invalid ID response code: %d", id));
-        }
-    }
+    REJECTED;
 
     public static ResponseCode getResponseCode(@NotNull final String s) throws IllegalArgumentException {
         for (ResponseCode rc : values()) {

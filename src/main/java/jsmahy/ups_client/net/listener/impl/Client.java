@@ -71,7 +71,33 @@ public class Client extends AbstractListener {
 	}
 
 	private void onCastles(PacketPlayInCastles packet) {
+		final boolean clientWhite = Client.getClient().getPlayer().isWhite();
 
+		boolean whiteCastles = packet.isWhite();
+		boolean longCastles = packet.isLongCastles();
+
+		int rank = whiteCastles ? 0 : 7;
+
+		int rookFromFile = longCastles ? 0 : 7;
+		int rookToFile = longCastles ? 3 : 5;
+
+		int kingFromFile = 4;
+		int kingToFile = longCastles ? 2 : 6;
+
+		L.info(String.format("white, long: %s, %s", whiteCastles, longCastles));
+
+		moveCastles(clientWhite, rank, kingFromFile, kingToFile, "kingFrom - kingTo: %s - %s");
+
+		moveCastles(clientWhite, rank, rookFromFile, rookToFile, "rookFrom - rookTo: %s - %s");
+	}
+
+	private void moveCastles(final boolean clientWhite, final int rank, final int fromFile, final int toFile,
+	                         final String s) {
+		final Square kingFrom = new Square(rank, fromFile);
+		final Square kingTo = new Square(rank, toFile);
+
+		L.info(String.format(s, kingFrom, kingTo));
+		movePiece(clientWhite ? kingFrom : kingFrom.flip(), clientWhite ? kingTo : kingTo.flip());
 	}
 
 	private void onMoveResponse(PacketPlayInMoveResponse packet) {
@@ -79,6 +105,7 @@ public class Client extends AbstractListener {
 			case OK:
 				break;
 			case REJECTED:
+				L.info("Attempted to play an invalid move! Move: " + PacketPlayOutMove.getMove(packet.getMoveId()));
 				break;
 			default:
 				throw new IllegalStateException("Invalid response received!");
