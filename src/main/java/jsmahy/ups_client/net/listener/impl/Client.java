@@ -21,6 +21,10 @@ public class Client extends AbstractListener {
 	private static final Logger L = LogManager.getLogger(Client.class);
 	// TODO rename
 	private static final int DRAW_OFFER_MAX_DELAY = 15_000;
+	private static final int WIN_WHITE = 1 << 0;
+	private static final int WIN_BY_MATE = 1 << 1;
+	private static final int WIN_BY_RESIGN = 1 << 2;
+	private static final int WIN_BY_TIME = 1 << 3;
 	private static Client instance = null;
 	private static String name = "";
 	private final ChessPlayer player;
@@ -100,6 +104,29 @@ public class Client extends AbstractListener {
 		movePiece(clientWhite ? kingFrom : kingFrom.flip(), clientWhite ? kingTo : kingTo.flip());
 	}
 
+	/**
+	 * Attempts to move a piece on the board. Firstly it validates the move client-side, then it sends a packet to the
+	 * server for confirmation.
+	 *
+	 * @param from
+	 * @param to
+	 *
+	 * @return {@code true} if the move was successful, false otherwise
+	 */
+	private void movePiece(Square from, Square to) {
+		chessGame.getChessboard().moveOnBoard(from, to);
+		//chessGame.nextTurn();
+		// TODO make this better
+		GameController.getInstance().draggableGrid.update();
+	}
+
+	public static Client getClient() {
+		if (instance == null) {
+			throw new IllegalStateException("Not yet logged in!");
+		}
+		return instance;
+	}
+
 	private void onMoveResponse(PacketPlayInMoveResponse packet) {
 		switch (packet.getResponseCode()) {
 			case OK:
@@ -119,18 +146,19 @@ public class Client extends AbstractListener {
 			AlertBuilder ab = new AlertBuilder(Alert.AlertType.INFORMATION)
 					.title("Game finished!");
 
-			switch (packet.getFinishType()) {
-				case 0:
-					ab.header("Draw");
-					ab.content("Game ended in a draw.");
-					break;
-				case 1:
-					break;
-				case 2:
-					break;
-				case 3:
-					break;
+			final int fin = packet.getFinishType();
+			if (fin == 0) {
+				ab.header("Draw").content("Game ended in a draw.");
+			} else {
+				ab.header(String.format("%s won!",
+								(fin & WIN_WHITE) != 0 == getPlayer().isWhite() ? "You" : "Opponent"))
+						.content(String.format("Won by %s",
+								(fin & WIN_BY_MATE) != 0 ? "mate" :
+										(fin & WIN_BY_RESIGN) != 0 ? "resignation" :
+												(fin & WIN_BY_TIME) != 0 ? "time" : "unknown circumstances"
+						));
 			}
+
 			ab.build().show();
 		});
 		NetworkManager.getInstance().changeState(ProtocolState.LOGGED_IN);
@@ -157,29 +185,6 @@ public class Client extends AbstractListener {
 		final Square from = packet.getFrom();
 		final Square to = packet.getTo();
 		movePiece(clientWhite ? from : from.flip(), clientWhite ? to : to.flip());
-	}
-
-	/**
-	 * Attempts to move a piece on the board. Firstly it validates the move client-side, then it sends a packet to the
-	 * server for confirmation.
-	 *
-	 * @param from
-	 * @param to
-	 *
-	 * @return {@code true} if the move was successful, false otherwise
-	 */
-	private void movePiece(Square from, Square to) {
-		chessGame.getChessboard().moveOnBoard(from, to);
-		//chessGame.nextTurn();
-		// TODO make this better
-		GameController.getInstance().draggableGrid.update();
-	}
-
-	public static Client getClient() {
-		if (instance == null) {
-			throw new IllegalStateException("Not yet logged in!");
-		}
-		return instance;
 	}
 
 	public void move(Square from, Square to) {
