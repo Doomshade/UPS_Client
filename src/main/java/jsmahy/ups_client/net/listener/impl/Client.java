@@ -181,11 +181,12 @@ public class Client extends AbstractListener {
 						));
 			}
 
-			ab.build().show();
+			ab.build().showAndWait();
+
+			NetworkManager.getInstance().changeState(ProtocolState.LOGGED_IN);
+			SceneManager.changeScene(SceneManager.Scenes.PLAY_SCENE);
+			chessGame = null;
 		});
-		NetworkManager.getInstance().changeState(ProtocolState.LOGGED_IN);
-		SceneManager.changeScene(SceneManager.Scenes.PLAY_SCENE);
-		chessGame = null;
 	}
 
 	public void startGame(ChessGame chessGame) {
