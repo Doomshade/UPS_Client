@@ -133,8 +133,8 @@ public final class NetworkManager {
 		pool.execute(() -> {
 			try {
 				this.socket = new Socket(host, port);
-				this.socket.setSoTimeout(TIMEOUT);
-				this.socket.setKeepAlive(true);
+				this.socket.setSoTimeout(30000);
+				this.socket.setKeepAlive(false);
 				this.setupIO(socket.getInputStream(), socket.getOutputStream());
 				connectionSuccessful = true;
 				L.info("Successfully initialized connection");
@@ -165,7 +165,7 @@ public final class NetworkManager {
 		}
 		L.info("Setting up I/O...");
 		this.in = new BufferedInputStream(in);
-		startListening(in);
+		startListening(this.in);
 		if (out == null) {
 			try {
 				File tempOut = Files.createTempFile("out", null).toFile();

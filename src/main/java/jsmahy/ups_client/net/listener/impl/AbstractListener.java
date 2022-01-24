@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 
 abstract class AbstractListener implements PacketListener {
 	public static final int SERVER_RESPONSE_LIMIT = 30_000;
-	public static final int KEEPALIVE_CHECK_PERIOD = 5_000;
+	public static final int KEEPALIVE_CHECK_PERIOD = 2_500;
 	private static final Logger L = LogManager.getLogger(AbstractListener.class);
 	private static long lastKeepAlive = 0;
 	private static boolean sendingKeepAlive = false;
