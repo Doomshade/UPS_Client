@@ -4,10 +4,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import jsmahy.ups_client.net.NetworkManager;
@@ -36,6 +33,8 @@ public class GameController implements Initializable {
 	public Button resign;
 
 	public DraggableGrid draggableGrid = null;
+	@FXML
+	public Label opponent;
 
 	public static GameController getInstance() {
 		return instance;

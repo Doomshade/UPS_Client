@@ -46,12 +46,12 @@ public class PlaySceneController implements Initializable {
 	public void leaveQueue(final ActionEvent actionEvent) {
 		final NetworkManager nm = NetworkManager.getInstance();
 		if (nm.getState() == ProtocolState.QUEUE) {
-			nm.sendPacket(new PacketQueueOutLeaveQueue(), null, null, nodes, indicator);
+			nm.sendPacket(new PacketQueueOutLeaveQueue(), null, null);
 		}
 	}
 
 	public void joinQueue(final ActionEvent actionEvent) {
-		NetworkManager.getInstance().sendPacket(new PacketLoggedInOutJoinQueue(), null, null, nodes, indicator);
+		NetworkManager.getInstance().sendPacket(new PacketLoggedInOutJoinQueue(), null, null);
 	}
 
 	@Override

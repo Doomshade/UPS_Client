@@ -9,10 +9,4 @@ import jsmahy.ups_client.net.in.PacketIn;
  * @since 1.0
  */
 public class PacketInInvalidData implements PacketIn {
-	@PacketDataField
-	private String invalidData = "";
-
-	public String getInvalidData() {
-		return invalidData;
-	}
 }

@@ -72,6 +72,13 @@ public class Client extends AbstractListener {
 		instance = new Client();
 	}
 
+	public static Client getClient() {
+		if (instance == null) {
+			throw new IllegalStateException("Not yet logged in!");
+		}
+		return instance;
+	}
+
 	public ChessPlayer getPlayer() {
 		return player;
 	}
@@ -104,9 +111,7 @@ public class Client extends AbstractListener {
 		int kingToFile = longCastles ? 2 : 6;
 
 		L.info(String.format("white, long: %s, %s", whiteCastles, longCastles));
-
 		moveCastles(clientWhite, rank, kingFromFile, kingToFile, "kingFrom - kingTo: %s - %s");
-
 		moveCastles(clientWhite, rank, rookFromFile, rookToFile, "rookFrom - rookTo: %s - %s");
 	}
 
@@ -125,7 +130,6 @@ public class Client extends AbstractListener {
 	 *
 	 * @param from
 	 * @param to
-	 *
 	 * @return {@code true} if the move was successful, false otherwise
 	 */
 	private void movePiece(Square from, Square to) {
@@ -153,13 +157,11 @@ public class Client extends AbstractListener {
 	}
 
 	private void onOpponentDisconnect(PacketPlayInOpponentDisconnect packet) {
-		Platform.runLater(() -> {
-
-			AlertBuilder ab = new AlertBuilder(Alert.AlertType.INFORMATION)
-					.title("Opponent disconnected")
-					.header("Please wait for the opponent to reconnect");
-			ab.build().show();
-		});
+		Platform.runLater(() -> new AlertBuilder(Alert.AlertType.INFORMATION)
+				.title("Opponent disconnected")
+				.header("Please wait for the opponent to reconnect")
+				.build()
+				.show());
 	}
 
 	private void onGameFinish(PacketPlayInGameFinish packet) {
@@ -206,13 +208,6 @@ public class Client extends AbstractListener {
 		movePiece(clientWhite ? from : from.flip(), clientWhite ? to : to.flip());
 	}
 
-	public static Client getClient() {
-		if (instance == null) {
-			throw new IllegalStateException("Not yet logged in!");
-		}
-		return instance;
-	}
-
 	public void move(Square from, Square to) {
 		final boolean clientWhite = Client.getClient().getPlayer().isWhite();
 		from = clientWhite ? from : from.flip();
@@ -238,6 +233,7 @@ public class Client extends AbstractListener {
 
 	private void onOpponentName(PacketPlayInOpponentName packet) {
 		chessGame.setOpponent(new ChessPlayer(packet.getOpponentName()));
+		GameController.getInstance().opponent.setText("Opponent: " + packet.getOpponentName());
 	}
 
 	@Override

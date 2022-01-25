@@ -1,9 +1,7 @@
 package jsmahy.ups_client.net;
 
 import javafx.application.Platform;
-import javafx.scene.Node;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ProgressIndicator;
 import jsmahy.ups_client.SceneManager;
 import jsmahy.ups_client.exception.InvalidProtocolStateException;
 import jsmahy.ups_client.net.in.PacketIn;
@@ -27,7 +25,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -120,10 +117,9 @@ public final class NetworkManager {
 	 *
 	 * @param host the host
 	 * @param port the port
-	 *
 	 * @throws IllegalStateException if the connection has already been established
 	 */
-	public void setup(@NotNull final String host, final int port, Runnable onError, Runnable onSuccess)
+	public void setup(@NotNull final String host, final int port, Consumer<Throwable> onError, Runnable onSuccess)
 			throws IllegalStateException {
 		if (isConnectionSuccessful()) {
 			throw new IllegalStateException("Already connected to a server!");
@@ -143,7 +139,7 @@ public final class NetworkManager {
 				}
 			} catch (IOException e) {
 				if (onError != null) {
-					Platform.runLater(onError);
+					Platform.runLater(() -> onError.accept(e));
 				}
 			}
 		});
@@ -154,7 +150,6 @@ public final class NetworkManager {
 	 *
 	 * @param in  the input stream
 	 * @param out the output stream
-	 *
 	 * @throws IllegalStateException if the streams have already been initialized
 	 */
 	public void setupIO(@NotNull final InputStream in,
@@ -165,21 +160,8 @@ public final class NetworkManager {
 		}
 		L.info("Setting up I/O...");
 		this.in = new BufferedInputStream(in);
-		startListening(in);
-		if (out == null) {
-			try {
-				File tempOut = Files.createTempFile("out", null).toFile();
-				L.info("Created a new out temp file " + tempOut.getAbsolutePath());
-				startListening(new FileInputStream(tempOut));
-			} catch (IOException e) {
-				L.fatal("Could not create a temp file", e);
-				throw new RuntimeException(e);
-			}
-			L.info("Using simulated output stream...");
-			//this.out = new BufferedOutputStream(System.out);
-		} else {
-			this.out = new BufferedOutputStream(new LoggableOutputStream(out));
-		}
+		startListening(this.in);
+		this.out = new BufferedOutputStream(new LoggableOutputStream(out));
 		this.initializedStreams = true;
 		L.info("I/O set up");
 	}
@@ -194,21 +176,21 @@ public final class NetworkManager {
 	 * @return {@code true} if the I/O streams have been successfully initialized.
 	 */
 	public boolean isInitializedStreams() {
-		return initializedStreams;
+		return in != null && out != null && initializedStreams;
 	}
 
 	/**
 	 * @return {@code true} if the connection has been successfully established.
 	 */
 	public boolean isConnectionSuccessful() {
-		return connectionSuccessful;
+		return socket != null && !socket.isClosed() && connectionSuccessful;
 	}
 
-	public synchronized void receivePacket(BufferedPacket packet) throws IOException {
+	public synchronized void receivePacket(BufferedPacket packet) throws IllegalArgumentException, InvalidProtocolStateException {
 		receivePacket(getState().getPacketIn(packet.getPacketId()), packet.getData());
 	}
 
-	public synchronized void receivePacket(PacketIn p, String data) {
+	public synchronized void receivePacket(PacketIn p, String data) throws InvalidProtocolStateException {
 		final TreeMap<Integer, LinkedHashMap<Field, Object>> map = new TreeMap<>(Comparator.naturalOrder());
 
 		// get all the fields annotated with packet data field
@@ -245,10 +227,10 @@ public final class NetworkManager {
 		// we iterate through collections of fields from the smallest to the largest
 		for (Map<Field, Object> q : map.values()) {
 
-			L.debug(String.format("Iterating layer #%d", layer++));
+			L.trace(String.format("Iterating layer #%d", layer++));
 			// we iterate through fields and their types
 			for (Map.Entry<Field, Object> entry : q.entrySet()) {
-				L.debug(String.format("Amount read thus far: %d", amountRead.get()));
+				L.trace(String.format("Amount read thus far: %d", amountRead.get()));
 				final Field field = entry.getKey();
 				field.setAccessible(true);
 				final Object packetData = entry.getValue();
@@ -256,17 +238,17 @@ public final class NetworkManager {
 
 				try {
 					final String substring = data.substring(amountRead.get());
-					L.debug(String.format("Deserializing %s", substring));
+					L.trace(String.format("Deserializing %s", substring));
 					if (packetData instanceof Boolean) {
 						// check if the start of the string is either a 1 or a 0
 						final boolean val = substring.charAt(0) == '1';
-						L.debug(String.format("Setting %s to %s", field.getName(), val));
+						L.trace(String.format("Setting %s to %s", field.getName(), val));
 						field.setBoolean(p, val);
 						amountRead.incrementAndGet();
 						continue;
 					} else if (packetData instanceof String) {
 						// get the whole data
-						L.debug(String.format("Setting %s to %s", field.getName(), substring));
+						L.trace(String.format("Setting %s to %s", field.getName(), substring));
 						field.set(p, substring);
 						amountRead.addAndGet(substring.length());
 						continue;
@@ -274,7 +256,7 @@ public final class NetworkManager {
 						// check for maximum id length bytes
 						final int val = Integer.parseInt(
 								data.substring(amountRead.get(), amountRead.get() + MAXIMUM_ID_LENGTH));
-						L.debug(String.format("Setting %s to %d", field.getName(), val));
+						L.trace(String.format("Setting %s to %d", field.getName(), val));
 						field.setInt(p, val);
 						amountRead.addAndGet(MAXIMUM_ID_LENGTH);
 						continue;
@@ -282,11 +264,8 @@ public final class NetworkManager {
 
 					deserializeMethod =
 							packetData.getClass().getDeclaredMethod("deserialize", String.class, AtomicInteger.class);
-					System.out.print(field.get(p));
-					System.out.print(" -> ");
 					final Object invokedObj =
 							deserializeMethod.invoke(null, substring, amountRead);
-					System.out.println(invokedObj);
 					field.set(p, invokedObj);
 				} catch (IllegalAccessException | InvocationTargetException e) {
 					L.fatal(String.format("Failed to invoke %s method in %s!", "deserialize",
@@ -304,7 +283,7 @@ public final class NetworkManager {
 		}
 
 		// now that the packet is deserialized we can handle it
-		L.debug("Handling " + p);
+		L.debug("Successfully deserialized " + p);
 		getCurrentListener().handle(p);
 	}
 
@@ -321,7 +300,6 @@ public final class NetworkManager {
 	 * Gets the packet listener based on the given state.
 	 *
 	 * @param state the state
-	 *
 	 * @return the packet listener
 	 */
 	private PacketListener getListener(@NotNull ProtocolState state) {
@@ -335,23 +313,17 @@ public final class NetworkManager {
 		return state;
 	}
 
-	public synchronized void sendPacket(PacketOut packet) {
+	public synchronized void sendPacket(PacketOut packet) throws IllegalStateException, AnnotationTypeMismatchException, InvalidProtocolStateException {
 		sendPacket(packet, null, null);
-	}
-
-	public synchronized void sendPacket(PacketOut packet, Runnable onFail, Runnable onSuccess) {
-		sendPacket(packet, onFail, onSuccess, null, null);
 	}
 
 	/**
 	 * Sends a packet to the server.
 	 *
 	 * @param packet the packet to send
-	 *
 	 * @throws IllegalStateException if the network manager has not yet been initialized
 	 */
-	public synchronized void sendPacket(PacketOut packet, Runnable onFail, Runnable onSuccess, Node node,
-	                                    ProgressIndicator indicator)
+	public synchronized void sendPacket(PacketOut packet, Consumer<Throwable> onFail, Runnable onSuccess)
 			throws IllegalStateException, AnnotationTypeMismatchException, InvalidProtocolStateException {
 
 		if (!isInitializedStreams()) {
@@ -400,13 +372,10 @@ public final class NetworkManager {
 		}
 		L.info(String.format("Sending packet %s (%s). Payload: %s", packet, packet.getClass().getSimpleName(),
 				sb));
-		sendPacket(new BufferedPacket(getState().getPacketId(packet.getClass()), sb.toString()), onFail, onSuccess,
-				node, indicator);
+		sendPacket(new BufferedPacket(getState().getPacketId(packet.getClass()), sb.toString()), onFail, onSuccess);
 	}
 
-	public synchronized void sendPacket(BufferedPacket packet, final Runnable onFail, final Runnable onSuccess,
-	                                    final Node node,
-	                                    final ProgressIndicator indicator)
+	public synchronized void sendPacket(BufferedPacket packet, final Consumer<Throwable> onFail, final Runnable onSuccess)
 			throws IllegalStateException {
 		if (!isInitializedStreams()) {
 			throw new IllegalStateException("The I/O streams have not yet been initialized!");
@@ -414,11 +383,8 @@ public final class NetworkManager {
 		if (packet == null) {
 			return;
 		}
+
 		L.debug(format("Sending %s packet to the server...", packet));
-		if (out == null) {
-			L.error("No output stream specified, could not send a packet!");
-			return;
-		}
 
 		pool.execute(() -> {
 			try {
@@ -442,7 +408,7 @@ public final class NetworkManager {
 			} catch (IOException e) {
 				L.fatal("Failed to send a packet!", e);
 				if (onFail != null) {
-					Platform.runLater(onFail);
+					Platform.runLater(() -> onFail.accept(e));
 				}
 				disconnect("Server shutdown", "Unable to reach server", "Packet was not able to reach the server!");
 			}
@@ -450,9 +416,10 @@ public final class NetworkManager {
 	}
 
 	public void disconnect(String title, String header, String content) {
+		L.info("Disconnecting...");
+		stopListening();
 		Client.stopKeepAlive();
 		Client.logout();
-		stopListening();
 		changeState(ProtocolState.JUST_CONNECTED);
 		SceneManager.changeScene(SceneManager.Scenes.SERVER_CONNECTION);
 		if (title != null && header != null && content != null) {
@@ -491,27 +458,24 @@ public final class NetworkManager {
 		}
 	}
 
+	private void close(Closeable closeable) {
+		try {
+			closeable.close();
+		} catch (IOException e) {
+			L.error("Failed to close " + closeable);
+		}
+	}
+
 	/**
 	 * Stops listening to the server - closes the socket and the I/O streams
 	 */
 	private void stopListening() {
-		try {
-			if (socket != null) {
-				socket.close();
-			}
-			if (out != null) {
-				out.close();
-			}
-			if (in != null) {
-				in.close();
-			}
-		} catch (IOException ignored) {
-
-		} finally {
-			connectionSuccessful = false;
-			initializedStreams = false;
-			L.debug("Closing both I/O streams...");
-		}
+		close(out);
+		close(in);
+		close(socket);
+		connectionSuccessful = false;
+		initializedStreams = false;
+		L.debug("Closing both I/O streams...");
 
 	}
 
@@ -519,11 +483,4 @@ public final class NetworkManager {
 		changedStateListeners.add(listener);
 	}
 
-	public synchronized void sendPacket(BufferedPacket packet) throws IllegalStateException {
-		sendPacket(packet, null, null);
-	}
-
-	public synchronized void sendPacket(BufferedPacket packet, Runnable onFail, Runnable onSuccess) {
-		sendPacket(packet, onFail, onSuccess, null, null);
-	}
 }
