@@ -16,13 +16,17 @@ import jsmahy.ups_client.util.AlertBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.ConnectException;
+import java.net.NoRouteToHostException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.ResourceBundle;
+import java.util.regex.Pattern;
 
 public class ServerConnectionController implements Initializable {
 	private static final Logger L = LogManager.getLogger(ServerConnectionController.class);
+	private static final String ALLOWED_CHARS = "[a-zA-Z\\d]";
 	private static ServerConnectionController instance;
-
 	@FXML
 	private ProgressIndicator progress;
 	@FXML
@@ -41,8 +45,8 @@ public class ServerConnectionController implements Initializable {
 	}
 
 	public void connect(final ActionEvent actionEvent) {
-		if (!isValidTF(ipTF) || !isValidTF(portTF)) {
-			sendInvalidInputAlert("Input cannot be empty!", "Invalid input");
+		if (!isValidTF(ipTF) || !isValidTF(portTF) || !isValidTF(nameTF)) {
+			sendInvalidInputAlert("Invalid input received!", "Invalid input");
 			return;
 		}
 		final int port;
@@ -58,29 +62,35 @@ public class ServerConnectionController implements Initializable {
 		try {
 			setProgress(true);
 			Client.setLoginName(nameTF.getText());
-			if (ipTF.getText().equalsIgnoreCase("null")) {
-				NM.setupIO(System.in, null);
-			} else {
-				NM.setup(ipTF.getText(), port,
-						() -> {
-							setProgress(false);
-							L.error("Failed to join to the server!");
-							sendInvalidInputAlert("Server does not exist!", "Invalid input");
-						},
-						() -> {
-							L.info("Successfully connected to the server");
-							NM.sendPacket(new PacketJustConnectedOutHello(nameTF.getText()), null, null, form,
-									progress);
-						});
-			}
+			NM.setup(ipTF.getText(), port,
+					e -> {
+						String content = "Connection error";
+						if (e instanceof UnknownHostException || e instanceof NoRouteToHostException) {
+							content = "Unknown host destination";
+						} else if (e instanceof ConnectException){
+							content = "Could not connect to the server";
+						}
+						setProgress(false);
+						L.error(content);
+						sendInvalidInputAlert(content, "Invalid input");
+					},
+					() -> {
+						L.info("Successfully connected to the server");
+						NM.sendPacket(new PacketJustConnectedOutHello(nameTF.getText()));
+					});
+		} catch (IllegalStateException e) {
+			setProgress(false);
+			L.error("Already connected");
+			sendInvalidInputAlert("Already connected to a server!", "Invalid input");
 		} catch (Exception e) {
 			setProgress(false);
-			L.error("Failed to join to the server!", e);
-			sendInvalidInputAlert("Already connected to a server!", "Invalid input");
+			L.error("Failed to join to the server!");
+			sendInvalidInputAlert("An unknown error occurred!", "Unknown exception");
 		}
 	}
 
 	private void setProgress(boolean progress) {
+		L.debug("Setting progress to " + progress);
 		this.progress.setProgress(-1);
 		this.progress.setDisable(!progress);
 		this.progress.setVisible(progress);
@@ -92,6 +102,7 @@ public class ServerConnectionController implements Initializable {
 		Platform.runLater(() -> {
 			new AlertBuilder(Alert.AlertType.ERROR)
 					.content(content)
+					.header("Connection error")
 					.title(title)
 					.build()
 					.show();
@@ -99,7 +110,8 @@ public class ServerConnectionController implements Initializable {
 	}
 
 	private boolean isValidTF(TextField tf) {
-		return !tf.getText().trim().isEmpty();
+		final String text = tf.getText().trim();
+		return !text.isEmpty() && Pattern.compile(ALLOWED_CHARS).matcher(text).find();
 	}
 
 	public void errorUsernameExists() {

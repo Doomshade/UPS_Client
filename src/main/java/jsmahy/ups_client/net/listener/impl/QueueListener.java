@@ -47,7 +47,6 @@ public class QueueListener extends AbstractListener {
                 NetworkManager.getInstance().changeState(ProtocolState.LOGGED_IN);
                 break;
             case REJECTED:
-                // TODO
                 throw new IllegalStateException("Could not leave the queue!");
             default:
                 throw new InvalidPacketFormatException("Invalid response code received!");

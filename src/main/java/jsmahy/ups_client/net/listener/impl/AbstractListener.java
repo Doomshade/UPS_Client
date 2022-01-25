@@ -2,8 +2,8 @@ package jsmahy.ups_client.net.listener.impl;
 
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
+import jsmahy.ups_client.exception.InvalidProtocolStateException;
 import jsmahy.ups_client.net.NetworkManager;
-import jsmahy.ups_client.net.ProtocolState;
 import jsmahy.ups_client.net.in.PacketIn;
 import jsmahy.ups_client.net.in.all.PacketInDisconnect;
 import jsmahy.ups_client.net.in.all.PacketInInvalidData;
@@ -21,10 +21,10 @@ import java.util.TimerTask;
 import java.util.function.Consumer;
 
 abstract class AbstractListener implements PacketListener {
-	public static final int SERVER_RESPONSE_LIMIT = 30_000;
-	public static final int KEEPALIVE_CHECK_PERIOD = 2_500;
+	public static final int SERVER_RESPONSE_LIMIT = 60_000;
+	public static final int KEEPALIVE_CHECK_PERIOD = 5_000;
 	private static final Logger L = LogManager.getLogger(AbstractListener.class);
-	private static long lastKeepAlive = 0;
+	private static long lastKeepAlive = -1;
 	private static boolean sendingKeepAlive = false;
 	private static Timer timer = null;
 	private final Map<Class<? extends PacketIn>, Consumer<? extends PacketIn>> MAP = new HashMap<>();
@@ -36,10 +36,11 @@ abstract class AbstractListener implements PacketListener {
 	}
 
 	protected static void startKeepAlive() {
-		if (sendingKeepAlive || NetworkManager.getInstance().getState() == ProtocolState.JUST_CONNECTED) {
+		if (sendingKeepAlive) {
 			return;
 		}
 		sendingKeepAlive = true;
+		lastKeepAlive = -1;
 		final TimerTask task = new TimerTask() {
 
 			@Override
@@ -57,13 +58,12 @@ abstract class AbstractListener implements PacketListener {
 				try {
 					NetworkManager.getInstance().sendPacket(new PacketOutKeepAlive());
 				} catch (Exception e) {
-					L.error("Error sending packet", e);
+					L.error("Error sending packet");
 					stopKeepAlive();
 				}
 			}
 		};
 		timer = new Timer("keepAlive", true);
-		lastKeepAlive = System.currentTimeMillis();
 		timer.schedule(task, 0, KEEPALIVE_CHECK_PERIOD);
 	}
 
@@ -72,6 +72,7 @@ abstract class AbstractListener implements PacketListener {
 			return;
 		}
 		sendingKeepAlive = false;
+		lastKeepAlive = -1;
 		timer.cancel();
 		timer = null;
 	}
@@ -80,7 +81,6 @@ abstract class AbstractListener implements PacketListener {
 		Platform.runLater(() -> new AlertBuilder(Alert.AlertType.WARNING)
 				.title("Invalid data")
 				.header("The server received invalid data")
-				.content("The data: " + packet.getInvalidData())
 				.build().show());
 	}
 
@@ -98,10 +98,10 @@ abstract class AbstractListener implements PacketListener {
 	}
 
 	@Override
-	public final void handle(PacketIn packet) {
+	public final void handle(PacketIn packet) throws InvalidProtocolStateException {
 		final Consumer<PacketIn> handler = (Consumer<PacketIn>) MAP.get(packet.getClass());
 		if (handler == null) {
-			throw new IllegalStateException("No handler found for " + packet.getClass().getSimpleName());
+			throw new InvalidProtocolStateException("No handler found for " + packet.getClass().getSimpleName());
 		}
 		L.debug(String.format("Found handler for %s packet in class %s", packet, getClass().getSimpleName()));
 		handler.accept(packet);

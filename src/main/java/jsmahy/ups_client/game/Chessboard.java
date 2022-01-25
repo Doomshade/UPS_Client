@@ -88,6 +88,7 @@ public final class Chessboard {
 				bbuf[j] = c;
 			}
 		}
+		String wb = m.group(4);
 		L.trace("Chessboard after first FEN part: " + Arrays.deepToString(board));
 		// end of chessboard piece parsing
 
