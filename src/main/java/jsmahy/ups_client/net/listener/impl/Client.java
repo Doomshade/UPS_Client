@@ -191,6 +191,10 @@ public class Client extends AbstractListener {
 		});
 	}
 
+	public void setOnTurn(boolean onTurn) {
+		GameController.getInstance().onTurn.setText(onTurn ? "It's your turn" : "It's your opponent's turn");
+	}
+
 	public void startGame(ChessGame chessGame) {
 		if (this.chessGame != null) {
 			throw new IllegalStateException("A chess game is already in play!");

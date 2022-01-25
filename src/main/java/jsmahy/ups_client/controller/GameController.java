@@ -36,6 +36,9 @@ public class GameController implements Initializable {
 	@FXML
 	public Label opponent;
 
+	@FXML
+	public Label onTurn;
+
 	public static GameController getInstance() {
 		return instance;
 	}

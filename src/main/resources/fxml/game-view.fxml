@@ -18,6 +18,7 @@
                 <TextField fx:id="chat"/>
                 <Button defaultButton="true" text="Send" fx:id="chatSend" onAction="#sendMessage"/>
                 <Label fx:id="opponent" text="Opponent: "/>
+                <Label fx:id="onTurn" text="Not yet your turn"/>
             </FlowPane>
             <TextArea editable="false" fx:id="opponentChat"/>
         </VBox>
