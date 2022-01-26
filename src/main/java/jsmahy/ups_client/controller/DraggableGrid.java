@@ -1,6 +1,5 @@
 package jsmahy.ups_client.controller;
 
-import javafx.event.Event;
 import javafx.scene.Group;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -122,7 +121,7 @@ public class DraggableGrid {
 					L.debug("Drag drop - move");
 					System.out.println("Drag Drop:");
 					System.out.println(from + " -> " + sq);
-					Client.getClient().move(from, sq);
+					Client.getClient().sendServerMove(from, sq);
 					e.setDropCompleted(true);
 					e.consume();
 					update();

@@ -39,6 +39,7 @@ public class QueueListener extends AbstractListener {
         c.startGame(game);
         NetworkManager.getInstance().changeState(ProtocolState.PLAY);
         SceneManager.changeScene(SceneManager.Scenes.GAME_SCENE);
+        Client.getClient().setOnTurn(packet.isWhite());
     }
 
     private void onLeaveQueue(PacketQueueInLeaveQueue packet) throws InvalidPacketFormatException {

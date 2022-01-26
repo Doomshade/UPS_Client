@@ -21,8 +21,7 @@ import java.util.TimerTask;
 import java.util.function.Consumer;
 
 abstract class AbstractListener implements PacketListener {
-	public static final int SERVER_RESPONSE_LIMIT = 60_000;
-	public static final int KEEPALIVE_CHECK_PERIOD = 5_000;
+	public static final int KEEPALIVE_CHECK_PERIOD = 2_500;
 	private static final Logger L = LogManager.getLogger(AbstractListener.class);
 	private static long lastKeepAlive = -1;
 	private static boolean sendingKeepAlive = false;
@@ -49,10 +48,10 @@ abstract class AbstractListener implements PacketListener {
 					lastKeepAlive = System.currentTimeMillis();
 				}
 				// the server hasn't responded in over 30 seconds, disconnect the client
-				if (System.currentTimeMillis() - lastKeepAlive >= SERVER_RESPONSE_LIMIT) {
+				if (System.currentTimeMillis() - lastKeepAlive >= NetworkManager.MAX_TIMEOUT) {
 					NetworkManager.getInstance().disconnect("Disconnected", "Could not reach the server",
 							String.format("Reason: have not received a keep alive packet in %ds",
-									SERVER_RESPONSE_LIMIT / 1000));
+									NetworkManager.MAX_TIMEOUT / 1000));
 					return;
 				}
 				try {

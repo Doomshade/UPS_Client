@@ -24,6 +24,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
+import java.net.StandardSocketOptions;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,13 +49,13 @@ public final class NetworkManager {
 	public static final String PACKET_MAGIC = "CHESS";
 	public static final int PACKET_HEADER_LENGTH = PACKET_MAGIC.length() + 5;
 	public static final int MAXIMUM_ID_LENGTH = 3;
-	private static final NetworkManager INSTANCE = new NetworkManager();
 	/**
 	 * The timeout limit for server to answer.
 	 */
-	private static final int TIMEOUT = 30_000;
+	public static final int SHORT_TIMEOUT = 5_000;
+	public static final int MAX_TIMEOUT = 20_000;
+	private static final NetworkManager INSTANCE = new NetworkManager();
 	private final Executor pool = Executors.newCachedThreadPool();
-
 	private final Collection<Consumer<ProtocolState>> changedStateListeners = new ArrayList<>();
 	private final Logger L = LogManager.getLogger(NetworkManager.class);
 	/**
@@ -68,6 +69,7 @@ public final class NetworkManager {
 			put(ProtocolState.QUEUE, new QueueListener());
 		}
 	};
+	private Thread readThread;
 	/**
 	 * Indicates whether the connection was successfully instantiated.
 	 */
@@ -76,7 +78,7 @@ public final class NetworkManager {
 	/**
 	 * Messages from server are received by this input stream.
 	 */
-	private BufferedInputStream in = null;
+	private InputStream in = null;
 
 	/**
 	 * Messages to server are sent in this output stream.
@@ -117,6 +119,7 @@ public final class NetworkManager {
 	 *
 	 * @param host the host
 	 * @param port the port
+	 *
 	 * @throws IllegalStateException if the connection has already been established
 	 */
 	public void setup(@NotNull final String host, final int port, Consumer<Throwable> onError, Runnable onSuccess)
@@ -129,8 +132,10 @@ public final class NetworkManager {
 		pool.execute(() -> {
 			try {
 				this.socket = new Socket(host, port);
-				this.socket.setSoTimeout(TIMEOUT);
-				this.socket.setKeepAlive(true);
+				this.socket.setKeepAlive(false);
+				this.socket.setSoTimeout(SHORT_TIMEOUT);
+				this.socket.setSoLinger(true, Integer.MAX_VALUE);
+				socket.setReceiveBufferSize(4096);
 				this.setupIO(socket.getInputStream(), socket.getOutputStream());
 				connectionSuccessful = true;
 				L.info("Successfully initialized connection");
@@ -150,6 +155,7 @@ public final class NetworkManager {
 	 *
 	 * @param in  the input stream
 	 * @param out the output stream
+	 *
 	 * @throws IllegalStateException if the streams have already been initialized
 	 */
 	public void setupIO(@NotNull final InputStream in,
@@ -159,7 +165,7 @@ public final class NetworkManager {
 			throw new IllegalStateException("I/O streams have already been initialized!");
 		}
 		L.info("Setting up I/O...");
-		this.in = new BufferedInputStream(in);
+		this.in = in;
 		startListening(this.in);
 		this.out = new BufferedOutputStream(new LoggableOutputStream(out));
 		this.initializedStreams = true;
@@ -167,7 +173,7 @@ public final class NetworkManager {
 	}
 
 	private void startListening(final InputStream in) {
-		Thread readThread = new Thread(new PacketDeserializer(in));
+		readThread = new Thread(new PacketDeserializer(in));
 		readThread.setDaemon(true);
 		readThread.start();
 	}
@@ -186,7 +192,8 @@ public final class NetworkManager {
 		return socket != null && !socket.isClosed() && connectionSuccessful;
 	}
 
-	public synchronized void receivePacket(BufferedPacket packet) throws IllegalArgumentException, InvalidProtocolStateException {
+	public synchronized void receivePacket(BufferedPacket packet)
+			throws IllegalArgumentException, InvalidProtocolStateException {
 		receivePacket(getState().getPacketIn(packet.getPacketId()), packet.getData());
 	}
 
@@ -300,6 +307,7 @@ public final class NetworkManager {
 	 * Gets the packet listener based on the given state.
 	 *
 	 * @param state the state
+	 *
 	 * @return the packet listener
 	 */
 	private PacketListener getListener(@NotNull ProtocolState state) {
@@ -313,7 +321,8 @@ public final class NetworkManager {
 		return state;
 	}
 
-	public synchronized void sendPacket(PacketOut packet) throws IllegalStateException, AnnotationTypeMismatchException, InvalidProtocolStateException {
+	public synchronized void sendPacket(PacketOut packet)
+			throws IllegalStateException, AnnotationTypeMismatchException, InvalidProtocolStateException {
 		sendPacket(packet, null, null);
 	}
 
@@ -321,6 +330,7 @@ public final class NetworkManager {
 	 * Sends a packet to the server.
 	 *
 	 * @param packet the packet to send
+	 *
 	 * @throws IllegalStateException if the network manager has not yet been initialized
 	 */
 	public synchronized void sendPacket(PacketOut packet, Consumer<Throwable> onFail, Runnable onSuccess)
@@ -375,7 +385,8 @@ public final class NetworkManager {
 		sendPacket(new BufferedPacket(getState().getPacketId(packet.getClass()), sb.toString()), onFail, onSuccess);
 	}
 
-	public synchronized void sendPacket(BufferedPacket packet, final Consumer<Throwable> onFail, final Runnable onSuccess)
+	public synchronized void sendPacket(BufferedPacket packet, final Consumer<Throwable> onFail,
+	                                    final Runnable onSuccess)
 			throws IllegalStateException {
 		if (!isInitializedStreams()) {
 			throw new IllegalStateException("The I/O streams have not yet been initialized!");
@@ -406,7 +417,7 @@ public final class NetworkManager {
 				L.debug(format("Sent %s packet to the server...", packet));
 				L.debug("Awaiting response from the server...");
 			} catch (IOException e) {
-				L.fatal("Failed to send a packet!", e);
+				L.fatal("Failed to send a packet!");
 				if (onFail != null) {
 					Platform.runLater(() -> onFail.accept(e));
 				}
@@ -415,8 +426,11 @@ public final class NetworkManager {
 		});
 	}
 
-	public void disconnect(String title, String header, String content) {
+	public synchronized void disconnect(String title, String header, String content) {
 		L.info("Disconnecting...");
+		L.info("Title: " + title);
+		L.info("Header: " + header);
+		L.info("Content: " + content);
 		stopListening();
 		Client.stopKeepAlive();
 		Client.logout();
@@ -458,14 +472,6 @@ public final class NetworkManager {
 		}
 	}
 
-	private void close(Closeable closeable) {
-		try {
-			closeable.close();
-		} catch (IOException e) {
-			L.error("Failed to close " + closeable);
-		}
-	}
-
 	/**
 	 * Stops listening to the server - closes the socket and the I/O streams
 	 */
@@ -475,8 +481,17 @@ public final class NetworkManager {
 		close(socket);
 		connectionSuccessful = false;
 		initializedStreams = false;
+		readThread.interrupt();
 		L.debug("Closing both I/O streams...");
 
+	}
+
+	private void close(Closeable closeable) {
+		try {
+			closeable.close();
+		} catch (IOException e) {
+			L.error("Failed to close " + closeable);
+		}
 	}
 
 	public void addChangedStateListener(Consumer<ProtocolState> listener) {

@@ -2,9 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.FlowPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.*?>
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="jsmahy.ups_client.controller.GameController"
@@ -14,18 +12,17 @@
     </padding>
     <bottom>
         <VBox>
-            <FlowPane hgap="5">
-                <TextField fx:id="chat"/>
-                <Button defaultButton="true" text="Send" fx:id="chatSend" onAction="#sendMessage"/>
-                <Label fx:id="opponent" text="Opponent: "/>
-                <Label fx:id="onTurn" text="Not yet your turn"/>
-            </FlowPane>
             <TextArea editable="false" fx:id="opponentChat"/>
         </VBox>
     </bottom>
     <right>
-        <VBox alignment="CENTER_LEFT">
+        <VBox alignment="CENTER_LEFT" minWidth="120" spacing="5">
             <Button fx:id="resign" text="Resign" onAction="#resign"/>
         </VBox>
     </right>
+    <top>
+        <FlowPane alignment="BASELINE_CENTER">
+            <Label fx:id="opponent" text="Opponent: "/>
+        </FlowPane>
+    </top>
 </BorderPane>

@@ -1,5 +1,6 @@
 package jsmahy.ups_client.controller;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -36,11 +37,12 @@ public class GameController implements Initializable {
 	@FXML
 	public Label opponent;
 
-	@FXML
-	public Label onTurn;
-
 	public static GameController getInstance() {
 		return instance;
+	}
+
+	public void appendMessage(String message) {
+		Platform.runLater(() -> opponentChat.appendText(message));
 	}
 
 	@Override

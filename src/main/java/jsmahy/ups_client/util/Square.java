@@ -97,10 +97,7 @@ public final class Square implements PacketData, Serializable {
 
 	@Override
 	public String toString() {
-		return "Position{" +
-				"row=" + rank +
-				", column=" + file +
-				'}';
+		return toDataString();
 	}
 
 	/**
