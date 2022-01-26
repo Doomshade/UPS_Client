@@ -21,18 +21,19 @@ public final class SceneManager {
 	}
 
 	public static synchronized void changeScene(Scenes scenes) {
-		if (currentScene == scenes) {
+		/*if (currentScene == scenes) {
 			return;
-		}
+		}*/
 		Platform.runLater(() -> {
 			FXMLLoader fxmlLoader =
 					new FXMLLoader(Main.class.getResource(String.format("/fxml/%s.fxml", scenes.scene)));
 			Scene scene;
 			try {
-				scene = new Scene(fxmlLoader.load(), 640, 480);
+				scene = new Scene(fxmlLoader.load());
 			} catch (IOException e) {
 				L.fatal("Failed to load a scene!", e);
 				Platform.exit();
+				System.exit(0);
 				return;
 			}
 			Main.getStage().setScene(scene);

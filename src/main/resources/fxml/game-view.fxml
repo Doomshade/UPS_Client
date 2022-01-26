@@ -8,21 +8,27 @@
             fx:controller="jsmahy.ups_client.controller.GameController"
             prefHeight="400.0" prefWidth="600.0" fx:id="rootPane">
     <padding>
-        <Insets top="10" bottom="10" right="50" left="30"/>
+        <Insets top="10" bottom="10" right="30" left="30"/>
     </padding>
     <bottom>
-        <VBox>
-            <TextArea editable="false" fx:id="opponentChat"/>
-        </VBox>
+        <FlowPane alignment="TOP_CENTER">
+            <Label style="-fx-font-size: 20;-fx-font-weight: bold" fx:id="player" text="Player"/>
+        </FlowPane>
     </bottom>
+    <left>
+        <FlowPane alignment="CENTER_LEFT" maxWidth="120">
+            <TextArea editable="false" fx:id="opponentChat" wrapText="true" prefColumnCount="12"/>
+        </FlowPane>
+    </left>
     <right>
-        <VBox alignment="CENTER_LEFT" minWidth="120" spacing="5">
+        <VBox alignment="CENTER_RIGHT" minWidth="90" spacing="5">
             <Button fx:id="resign" text="Resign" onAction="#resign"/>
+            <Button text="Draw"/>
         </VBox>
     </right>
     <top>
-        <FlowPane alignment="BASELINE_CENTER">
-            <Label fx:id="opponent" text="Opponent: "/>
+        <FlowPane alignment="BOTTOM_CENTER">
+            <Label style="-fx-font-size: 20;-fx-font-weight: bold" fx:id="opponent" text="Opponent"/>
         </FlowPane>
     </top>
 </BorderPane>

@@ -49,6 +49,8 @@ public class Main extends Application {
 			System.exit(0);
 		});
 		stage.setTitle("Semestrální práce - Šachy (Jakub Šmrha jsmahy@students.zcu.cz)");
+		stage.setWidth(1000);
+		stage.setHeight(750);
 		stage.show();
 	}
 }

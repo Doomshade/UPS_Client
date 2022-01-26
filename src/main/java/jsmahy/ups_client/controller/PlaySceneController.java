@@ -30,13 +30,6 @@ public class PlaySceneController implements Initializable {
 	public Button startButton;
 	@FXML
 	public Button leaveQueueButton;
-	@FXML
-	public ChoiceBox<String> gameTypeChoiceBox;
-
-	@FXML
-	public VBox nodes;
-	@FXML
-	public ProgressIndicator indicator;
 
 	public void goBack(final ActionEvent actionEvent) {
 		leaveQueue(actionEvent);
@@ -58,10 +51,6 @@ public class PlaySceneController implements Initializable {
 	public void initialize(final URL location, final ResourceBundle resources) {
 		NetworkManager.getInstance().addChangedStateListener(x -> updateButtons());
 		updateButtons();
-		final ObservableList<String> list = gameTypeChoiceBox.getItems();
-		list.add("BLITZ");
-		list.add("RAPID");
-		list.add("CLASSICAL");
 	}
 
 	public void updateButtons() {

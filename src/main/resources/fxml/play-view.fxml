@@ -1,35 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<StackPane stylesheets="@../css/basicStyle.css,@../css/bg.css" xmlns="http://javafx.com/javafx/10.0.2-internal"
-           xmlns:fx="http://javafx.com/fxml/1" fx:controller="jsmahy.ups_client.controller.PlaySceneController">
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.VBox?>
+<VBox alignment="CENTER" stylesheets="@../css/basicStyle.css,@../css/bg.css"
+      xmlns="http://javafx.com/javafx/10.0.2-internal"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="jsmahy.ups_client.controller.PlaySceneController" spacing="13">
     <padding>
         <Insets top="10" bottom="10" right="50" left="30"/>
     </padding>
 
-    <ProgressIndicator fx:id="indicator" disable="true" visible="false"/>
-    <VBox fx:id="nodes">
-        <padding>
-            <Insets top="10" bottom="10" right="50" left="30"/>
-        </padding>
-        <Label text="Game type"/>
-        <ChoiceBox fx:id="gameTypeChoiceBox" prefWidth="150.0"/>
-        <HBox>
-            <HBox alignment="CENTER_LEFT">
-                <Button fx:id="zpetButton" mnemonicParsing="false" onAction="#goBack"
-                        text="Back" prefHeight="30"/>
-            </HBox>
-
-            <HBox alignment="CENTER_RIGHT" spacing="5">
-                <Button fx:id="leaveQueueButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#leaveQueue"
-                        text="Leave Queue" prefHeight="30" disable="true" cancelButton="true"/>
-                <Button fx:id="startButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#joinQueue"
-                        text="Start" prefHeight="30" defaultButton="true"/>
-            </HBox>
-        </HBox>
-    </VBox>
-
-
-</StackPane>
+    <Button fx:id="startButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#joinQueue"
+            text="Join Queue" prefHeight="30" defaultButton="true"/>
+    <Button fx:id="leaveQueueButton" alignment="CENTER_RIGHT" mnemonicParsing="false" onAction="#leaveQueue"
+            text="Leave Queue" prefHeight="30" disable="true" cancelButton="true"/>
+    <Button fx:id="zpetButton" mnemonicParsing="false" onAction="#goBack"
+            text="Back" prefHeight="30"/>
+</VBox>

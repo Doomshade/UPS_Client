@@ -3,12 +3,12 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<StackPane maxHeight="500" maxWidth="300" minHeight="100" minWidth="100"
+<StackPane alignment="CENTER" maxHeight="500" maxWidth="300" minHeight="100" minWidth="100"
            stylesheets="@../css/basicStyle.css,@../css/bg.css"
            xmlns="http://javafx.com/javafx/11.0.2" xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="jsmahy.ups_client.controller.ServerConnectionController">
-    <ProgressIndicator progress="0.0" disable="true" visible="false" fx:id="progress"/>
-    <VBox fx:id="form">
+    <ProgressIndicator StackPane.alignment="CENTER" progress="0.0" disable="true" visible="false" fx:id="progress"/>
+    <VBox alignment="CENTER" StackPane.alignment="CENTER" fx:id="form">
         <padding>
             <Insets bottom="25" left="25" right="25" top="25"/>
         </padding>

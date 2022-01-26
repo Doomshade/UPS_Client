@@ -194,9 +194,9 @@ public class Client extends AbstractListener {
 				break;
 			case REJECTED:
 				L.info("Attempted to play an invalid move! Move: " + PacketPlayOutMove.getMove(packet.getMoveId()));
-				//GameController.getInstance().appendMessage("Invalid move!");
+				GameController.getInstance().appendMessage("Invalid move!");
 				if (!onTurn){
-					//GameController.getInstance().appendMessage("It's not your turn yet!");
+					GameController.getInstance().appendMessage("It's not your turn yet!");
 				}
 				break;
 			default:
@@ -277,7 +277,7 @@ public class Client extends AbstractListener {
 		final boolean clientWhite = Client.getClient().getPlayer().isWhite();
 		Square from = packet.getFrom();
 		Square to = packet.getTo();
-		//GameController.getInstance().appendMessage(String.format("Move on board: %s-%s%n", from, to));
+		GameController.getInstance().appendMessage(String.format("Move on board: %s-%s", from, to));
 		if (!clientWhite) {
 			from = from.flip();
 			to = to.flip();
@@ -285,7 +285,7 @@ public class Client extends AbstractListener {
 		final char piece = chessGame.getChessboard().getPieceId(from);
 		setOnTurn((Character.toUpperCase(piece) == piece) != clientWhite);
 		moveOnBoard(from, to);
-
+		GameController.getInstance().appendMessage((onTurn ? "It's your turn" : "It's your opponent's turn"));
 	}
 
 	/**
@@ -295,7 +295,6 @@ public class Client extends AbstractListener {
 	 */
 	public void setOnTurn(boolean onTurn) {
 		this.onTurn = onTurn;
-		//GameController.getInstance().appendMessage(onTurn ? "It's your turn" : "It's your opponent's turn");
 	}
 
 	/**
@@ -338,7 +337,7 @@ public class Client extends AbstractListener {
 		if (millis - timeSinceLastDrawOffer > DRAW_OFFER_MAX_DELAY) {
 			timeSinceLastDrawOffer = millis;
 			L.debug("Showing draw offer available responses...");
-			GameController.getInstance().appendMessage(String.format("%s%n", "Opponent asks for a draw"));
+			GameController.getInstance().appendMessage("Opponent asks for a draw");
 		}
 	}
 
@@ -349,7 +348,7 @@ public class Client extends AbstractListener {
 	 */
 	private void onMessage(PacketPlayInMessage packet) {
 		L.info("Message recvd: " + packet.getMessage());
-		GameController.getInstance().appendMessage(String.format("%s%n", packet.getMessage()));
+		GameController.getInstance().appendMessage(packet.getMessage());
 	}
 
 	/**

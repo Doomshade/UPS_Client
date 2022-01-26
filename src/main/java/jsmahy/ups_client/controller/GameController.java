@@ -37,21 +37,26 @@ public class GameController implements Initializable {
 	@FXML
 	public Label opponent;
 
+	@FXML
+	public Label player;
+
 	public static GameController getInstance() {
 		return instance;
 	}
 
 	public void appendMessage(String message) {
-		Platform.runLater(() -> opponentChat.appendText(message));
+		Platform.runLater(() -> opponentChat.appendText(message.concat("\n")));
 	}
 
 	@Override
 	public void initialize(URL url, ResourceBundle resourceBundle) {
 		instance = this;
-		this.draggableGrid = new DraggableGrid(Client.getClient().getChessGame().getChessboard());
+		final Client client = Client.getClient();
+		this.draggableGrid = new DraggableGrid(client.getChessGame().getChessboard());
+		this.player.setText(client.getPlayer().getName());
 		final GridPane gridPane = draggableGrid.getGridPane();
-		gridPane.setAlignment(Pos.CENTER);
 		rootPane.setCenter(gridPane);
+		gridPane.setAlignment(Pos.CENTER);
 	}
 
 	public void sendMessage(ActionEvent actionEvent) {

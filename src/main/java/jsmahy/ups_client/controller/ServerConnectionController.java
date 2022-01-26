@@ -9,6 +9,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import jsmahy.ups_client.exception.InvalidProtocolStateException;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.listener.impl.Client;
 import jsmahy.ups_client.net.out.just_connected.PacketJustConnectedOutHello;
@@ -16,6 +17,7 @@ import jsmahy.ups_client.util.AlertBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.annotation.AnnotationTypeMismatchException;
 import java.net.ConnectException;
 import java.net.NoRouteToHostException;
 import java.net.URL;
@@ -46,7 +48,7 @@ public class ServerConnectionController implements Initializable {
 
 	public void connect(final ActionEvent actionEvent) {
 		if (!isValidTF(ipTF) || !isValidTF(portTF) || !isValidTF(nameTF)) {
-			sendInvalidInputAlert("Invalid input received!", "Invalid input");
+			sendInvalidInputAlert("Invalid name/IP/port!", "Invalid input");
 			return;
 		}
 		final int port;
@@ -76,7 +78,11 @@ public class ServerConnectionController implements Initializable {
 					},
 					() -> {
 						L.info("Successfully connected to the server");
-						NM.sendPacket(new PacketJustConnectedOutHello(nameTF.getText()));
+						try {
+							NM.sendPacket(new PacketJustConnectedOutHello(nameTF.getText()));
+						} catch (IllegalStateException | AnnotationTypeMismatchException | InvalidProtocolStateException e) {
+							L.error("Failed to send a packet!");
+						}
 					});
 		} catch (IllegalStateException e) {
 			setProgress(false);
@@ -99,14 +105,12 @@ public class ServerConnectionController implements Initializable {
 	}
 
 	private void sendInvalidInputAlert(String content, String title) {
-		Platform.runLater(() -> {
-			new AlertBuilder(Alert.AlertType.ERROR)
-					.content(content)
-					.header("Connection error")
-					.title(title)
-					.build()
-					.show();
-		});
+		Platform.runLater(() -> new AlertBuilder(Alert.AlertType.ERROR)
+				.content(content)
+				.header("Input error")
+				.title(title)
+				.build()
+				.show());
 	}
 
 	private boolean isValidTF(TextField tf) {
