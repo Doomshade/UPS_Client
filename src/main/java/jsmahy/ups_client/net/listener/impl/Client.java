@@ -27,23 +27,35 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * The listener for the {@link ProtocolState#PLAY} state
+ *
+ * @author Jakub Šmrha
+ * @version 1.0
+ * @since 1.0
+ */
 public class Client extends AbstractListener {
 	private static final Logger L = LogManager.getLogger(Client.class);
-	// TODO rename
+
+	// some game related variables
 	private static final int DRAW_OFFER_MAX_DELAY = 15_000;
 	private static final int WIN_WHITE = 1 << 0;
 	private static final int WIN_BY_MATE = 1 << 1;
 	private static final int WIN_BY_RESIGN = 1 << 2;
 	private static final int WIN_BY_TIME = 1 << 3;
 	private static Client instance = null;
+
+	// the name nad player instance of the client
 	private static String name = "";
 	private final ChessPlayer player;
+
+	// the chess game the client is in
 	private ChessGame chessGame = null;
 	private long timeSinceLastDrawOffer = 0L;
 	private boolean onTurn = false;
 
 	{
-		// register packet handlers!!!
+		// registers packet handlers
 		register(PacketPlayInMove.class, this::onMove);
 		register(PacketPlayInOpponentName.class, this::onOpponentName);
 		register(PacketPlayInMessage.class, this::onMessage);
@@ -54,6 +66,7 @@ public class Client extends AbstractListener {
 		register(PacketPlayInOpponentDisconnect.class, this::onOpponentDisconnect);
 		register(PacketPlayInEnPassant.class, this::onEnPassant);
 
+		// and log in once an instance is created
 		this.player = new ChessPlayer(name);
 		NetworkManager.setClient(this);
 		L.info("Logged in as " + this);
@@ -84,12 +97,20 @@ public class Client extends AbstractListener {
 		instance = null;
 	}
 
+	/**
+	 * Attempts to reconnect the player
+	 */
 	public static void attemptReconnect() {
-		Timer reconnect_timer = new Timer("Reconnect timer");
+		Timer reconnectTimer = new Timer("Reconnect timer");
+
+		// the boolean to that checks whether the reconnection was successful
 		AtomicBoolean reconnected = new AtomicBoolean(false);
+
+		// the task that attempts to reconnect periodically
 		TimerTask task = new TimerTask() {
 			@Override
 			public void run() {
+				// attempt to set up a new connection with the previous IP and port
 				Platform.runLater(() -> NetworkManager.getInstance()
 						.setup(ServerConnectionController.ip, ServerConnectionController.port,
 								x -> {
@@ -102,6 +123,8 @@ public class Client extends AbstractListener {
 									L.error(content);
 								},
 								() -> {
+									// the connection was successful, send the server a hello packet with the previous
+									// name
 									L.info("Successfully connected to the server");
 									try {
 										NetworkManager.getInstance()
@@ -115,11 +138,16 @@ public class Client extends AbstractListener {
 								}));
 			}
 		};
-		reconnect_timer.schedule(task, 2000, 2000);
+
+		// schedule the task
+		reconnectTimer.schedule(task, 2000, 2000);
+
+		// schedule another task that cancels the reconnection task, and disconnects the player if the server is
+		// unreachable after 40 seconds
 		new Timer().schedule(new TimerTask() {
 			@Override
 			public void run() {
-				reconnect_timer.cancel();
+				reconnectTimer.cancel();
 				if (!reconnected.get()) {
 					NetworkManager.getInstance()
 							.disconnect("Disconnected", "Could not reconnect",
@@ -175,7 +203,7 @@ public class Client extends AbstractListener {
 	}
 
 	/**
-	 * Updates the UI
+	 * Updates the game UI
 	 */
 	private void update() {
 		GameController.getInstance().draggableGrid.update();
@@ -224,12 +252,13 @@ public class Client extends AbstractListener {
 		final Square kingTo = new Square(rank, toFile);
 
 		L.info(String.format(s, kingFrom, kingTo));
+
+		// the moves have to be flipped depending on the player's colour
 		moveOnBoard(clientWhite ? kingFrom : kingFrom.flip(), clientWhite ? kingTo : kingTo.flip());
 	}
 
 	/**
-	 * Attempts to move a piece on the board. Firstly it validates the move client-side, then it sends a packet to the
-	 * server for confirmation.
+	 * Moves a piece on the board and updates the board
 	 *
 	 * @param from square from
 	 * @param to   square to
@@ -334,12 +363,18 @@ public class Client extends AbstractListener {
 		Square from = packet.getFrom();
 		Square to = packet.getTo();
 		GameController.getInstance().appendMessage(String.format("Move on board: %s-%s", from, to));
+
+		// flip the coords if the player is black
 		if (!clientWhite) {
 			from = from.flip();
 			to = to.flip();
 		}
+
+		// get the piece and set whose turn it is based on the moved piece
 		final char piece = chessGame.getChessboard().getPieceId(from);
 		setOnTurn((Character.toUpperCase(piece) == piece) != clientWhite);
+
+		// move the piece on the board
 		moveOnBoard(from, to);
 		GameController.getInstance().appendMessage((onTurn ? "It's your turn" : "It's your opponent's turn"));
 	}

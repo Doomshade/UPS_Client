@@ -7,6 +7,13 @@ import jsmahy.ups_client.net.ResponseCode;
 import jsmahy.ups_client.net.in.logged_in.packet.PacketLoggedInInJoinQueue;
 import jsmahy.ups_client.net.in.logged_in.packet.PacketLoggedInInReconnect;
 
+/**
+ * The listener for the {@link ProtocolState#LOGGED_IN} state
+ *
+ * @author Jakub Šmrha
+ * @version 1.0
+ * @since 1.0
+ */
 public class LoggedInListener extends AbstractListener {
 
 	{

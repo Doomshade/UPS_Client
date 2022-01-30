@@ -4,6 +4,8 @@ import jsmahy.ups_client.exception.InvalidProtocolStateException;
 import jsmahy.ups_client.net.in.PacketIn;
 
 /**
+ * The packet listener for each state
+ *
  * @author Jakub Šmrha
  * @version 1.0
  * @since 1.0
