@@ -6,6 +6,13 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * A square on the board.
+ *
+ * @author Jakub Šmrha
+ * @version 1.0
+ * @since 1.0
+ */
 public final class Square implements PacketData, Serializable {
 	private final int rank, file;
 
@@ -64,6 +71,11 @@ public final class Square implements PacketData, Serializable {
 		return new Square(rank - '1', file - 'A');
 	}
 
+	/**
+	 * Flips the square coordinates on both axis, e.g. [1,4] (B5) -> [6,3] (G4)
+	 *
+	 * @return a flipped square
+	 */
 	public Square flip() {
 		return new Square(7 - rank, 7 - file);
 	}

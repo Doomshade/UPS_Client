@@ -8,6 +8,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * An output stream that logs the data sent before writing it.
+ *
+ * @author Jakub Šmrha
+ * @version 1.0
+ * @since 1.0
+ */
 public class LoggableOutputStream extends OutputStream {
 	private static final Logger L = LogManager.getLogger(LoggableOutputStream.class);
 	private final OutputStream out;
