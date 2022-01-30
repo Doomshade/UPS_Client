@@ -57,7 +57,7 @@ public class DraggableGrid {
 		final Image blackBG = new Image("/pieces/brown_cell.png", 50, 50, true, true);
 		final Image whiteBG = new Image("/pieces/white_cell.png", 50, 50, true, true);
 
-
+		// loop through the board and add groups of background images and pieces
 		for (int y = 0; y < 8; y++) {
 			for (int x = 0; x < 8; x++) {
 				final Group group = new Group();
@@ -70,6 +70,7 @@ public class DraggableGrid {
 				final Image img = PIECE_IMAGES.get(pieceId);
 				final ImageView imageView = new ImageView(img);
 
+				// logic that happens when dragging starts
 				group.setOnDragDetected(e -> {
 					L.debug("Started dragging");
 					final char piece = cb.getPieceId(sq);
@@ -95,12 +96,14 @@ public class DraggableGrid {
 					e.consume();
 				});
 
+				// what does the gesture accept on drag over
 				group.setOnDragOver(e -> {
 					if (e.getGestureSource() != group) {
 						e.acceptTransferModes(TransferMode.MOVE);
 					}
 				});
 
+				// send the packet on drop
 				group.setOnDragDropped(e -> {
 					L.debug("Drag dropped");
 					final Dragboard dragboard = e.getDragboard();
@@ -118,14 +121,13 @@ public class DraggableGrid {
 					}
 
 					L.debug("Drag drop - move");
-					System.out.println("Drag Drop:");
-					System.out.println(from + " -> " + sq);
 					Client.getClient().sendServerMove(from, sq);
 					e.setDropCompleted(true);
 					e.consume();
 					update();
 				});
 
+				// once the dragging is done, update the board
 				group.setOnDragDone(e -> update());
 
 				group.getChildren().addAll(bgImageView, imageView);
@@ -149,6 +151,9 @@ public class DraggableGrid {
 		return PIECE_IMAGES.get(piece);
 	}
 
+	/**
+	 * Updates the board to the current state
+	 */
 	public void update() {
 		for (int y = 0; y < 8; y++) {
 			for (int x = 0; x < 8; x++) {

@@ -48,6 +48,9 @@ public class PlaySceneController implements Initializable {
 		updateButtons();
 	}
 
+	/**
+	 * Updates the buttons according the state of the queue
+	 */
 	public void updateButtons() {
 		final boolean inQueue = NetworkManager.getInstance().getState() == ProtocolState.QUEUE;
 		startButton.setDisable(inQueue);

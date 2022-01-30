@@ -27,11 +27,17 @@ import java.util.regex.Pattern;
 
 public class ServerConnectionController implements Initializable {
 	private static final Logger L = LogManager.getLogger(ServerConnectionController.class);
+
+	// the allowed characters in the text fields
 	private static final String ALLOWED_CHARS = "[a-zA-Z\\d]";
+
+	// global vars for a quick fix during odevzdání Oops
 	public static String ip = "";
 	public static int port = 10000;
 	public static String name = "";
+
 	private static ServerConnectionController instance;
+
 	@FXML
 	private ProgressIndicator progress;
 	@FXML
@@ -101,6 +107,11 @@ public class ServerConnectionController implements Initializable {
 		}
 	}
 
+	/**
+	 * Sets the progress icon to on/off
+	 *
+	 * @param progress on/off
+	 */
 	private void setProgress(boolean progress) {
 		L.debug("Setting progress to " + progress);
 		this.progress.setProgress(-1);
@@ -110,6 +121,12 @@ public class ServerConnectionController implements Initializable {
 		this.form.setDisable(progress);
 	}
 
+	/**
+	 * Sends an alert that the input is invalid
+	 *
+	 * @param content the content of the alert
+	 * @param title   the title of the alert
+	 */
 	private void sendInvalidInputAlert(String content, String title) {
 		Platform.runLater(() -> new AlertBuilder(Alert.AlertType.ERROR)
 				.content(content)
@@ -124,6 +141,9 @@ public class ServerConnectionController implements Initializable {
 		return text.isEmpty() || !Pattern.compile(ALLOWED_CHARS).matcher(text).find();
 	}
 
+	/**
+	 * Shows an alert that the username already exists on the server
+	 */
 	public void errorUsernameExists() {
 		Platform.runLater(() -> {
 			setProgress(false);

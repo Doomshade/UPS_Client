@@ -42,6 +42,11 @@ public class GameController implements Initializable {
 		return instance;
 	}
 
+	/**
+	 * Appends a message to the text box
+	 *
+	 * @param message the message
+	 */
 	public void appendMessage(String message) {
 		Platform.runLater(() -> opponentChat.appendText(message.concat("\n")));
 	}
@@ -57,6 +62,14 @@ public class GameController implements Initializable {
 		gridPane.setAlignment(Pos.CENTER);
 	}
 
+	/**
+	 * Sends a message to the chat box
+	 *
+	 * @param actionEvent
+	 *
+	 * @deprecated not used anymore
+	 */
+	@Deprecated
 	public void sendMessage(ActionEvent actionEvent) {
 		final String text = chat.getText();
 
@@ -83,6 +96,11 @@ public class GameController implements Initializable {
 		chat.clear();
 	}
 
+	/**
+	 * Resigns the player from the game
+	 *
+	 * @param actionEvent
+	 */
 	public void resign(final ActionEvent actionEvent) {
 		NetworkManager.getInstance().sendPacket(new PacketPlayOutResign());
 	}
