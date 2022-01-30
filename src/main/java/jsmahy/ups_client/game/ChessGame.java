@@ -33,6 +33,13 @@ public final class ChessGame {
 		return opponent;
 	}
 
+	/**
+	 * Sets the opponent
+	 *
+	 * @param opponent the opponent
+	 *
+	 * @throws IllegalStateException if the opponent has already been set
+	 */
 	public void setOpponent(ChessPlayer opponent) throws IllegalStateException {
 		if (hasOpponent()) {
 			throw new IllegalStateException("Opponent already set in this game! " + this);

@@ -111,6 +111,12 @@ public final class Chessboard {
 		L.debug(Arrays.deepToString(board));
 	}
 
+	/**
+	 * Ses a piece on the board
+	 *
+	 * @param sq    the square to set the piece on
+	 * @param piece the piece
+	 */
 	public void setOnBoard(Square sq, char piece) {
 		board[sq.getRank()][sq.getFile()] = piece;
 	}
