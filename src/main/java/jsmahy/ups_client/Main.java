@@ -35,7 +35,11 @@ public class Main extends Application {
 	@Override
 	public void start(Stage stage) {
 		Main.stage = stage;
+
+		// set the state to just connected
 		NetworkManager.getInstance().changeState(ProtocolState.JUST_CONNECTED);
+
+		// exit the program once the GUI is closed
 		stage.setOnCloseRequest(x -> {
 			Platform.exit();
 			System.exit(0);

@@ -9,8 +9,11 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 
 /**
+ * A manager hat changes scenes on request
+ *
  * @author Jakub Šmrha
  * @version 1.0
+ * @see Scenes
  * @since 1.0
  */
 public final class SceneManager {
@@ -19,6 +22,11 @@ public final class SceneManager {
 	private SceneManager() {
 	}
 
+	/**
+	 * Changes the scene
+	 *
+	 * @param scenes the scene to change to
+	 */
 	public static synchronized void changeScene(Scenes scenes) {
 		Platform.runLater(() -> {
 			FXMLLoader fxmlLoader =
