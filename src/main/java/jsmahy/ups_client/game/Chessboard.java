@@ -79,7 +79,7 @@ public final class Chessboard {
 		}
 		final int rowSize = ChessPieceUtil.ROW_SIZE;
 		for (int i = rowSize - 1; i >= 0; i--) {
-			char[] bbuf = new char[8];
+			char[] bbuf = new char[rowSize];
 			for (int j = 0; j < rowSize; j++) {
 				char c = board[i][j];
 				if (c == '\u0000') {
@@ -88,7 +88,8 @@ public final class Chessboard {
 				bbuf[j] = c;
 			}
 		}
-		String wb = m.group(4);
+		// TODO deserialize the whole FEN string (check who's turn it is)
+		// String wb = m.group(4);
 		L.trace("Chessboard after first FEN part: " + Arrays.deepToString(board));
 		// end of chessboard piece parsing
 

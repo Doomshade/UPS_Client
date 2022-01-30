@@ -27,7 +27,6 @@ public class DraggableGrid {
 
 	private static final DataFormat PIECE = new DataFormat("figure");
 	private static final DataFormat SQUARE_FORMAT = new DataFormat("square");
-	private static final DataFormat COLOUR_FORMAT = new DataFormat("colour");
 	private static final HashMap<Character, Image> PIECE_IMAGES = new HashMap<>() {
 		{
 			// yes this is awful but idgaf anymore
@@ -150,14 +149,6 @@ public class DraggableGrid {
 		return PIECE_IMAGES.get(piece);
 	}
 
-	private static Image createImage(String piece, boolean white) {
-		return new Image(String.format("/pieces/%s_%s.png", piece, white ? "white" : "black"), 50, 50, true, true);
-	}
-
-	public GridPane getGridPane() {
-		return gridPane;
-	}
-
 	public void update() {
 		for (int y = 0; y < 8; y++) {
 			for (int x = 0; x < 8; x++) {
@@ -169,5 +160,13 @@ public class DraggableGrid {
 				imageView.setImage(img);
 			}
 		}
+	}
+
+	private static Image createImage(String piece, boolean white) {
+		return new Image(String.format("/pieces/%s_%s.png", piece, white ? "white" : "black"), 50, 50, true, true);
+	}
+
+	public GridPane getGridPane() {
+		return gridPane;
 	}
 }

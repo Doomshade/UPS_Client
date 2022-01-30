@@ -1,6 +1,5 @@
 package jsmahy.ups_client.net.in.all;
 
-import jsmahy.ups_client.net.PacketDataField;
 import jsmahy.ups_client.net.in.PacketIn;
 
 /**

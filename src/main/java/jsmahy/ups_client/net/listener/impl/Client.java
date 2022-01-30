@@ -63,6 +63,7 @@ public class Client extends AbstractListener {
 	 * Sets the login name
 	 *
 	 * @param name the login name to set
+	 *
 	 * @throws NullPointerException     if the name is null
 	 * @throws IllegalArgumentException if the name is empty
 	 */
@@ -89,28 +90,29 @@ public class Client extends AbstractListener {
 		TimerTask task = new TimerTask() {
 			@Override
 			public void run() {
-				Platform.runLater(() -> {
-					NetworkManager.getInstance().setup(ServerConnectionController.ip, ServerConnectionController.port,
-							x -> {
-								String content = "Connection error";
-								if (x instanceof UnknownHostException || x instanceof NoRouteToHostException) {
-									content = "Unknown host destination";
-								} else if (x instanceof ConnectException) {
-									content = "Could not connect to the server";
-								}
-								L.error(content);
-							},
-							() -> {
-								L.info("Successfully connected to the server");
-								try {
-									NetworkManager.getInstance().sendPacket(new PacketJustConnectedOutHello(ServerConnectionController.name));
-								} catch (IllegalStateException | AnnotationTypeMismatchException | InvalidProtocolStateException ex) {
-									L.error("Failed to send a packet!");
-								}
-								reconnected.set(true);
-								cancel();
-							});
-				});
+				Platform.runLater(() -> NetworkManager.getInstance()
+						.setup(ServerConnectionController.ip, ServerConnectionController.port,
+								x -> {
+									String content = "Connection error";
+									if (x instanceof UnknownHostException || x instanceof NoRouteToHostException) {
+										content = "Unknown host destination";
+									} else if (x instanceof ConnectException) {
+										content = "Could not connect to the server";
+									}
+									L.error(content);
+								},
+								() -> {
+									L.info("Successfully connected to the server");
+									try {
+										NetworkManager.getInstance()
+												.sendPacket(new PacketJustConnectedOutHello(
+														ServerConnectionController.name));
+									} catch (IllegalStateException | AnnotationTypeMismatchException | InvalidProtocolStateException ex) {
+										L.error("Failed to send a packet!");
+									}
+									reconnected.set(true);
+									cancel();
+								}));
 			}
 		};
 		reconnect_timer.schedule(task, 2000, 2000);
@@ -119,7 +121,9 @@ public class Client extends AbstractListener {
 			public void run() {
 				reconnect_timer.cancel();
 				if (!reconnected.get()) {
-					NetworkManager.getInstance().disconnect("Disconnected", "Could not reconnect", "Failed to reconnect after a long timeout", true);
+					NetworkManager.getInstance()
+							.disconnect("Disconnected", "Could not reconnect",
+									"Failed to reconnect after a long timeout", true);
 				}
 			}
 		}, 40000);
@@ -139,17 +143,6 @@ public class Client extends AbstractListener {
 		}
 		L.info(String.format("Logging in as %s...", name));
 		instance = new Client();
-	}
-
-	/**
-	 * @return the client instance
-	 * @throws IllegalStateException if the client is not yet logged in
-	 */
-	public static Client getClient() throws IllegalStateException {
-		if (instance == null) {
-			throw new IllegalStateException("Not yet logged in!");
-		}
-		return instance;
 	}
 
 	/**
@@ -319,6 +312,7 @@ public class Client extends AbstractListener {
 	 * Starts the chess game
 	 *
 	 * @param chessGame the chess game to start
+	 *
 	 * @throws IllegalStateException if the user is already in a game
 	 */
 	public void startGame(ChessGame chessGame) throws IllegalStateException {
@@ -348,6 +342,18 @@ public class Client extends AbstractListener {
 		setOnTurn((Character.toUpperCase(piece) == piece) != clientWhite);
 		moveOnBoard(from, to);
 		GameController.getInstance().appendMessage((onTurn ? "It's your turn" : "It's your opponent's turn"));
+	}
+
+	/**
+	 * @return the client instance
+	 *
+	 * @throws IllegalStateException if the client is not yet logged in
+	 */
+	public static Client getClient() throws IllegalStateException {
+		if (instance == null) {
+			throw new IllegalStateException("Not yet logged in!");
+		}
+		return instance;
 	}
 
 	/**

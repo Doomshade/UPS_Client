@@ -15,15 +15,11 @@ import java.io.IOException;
  */
 public final class SceneManager {
 	private static final Logger L = LogManager.getLogger(SceneManager.class);
-	private static Scenes currentScene = null;
 
 	private SceneManager() {
 	}
 
 	public static synchronized void changeScene(Scenes scenes) {
-		/*if (currentScene == scenes) {
-			return;
-		}*/
 		Platform.runLater(() -> {
 			FXMLLoader fxmlLoader =
 					new FXMLLoader(Main.class.getResource(String.format("/fxml/%s.fxml", scenes.scene)));
@@ -37,7 +33,6 @@ public final class SceneManager {
 				return;
 			}
 			Main.getStage().setScene(scene);
-			currentScene = scenes;
 		});
 	}
 

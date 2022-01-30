@@ -16,7 +16,6 @@ import jsmahy.ups_client.util.LoggableOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.lang.annotation.AnnotationTypeMismatchException;
@@ -45,43 +44,46 @@ import static java.lang.String.format;
  * @since 1.0
  */
 public final class NetworkManager {
+	// Packet format variables
 	public static final String PACKET_MAGIC = "CHESS";
 	public static final int PACKET_HEADER_LENGTH = PACKET_MAGIC.length() + 5;
 	public static final int MAXIMUM_ID_LENGTH = 3;
+
 	/**
 	 * The timeout limit for server to answer.
 	 */
 	public static final int SHORT_TIMEOUT = 30_000;
 	public static final int MAX_TIMEOUT = 60_000;
+
+	/**
+	 * The instance
+	 */
 	private static final NetworkManager INSTANCE = new NetworkManager();
 	private final Executor pool = Executors.newCachedThreadPool();
+
+	/**
+	 * Listeners for the changed state of protocol
+	 */
 	private final Collection<Consumer<ProtocolState>> changedStateListeners = new ArrayList<>();
 	private final Logger L = LogManager.getLogger(NetworkManager.class);
 	/**
 	 * The packet listener based on the protocol state.
 	 */
 	private final Map<ProtocolState, PacketListener> LISTENERS = new ConcurrentHashMap<>() {
-		// test
 		{
 			put(ProtocolState.JUST_CONNECTED, new JustConnectedListener());
 			put(ProtocolState.LOGGED_IN, new LoggedInListener());
 			put(ProtocolState.QUEUE, new QueueListener());
 		}
 	};
-	private Thread readThread;
 	/**
 	 * Indicates whether the connection was successfully instantiated.
 	 */
 	private boolean connectionSuccessful = false;
-	private Socket socket = null;
-	/**
-	 * Messages from server are received by this input stream.
-	 */
-	private InputStream in = null;
 
-	/**
-	 * Messages to server are sent in this output stream.
-	 */
+	// socket stuff
+	private Socket socket = null;
+	private InputStream in = null;
 	private BufferedOutputStream out = null;
 
 	/**
@@ -111,6 +113,10 @@ public final class NetworkManager {
 	 */
 	public static NetworkManager getInstance() {
 		return INSTANCE;
+	}
+
+	public void addChangedStateListener(Consumer<ProtocolState> listener) {
+		changedStateListeners.add(listener);
 	}
 
 	/**
@@ -150,6 +156,13 @@ public final class NetworkManager {
 	}
 
 	/**
+	 * @return {@code true} if the connection has been successfully established.
+	 */
+	public boolean isConnectionSuccessful() {
+		return socket != null && !socket.isClosed() && connectionSuccessful;
+	}
+
+	/**
 	 * Sets up the I/O streams.
 	 *
 	 * @param in  the input stream
@@ -158,7 +171,7 @@ public final class NetworkManager {
 	 * @throws IllegalStateException if the streams have already been initialized
 	 */
 	public void setupIO(@NotNull final InputStream in,
-	                    @Nullable OutputStream out)
+	                    @NotNull final OutputStream out)
 			throws IllegalStateException {
 		if (isInitializedStreams()) {
 			throw new IllegalStateException("I/O streams have already been initialized!");
@@ -171,12 +184,6 @@ public final class NetworkManager {
 		L.info("I/O set up");
 	}
 
-	private void startListening(final InputStream in) {
-		readThread = new Thread(new PacketDeserializer(in));
-		readThread.setDaemon(true);
-		readThread.start();
-	}
-
 	/**
 	 * @return {@code true} if the I/O streams have been successfully initialized.
 	 */
@@ -184,18 +191,33 @@ public final class NetworkManager {
 		return in != null && out != null && initializedStreams;
 	}
 
-	/**
-	 * @return {@code true} if the connection has been successfully established.
-	 */
-	public boolean isConnectionSuccessful() {
-		return socket != null && !socket.isClosed() && connectionSuccessful;
+	private void startListening(final InputStream in) {
+		Thread readThread = new Thread(new PacketDeserializer(in));
+		readThread.setDaemon(true);
+		readThread.start();
 	}
 
+	/**
+	 * Attempts to parse and receive an incoming packet
+	 *
+	 * @param packet the buffered packet
+	 *
+	 * @throws IllegalArgumentException      if the packet class could not be instantiated with the default constructor
+	 * @throws InvalidProtocolStateException if the packet was sent in an invalid protocol
+	 */
 	public synchronized void receivePacket(BufferedPacket packet)
 			throws IllegalArgumentException, InvalidProtocolStateException {
 		receivePacket(getState().getPacketIn(packet.getPacketId()), packet.getData());
 	}
 
+	/**
+	 * Receives the packet with the given data in string format that is later parsed
+	 *
+	 * @param p    the packet
+	 * @param data the data
+	 *
+	 * @throws InvalidProtocolStateException if the packet was sent in an invalid state
+	 */
 	public synchronized void receivePacket(PacketIn p, String data) throws InvalidProtocolStateException {
 		final TreeMap<Integer, LinkedHashMap<Field, Object>> map = new TreeMap<>(Comparator.naturalOrder());
 
@@ -230,10 +252,11 @@ public final class NetworkManager {
 
 		AtomicInteger amountRead = new AtomicInteger(0);
 		int layer = 1;
+
 		// we iterate through collections of fields from the smallest to the largest
 		for (Map<Field, Object> q : map.values()) {
-
 			L.trace(String.format("Iterating layer #%d", layer++));
+
 			// we iterate through fields and their types
 			for (Map.Entry<Field, Object> entry : q.entrySet()) {
 				L.trace(String.format("Amount read thus far: %d", amountRead.get()));
@@ -242,6 +265,7 @@ public final class NetworkManager {
 				final Object packetData = entry.getValue();
 				final Method deserializeMethod;
 
+				// now we deserialize
 				try {
 					final String substring = data.substring(amountRead.get());
 					L.trace(String.format("Deserializing %s", substring));
@@ -320,6 +344,16 @@ public final class NetworkManager {
 		return state;
 	}
 
+	/**
+	 * Sends the packet to the server
+	 *
+	 * @param packet the packet
+	 *
+	 * @throws IllegalStateException           if the network manager has not yet been initialized
+	 * @throws AnnotationTypeMismatchException if an argument in a packet is wrong
+	 * @throws InvalidProtocolStateException   if the packet was sent in the wrong protocol state
+	 * @see #sendPacket(PacketOut, Consumer, Runnable)
+	 */
 	public synchronized void sendPacket(PacketOut packet)
 			throws IllegalStateException, AnnotationTypeMismatchException, InvalidProtocolStateException {
 		sendPacket(packet, null, null);
@@ -330,7 +364,9 @@ public final class NetworkManager {
 	 *
 	 * @param packet the packet to send
 	 *
-	 * @throws IllegalStateException if the network manager has not yet been initialized
+	 * @throws IllegalStateException           if the network manager has not yet been initialized
+	 * @throws AnnotationTypeMismatchException if an argument in a packet is wrong
+	 * @throws InvalidProtocolStateException   if the packet was sent in the wrong protocol state
 	 */
 	public synchronized void sendPacket(PacketOut packet, Consumer<Throwable> onFail, Runnable onSuccess)
 			throws IllegalStateException, AnnotationTypeMismatchException, InvalidProtocolStateException {
@@ -384,6 +420,15 @@ public final class NetworkManager {
 		sendPacket(new BufferedPacket(getState().getPacketId(packet.getClass()), sb.toString()), onFail, onSuccess);
 	}
 
+	/**
+	 * Sends the packet to the server
+	 *
+	 * @param packet    the packet
+	 * @param onFail    what should happen if the packet fails to deliver
+	 * @param onSuccess what should happen if the packet was successfully delivered
+	 *
+	 * @throws IllegalStateException if the IO streams have not yet been initialized
+	 */
 	public synchronized void sendPacket(BufferedPacket packet, final Consumer<Throwable> onFail,
 	                                    final Runnable onSuccess)
 			throws IllegalStateException {
@@ -420,11 +465,20 @@ public final class NetworkManager {
 				if (onFail != null) {
 					Platform.runLater(() -> onFail.accept(e));
 				}
-				disconnect("Server shutdown", "Unable to reach server", "Packet was not able to reach the server!", true);
+				disconnect("Server shutdown", "Unable to reach server", "Packet was not able to reach the server!",
+						true);
 			}
 		});
 	}
 
+	/**
+	 * Disconnects the player from the server
+	 *
+	 * @param title       the title of the alert
+	 * @param header      the header of the alert
+	 * @param content     the content of the alert
+	 * @param changeScene whether to change scenes once this method finishes
+	 */
 	public synchronized void disconnect(String title, String header, String content, boolean changeScene) {
 		L.info("Disconnecting...");
 		L.info("Title: " + title);
@@ -444,6 +498,27 @@ public final class NetworkManager {
 					.content(content)
 					.build()
 					.show());
+		}
+	}
+
+	/**
+	 * Stops listening to the server - closes the socket and the I/O streams
+	 */
+	private void stopListening() {
+		close(out);
+		close(in);
+		close(socket);
+		connectionSuccessful = false;
+		initializedStreams = false;
+		L.debug("Closing both I/O streams...");
+
+	}
+
+	private void close(Closeable closeable) {
+		try {
+			closeable.close();
+		} catch (IOException e) {
+			L.error("Failed to close " + closeable);
 		}
 	}
 
@@ -473,29 +548,5 @@ public final class NetworkManager {
 		}
 	}
 
-	/**
-	 * Stops listening to the server - closes the socket and the I/O streams
-	 */
-	private void stopListening() {
-		close(out);
-		close(in);
-		close(socket);
-		connectionSuccessful = false;
-		initializedStreams = false;
-		L.debug("Closing both I/O streams...");
-
-	}
-
-	private void close(Closeable closeable) {
-		try {
-			closeable.close();
-		} catch (IOException e) {
-			L.error("Failed to close " + closeable);
-		}
-	}
-
-	public void addChangedStateListener(Consumer<ProtocolState> listener) {
-		changedStateListeners.add(listener);
-	}
 
 }

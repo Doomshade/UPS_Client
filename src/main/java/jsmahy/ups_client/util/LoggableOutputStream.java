@@ -7,32 +7,31 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 public class LoggableOutputStream extends OutputStream {
-    private static final Logger L = LogManager.getLogger(LoggableOutputStream.class);
-    private final OutputStream out;
+	private static final Logger L = LogManager.getLogger(LoggableOutputStream.class);
+	private final OutputStream out;
 
-    public LoggableOutputStream(OutputStream out) {
-        this.out = out;
-    }
+	public LoggableOutputStream(OutputStream out) {
+		this.out = out;
+	}
 
-    @Override
-    public void write(int b) throws IOException {
-        L.debug(String.format("Writing %d to %s...", b, out.toString()));
-        out.write(b);
-    }
+	@Override
+	public void write(int b) throws IOException {
+		L.debug(String.format("Writing %d to %s...", b, out.toString()));
+		out.write(b);
+	}
 
-    @Override
-    public void write(byte @NotNull [] b) throws IOException {
-        L.debug(String.format("Writing %s to %s...", new String(b, StandardCharsets.UTF_8).trim(), out.toString()));
-        out.write(b);
-    }
+	@Override
+	public void write(byte @NotNull [] b) throws IOException {
+		L.debug(String.format("Writing %s to %s...", new String(b, StandardCharsets.UTF_8).trim(), out.toString()));
+		out.write(b);
+	}
 
-    @Override
-    public void write(byte @NotNull [] b, int off, int len) throws IOException {
-        L.debug(String.format("Writing %s to %s (off=%d, len=%d)...", new String(b, StandardCharsets.UTF_8).trim(),
-                out.toString(), off, len));
-        out.write(b, off, len);
-    }
+	@Override
+	public void write(byte @NotNull [] b, int off, int len) throws IOException {
+		L.debug(String.format("Writing %s to %s (off=%d, len=%d)...", new String(b, StandardCharsets.UTF_8).trim(),
+				out.toString(), off, len));
+		out.write(b, off, len);
+	}
 }

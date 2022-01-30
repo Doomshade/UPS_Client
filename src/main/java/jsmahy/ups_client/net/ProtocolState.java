@@ -1,6 +1,5 @@
 package jsmahy.ups_client.net;
 
-import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.exception.InvalidProtocolStateException;
 import jsmahy.ups_client.net.in.PacketIn;
 import jsmahy.ups_client.net.in.all.PacketInDisconnect;
@@ -119,10 +118,10 @@ public enum ProtocolState {
 	 *
 	 * @return an instance of a packet
 	 *
-	 * @throws InvalidPacketFormatException if the packet format is incorrect
-	 * @throws IllegalStateException        if the packet class could not be instantiated with the default constructor
+	 * @throws InvalidProtocolStateException if the packet was sent in a wrong state
+	 * @throws IllegalStateException         if the packet class could not be instantiated with the default constructor
 	 */
-	public PacketIn getPacketIn(int packetId) throws IllegalArgumentException, InvalidProtocolStateException {
+	public PacketIn getPacketIn(int packetId) throws IllegalStateException, InvalidProtocolStateException {
 		final Map<Integer, Class<? extends Packet>> registry = packetRegistryById.get(this);
 		if (registry == null || !registry.containsKey(packetId)) {
 			throw new InvalidProtocolStateException(

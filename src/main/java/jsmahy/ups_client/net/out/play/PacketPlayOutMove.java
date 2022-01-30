@@ -40,18 +40,6 @@ public class PacketPlayOutMove implements PacketOut {
 		return MOVES.get(moveId);
 	}
 
-	public int getMoveId() {
-		return moveId;
-	}
-
-	public Square getFrom() {
-		return from;
-	}
-
-	public Square getTo() {
-		return to;
-	}
-
 	@Override
 	public String toString() {
 		return new ToStringBuilder(this)

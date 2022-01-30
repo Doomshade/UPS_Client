@@ -2,9 +2,6 @@ package jsmahy.ups_client.net.out.all;
 
 import jsmahy.ups_client.net.out.PacketOut;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
 /**
  * This packet is sent periodically to check whether the connection is still up
  *

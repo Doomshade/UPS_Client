@@ -1,6 +1,5 @@
 package jsmahy.ups_client.net.in.just_connected;
 
-import jsmahy.ups_client.net.Packet;
 import jsmahy.ups_client.net.ProtocolState;
 import jsmahy.ups_client.net.in.PacketIn;
 

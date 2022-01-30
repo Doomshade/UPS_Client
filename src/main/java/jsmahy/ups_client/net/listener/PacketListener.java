@@ -12,8 +12,10 @@ public interface PacketListener {
 
 	/**
 	 * Handles the received packet by the given handler in the current state
+	 *
 	 * @param packet the packet to handle
+	 *
 	 * @throws InvalidProtocolStateException if the packet was not found in this state
 	 */
-	void handle(PacketIn packet) throws InvalidProtocolStateException;
+	<T extends PacketIn> void handle(T packet) throws InvalidProtocolStateException;
 }

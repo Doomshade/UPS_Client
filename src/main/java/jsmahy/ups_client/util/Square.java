@@ -41,10 +41,14 @@ public final class Square implements PacketData, Serializable {
 		return (rank >> 3) == 0 && (file >> 3) == 0;
 	}
 
-	public static Square fromString(String s) throws IllegalArgumentException {
-		return Square.deserialize(s, new AtomicInteger(0));
-	}
-
+	/**
+	 * Deserializes the squares from the data
+	 *
+	 * @param data       the data
+	 * @param amountRead the amount read from the data
+	 *
+	 * @return the square
+	 */
 	public static Square deserialize(String data, AtomicInteger amountRead) {
 		char file = data.charAt(0);
 		if (file < 'A' || file > 'H') {
@@ -100,6 +104,11 @@ public final class Square implements PacketData, Serializable {
 		return toDataString();
 	}
 
+	@Override
+	public String toDataString() {
+		return new String(new char[] {(char) (file + 'A'), (char) (rank + '1')});
+	}
+
 	/**
 	 * @param rank the rank
 	 * @param file the file
@@ -110,10 +119,5 @@ public final class Square implements PacketData, Serializable {
 	 */
 	public Square add(int rank, int file) throws IllegalArgumentException {
 		return new Square(this.rank + rank, this.file + file);
-	}
-
-	@Override
-	public String toDataString() {
-		return new String(new char[] {(char) (file + 'A'), (char) (rank + '1')});
 	}
 }

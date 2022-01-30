@@ -74,34 +74,6 @@ public class PacketDeserializer implements Runnable {
 							.content("Disconnected, attempting to reconnect...")
 							.build()
 							.show());
-
-					/*
-					Platform.runLater(() -> {
-						NetworkManager.getInstance()
-								.disconnect("Connection error", "Server connection error",
-										"Disconnected", false);
-
-						Client.setLoginName(ServerConnectionController.name);
-						NetworkManager.getInstance().setup(ServerConnectionController.ip, ServerConnectionController.port,
-								x -> {
-									String content = "Connection error";
-									if (x instanceof UnknownHostException || x instanceof NoRouteToHostException) {
-										content = "Unknown host destination";
-									} else if (x instanceof ConnectException) {
-										content = "Could not connect to the server";
-									}
-									L.error(content);
-									stop();
-								},
-								() -> {
-									L.info("Successfully connected to the server");
-									try {
-										NetworkManager.getInstance().sendPacket(new PacketJustConnectedOutHello(ServerConnectionController.name));
-									} catch (IllegalStateException | AnnotationTypeMismatchException | InvalidProtocolStateException ex) {
-										L.error("Failed to send a packet!");
-									}
-								});
-					});*/
 					break;
 				}
 				s = new String(buf, StandardCharsets.UTF_8);
@@ -146,9 +118,5 @@ public class PacketDeserializer implements Runnable {
 				break;
 			}
 		}
-	}
-
-	public void stop() {
-		this.stop = true;
 	}
 }

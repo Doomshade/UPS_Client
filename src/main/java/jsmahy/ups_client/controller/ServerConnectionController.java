@@ -50,7 +50,7 @@ public class ServerConnectionController implements Initializable {
 	}
 
 	public void connect(final ActionEvent actionEvent) {
-		if (!isValidTF(ipTF) || !isValidTF(portTF) || !isValidTF(nameTF)) {
+		if (isInvalid(ipTF) || isInvalid(portTF) || isInvalid(nameTF)) {
 			sendInvalidInputAlert("Invalid name/IP/port!", "Invalid input");
 			return;
 		}
@@ -119,9 +119,9 @@ public class ServerConnectionController implements Initializable {
 				.show());
 	}
 
-	private boolean isValidTF(TextField tf) {
+	private boolean isInvalid(TextField tf) {
 		final String text = tf.getText().trim();
-		return !text.isEmpty() && Pattern.compile(ALLOWED_CHARS).matcher(text).find();
+		return text.isEmpty() || !Pattern.compile(ALLOWED_CHARS).matcher(text).find();
 	}
 
 	public void errorUsernameExists() {

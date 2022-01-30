@@ -2,10 +2,6 @@ package jsmahy.ups_client.net.out;
 
 import jsmahy.ups_client.net.Packet;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Collection;
-
 /**
  * An outgoing packet - Client -{@literal >} Server.
  *

@@ -1,13 +1,9 @@
 package jsmahy.ups_client.controller;
 
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.layout.VBox;
 import jsmahy.ups_client.SceneManager;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.ProtocolState;
@@ -23,7 +19,6 @@ import java.util.ResourceBundle;
  * @since 1.0
  */
 public class PlaySceneController implements Initializable {
-	private static PlaySceneController instance = null;
 	@FXML
 	public Button zpetButton;
 	@FXML

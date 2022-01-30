@@ -3,21 +3,17 @@ package jsmahy.ups_client;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
-import jsmahy.ups_client.game.ChessPlayer;
-import jsmahy.ups_client.game.Chessboard;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.ProtocolState;
-import jsmahy.ups_client.util.Square;
-import jsmahy.ups_client.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.net.InetAddress;
-
 /**
- * The type Hello application.
+ * The main entry point
+ *
+ * @author Jakub Šmrha
+ * @version 1.0
+ * @since 1.0
  */
 public class Main extends Application {
 	private static final Logger L = LogManager.getLogger(Main.class);
@@ -32,16 +28,12 @@ public class Main extends Application {
 		launch(args);
 	}
 
-	private static void connectionTest() throws IOException {
-		NetworkManager.getInstance().setup(InetAddress.getLocalHost().getHostAddress(), 5000, null, null);
-	}
-
 	public static Stage getStage() {
 		return stage;
 	}
 
 	@Override
-	public void start(Stage stage) throws IOException {
+	public void start(Stage stage) {
 		Main.stage = stage;
 		NetworkManager.getInstance().changeState(ProtocolState.JUST_CONNECTED);
 		stage.setOnCloseRequest(x -> {

@@ -12,17 +12,17 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * @since 1.0
  */
 public class PacketJustConnectedOutHello implements PacketOut {
-    @PacketDataField
-    private String playerName = "";
+	@PacketDataField
+	private final String playerName;
 
-    public PacketJustConnectedOutHello(final String playerName) {
-        this.playerName = playerName;
-    }
+	public PacketJustConnectedOutHello(final String playerName) {
+		this.playerName = playerName;
+	}
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this)
-                .append("playerName", playerName)
-                .toString();
-    }
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this)
+				.append("playerName", playerName)
+				.toString();
+	}
 }

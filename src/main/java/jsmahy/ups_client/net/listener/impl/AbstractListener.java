@@ -97,7 +97,7 @@ abstract class AbstractListener implements PacketListener {
 	}
 
 	@Override
-	public final void handle(PacketIn packet) throws InvalidProtocolStateException {
+	public final <T extends PacketIn> void handle(T packet) throws InvalidProtocolStateException {
 		final Consumer<PacketIn> handler = (Consumer<PacketIn>) MAP.get(packet.getClass());
 		if (handler == null) {
 			throw new InvalidProtocolStateException("No handler found for " + packet.getClass().getSimpleName());

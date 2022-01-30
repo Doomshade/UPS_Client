@@ -27,8 +27,6 @@ public class GameController implements Initializable {
 	@FXML
 	public TextArea opponentChat;
 	@FXML
-	public Button chatSend;
-	@FXML
 	public BorderPane rootPane;
 	@FXML
 	public Button resign;
