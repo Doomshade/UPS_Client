@@ -5,15 +5,32 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public final class BufferedPacket implements Cloneable {
 
-	private StringBuilder header = new StringBuilder(NetworkManager.PACKET_HEADER_LENGTH);
-	private StringBuilder data = new StringBuilder(1000);
-	private int packetId = -1;
-	private int packetSize = -1;
+	// the packet header
+	private StringBuilder header;
+
+	// the packet data
+	private StringBuilder data;
+
+	// the deserialized packet ID
+	private int packetId;
+
+	// the deserialized packet size
+	private int packetSize;
+
+	public BufferedPacket(int packetId, String data) throws InvalidPacketFormatException, IllegalStateException {
+		this();
+		this.packetId = packetId;
+		this.packetSize = data.length();
+		this.data.append(data);
+	}
 
 	public BufferedPacket() {
 		reset();
 	}
 
+	/**
+	 * Resets the packet's state
+	 */
 	public synchronized void reset() {
 		packetId = -1;
 		packetSize = -1;
@@ -21,12 +38,16 @@ public final class BufferedPacket implements Cloneable {
 		data = new StringBuilder(1000);
 	}
 
-	public BufferedPacket(int packetId, String data) throws InvalidPacketFormatException, IllegalStateException {
-		this.packetId = packetId;
-		this.packetSize = data.length();
-		this.data.append(data);
-	}
-
+	/**
+	 * Appends a string to the packet
+	 *
+	 * @param s the string
+	 *
+	 * @return the amount appended
+	 *
+	 * @throws InvalidPacketFormatException if the packet header is invalid
+	 * @throws IllegalStateException        if the packet size is invalid
+	 */
 	public synchronized int append(String s) throws InvalidPacketFormatException, IllegalStateException {
 		if (isPacketReady()) {
 			return 0;
@@ -54,22 +75,28 @@ public final class BufferedPacket implements Cloneable {
 		return 0;
 	}
 
-	private boolean isDataFull() {
-		return data.length() == packetSize;
-	}
-
 	private boolean isHeaderEmpty() {
 		return header.length() != NetworkManager.PACKET_HEADER_LENGTH;
 	}
 
+	/**
+	 * Parses the header
+	 *
+	 * @throws InvalidPacketFormatException if the header is invalid
+	 * @throws IllegalStateException        if the header is not yet full
+	 */
 	private void parseHeader() throws InvalidPacketFormatException, IllegalStateException {
 		if (isHeaderEmpty()) {
 			throw new IllegalStateException("Header not yet filled!");
 		}
+
+		// parse packet magic
 		String packetMagic = header.substring(0, NetworkManager.PACKET_MAGIC.length());
 		if (!packetMagic.equals(NetworkManager.PACKET_MAGIC)) {
 			throw new InvalidPacketFormatException("Invalid packet magic!");
 		}
+
+		// parse the packet header
 		try {
 			packetId = Integer.parseInt(
 					header.substring(NetworkManager.PACKET_MAGIC.length(), NetworkManager.PACKET_MAGIC.length() + 2),
@@ -80,29 +107,57 @@ public final class BufferedPacket implements Cloneable {
 		}
 	}
 
-	public int getPacketId() {
-		validatePacketReady();
+	/**
+	 * @return the packet ID
+	 *
+	 * @throws IllegalStateException if the packet is not ready yet
+	 */
+	public int getPacketId() throws IllegalStateException {
+		checkIfPacketReady();
 		return packetId;
 	}
 
-	private void validatePacketReady() {
+	/**
+	 * Checks if the packet is ready
+	 *
+	 * @throws IllegalStateException if the packet is not ready
+	 */
+	private void checkIfPacketReady() throws IllegalStateException {
 		if (!isPacketReady()) {
 			throw new IllegalStateException("Packet not yet parsed! (" + this + ")");
-
 		}
 	}
 
+	/**
+	 * Checks whether the ID is >=0, packet size is >=0, and the data length matches the packet size
+	 *
+	 * @return {@code true} if the conditions are met
+	 */
 	public synchronized boolean isPacketReady() {
-		return packetId >= 0 && packetSize >= 0 && data.length() == packetSize;
+		return packetId >= 0 && packetSize >= 0 && isDataFull();
 	}
 
-	public int getPacketSize() {
-		validatePacketReady();
+	private boolean isDataFull() {
+		return data.length() == packetSize;
+	}
+
+	/**
+	 * @return the packet size
+	 *
+	 * @throws IllegalStateException if the packet is not ready yet
+	 */
+	public int getPacketSize() throws IllegalStateException {
+		checkIfPacketReady();
 		return packetSize;
 	}
 
-	public String getData() {
-		validatePacketReady();
+	/**
+	 * @return the payload
+	 *
+	 * @throws IllegalStateException if the packet is not ready yet
+	 */
+	public String getData() throws IllegalStateException {
+		checkIfPacketReady();
 		return data.toString();
 	}
 

@@ -15,6 +15,13 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Deserializes the incoming traffic from the server
+ *
+ * @author Jakub Šmrha
+ * @version 1.0
+ * @since 1.0
+ */
 public class PacketDeserializer implements Runnable {
 	private static final Logger L = LogManager.getLogger(PacketDeserializer.class);
 
@@ -35,9 +42,13 @@ public class PacketDeserializer implements Runnable {
 		while (!stop) {
 			String s;
 			int buffered;
+
 			try {
+				// read the buffer
 				byte[] buf = new byte[4096];
 				try {
+					// if the read returns <0, that means error -> the server is unreachable, disconnect the player
+					// -- the server likely cut the connection
 					if (in.read(buf) < 0) {
 						L.fatal("Server is unreachable, disconnecting...");
 						Platform.runLater(() -> new AlertBuilder(Alert.AlertType.INFORMATION)
@@ -52,7 +63,10 @@ public class PacketDeserializer implements Runnable {
 										"Disconnected", true);
 						break;
 					}
-				} catch (SocketException | SocketTimeoutException e) {
+				}
+				// the server has not responded in a long time, an exception is thrown as a cause to that
+				// attempt to reconnect the player to the server
+				catch (SocketException | SocketTimeoutException e) {
 					L.fatal("Server is unreachable (ping >20000ms), attempting to reconnect...");
 
 					Platform.runLater(() -> new AlertBuilder(Alert.AlertType.INFORMATION)
@@ -66,7 +80,9 @@ public class PacketDeserializer implements Runnable {
 									"Disconnected", false);
 					Client.attemptReconnect();
 					break;
-				} catch (IOException e) {
+				}
+				// an IO exception not related to timeout occurred, disconnect the player
+				catch (IOException e) {
 					L.fatal("Disconnected.");
 					Platform.runLater(() -> new AlertBuilder(Alert.AlertType.INFORMATION)
 							.title("Connectivity issues")
@@ -76,27 +92,34 @@ public class PacketDeserializer implements Runnable {
 							.show());
 					break;
 				}
+
+				// parse the packet
 				s = new String(buf, StandardCharsets.UTF_8);
 				s = s.trim();
 				while (true) {
+					// append the data to the packet
 					buffered = bufferedPacket.append(s);
 
+					// if the packet is not yet ready, don't attempt to parse it
 					if (!bufferedPacket.isPacketReady()) {
 						break;
 					}
+
 					// the data is fully buffered -> the packet is ready
 					// we can handle the packet now
 					L.debug("Handling packet " + bufferedPacket);
 
+					// receive the buffered packet and delegate it to the listeners
 					NetworkManager.getInstance().receivePacket(bufferedPacket);
 
-					// reset the buffer and check if there's more in the buffer
+					// reset the buffer and check if there's more in the buffers
 					bufferedPacket.reset();
 					if (buffered >= s.length()) {
 						break;
 					}
 
-					// shift the string by the bytes read
+					// there's more data in the buffer, shift the string by the bytes read and attempt to parse it
+					// once more
 					try {
 						s = s.substring(buffered);
 					} catch (Exception e) {
@@ -104,13 +127,17 @@ public class PacketDeserializer implements Runnable {
 						break;
 					}
 				}
-			} catch (InvalidPacketFormatException | InvalidProtocolStateException e) {
+			}
+			// the packet send was invalid, disconnect the player
+			catch (InvalidPacketFormatException | InvalidProtocolStateException e) {
 				L.fatal("Received an invalid packet or the client is in an invalid state");
 				NetworkManager.getInstance()
 						.disconnect("Invalid packet", "Invalid packet received",
 								"The server sent an invalid packet or the client is in an invalid state", true);
 				break;
-			} catch (Exception e) {
+			}
+			// some internal exception happened, disconnect the player
+			catch (Exception e) {
 				L.fatal("An error occurred when handling a packet", e);
 				NetworkManager.getInstance()
 						.disconnect("Connection error", "Server connection error",

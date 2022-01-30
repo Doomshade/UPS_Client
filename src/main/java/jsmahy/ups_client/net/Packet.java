@@ -1,7 +1,13 @@
 package jsmahy.ups_client.net;
 
+import jsmahy.ups_client.net.in.PacketIn;
+import jsmahy.ups_client.net.out.PacketOut;
+
 /**
- * The type Packet.
+ * Represents some packet
+ *
+ * @see PacketIn
+ * @see PacketOut
  */
 public interface Packet {
 

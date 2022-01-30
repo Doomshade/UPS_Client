@@ -84,6 +84,7 @@ public enum ProtocolState {
 
 	};
 
+	// the offsets for packets
 	public static final int PACKET_IN_OFFSET = 0x80;
 	private static final int JUST_CONNECTED_OFFSET = 0x00;
 	private static final int LOGGED_IN_OFFSET = 0x20;
@@ -102,7 +103,7 @@ public enum ProtocolState {
 	private final Map<ProtocolState, Map<Class<? extends Packet>, Integer>>
 			packetRegistryByClass = new HashMap<>();
 
-	// global packets
+	// global packets that can be sent/received in any state
 	{
 		register(PacketOutKeepAlive.class, 0x7F);
 
@@ -112,9 +113,9 @@ public enum ProtocolState {
 	}
 
 	/**
-	 * Attempts to instantiate a packet.
+	 * Attempts to instantiate a packet based on the ID.
 	 *
-	 * @param packetId the packet id
+	 * @param packetId the packet ID
 	 *
 	 * @return an instance of a packet
 	 *
@@ -146,8 +147,7 @@ public enum ProtocolState {
 	 *
 	 * @throws InvalidProtocolStateException if the packet is not registered
 	 */
-	public int getPacketId(Class<?
-			extends Packet> packetClass) throws InvalidProtocolStateException {
+	public int getPacketId(Class<? extends Packet> packetClass) throws InvalidProtocolStateException {
 		Map<Class<? extends Packet>, Integer> map = packetRegistryByClass.get(this);
 		if (map == null || !map.containsKey(packetClass)) {
 			throw new InvalidProtocolStateException(
@@ -163,8 +163,7 @@ public enum ProtocolState {
 	 * @param packetClass the packet class
 	 * @param packetId    the packet id
 	 */
-	protected final void register(Class<? extends Packet> packetClass,
-	                              int packetId) {
+	protected final void register(Class<? extends Packet> packetClass, int packetId) {
 		if (L == null) {
 			L = LogManager.getLogger(ProtocolState.class);
 		}
@@ -180,8 +179,7 @@ public enum ProtocolState {
 	 * @param packetClass the packet's class
 	 * @param packetId    the packet id
 	 */
-	private void putClass(final Class<? extends Packet> packetClass,
-	                      final int packetId) {
+	private void putClass(final Class<? extends Packet> packetClass, final int packetId) {
 		putPacket(packetRegistryByClass, this, packetClass, packetId);
 
 	}
@@ -192,8 +190,7 @@ public enum ProtocolState {
 	 * @param packetClass the packet's class
 	 * @param packetId    the packet id
 	 */
-	private void putId(final Class<? extends Packet> packetClass,
-	                   final int packetId) {
+	private void putId(final Class<? extends Packet> packetClass, final int packetId) {
 		putPacket(packetRegistryById, this, packetId, packetClass);
 	}
 
