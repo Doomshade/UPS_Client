@@ -27,7 +27,7 @@ public final class JustConnectedListener extends AbstractListener {
                 startKeepAlive();
                 break;
             case REJECTED:
-                NetworkManager.getInstance().disconnect(null, null, null);
+                NetworkManager.getInstance().disconnect(null, null, null, true);
                 ServerConnectionController.getInstance().errorUsernameExists();
                 break;
             default:

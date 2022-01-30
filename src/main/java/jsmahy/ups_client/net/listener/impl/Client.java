@@ -4,17 +4,28 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import jsmahy.ups_client.SceneManager;
 import jsmahy.ups_client.controller.GameController;
+import jsmahy.ups_client.controller.ServerConnectionController;
+import jsmahy.ups_client.exception.InvalidProtocolStateException;
 import jsmahy.ups_client.game.ChessGame;
 import jsmahy.ups_client.game.ChessPlayer;
 import jsmahy.ups_client.net.NetworkManager;
 import jsmahy.ups_client.net.ProtocolState;
 import jsmahy.ups_client.net.in.play.packet.*;
+import jsmahy.ups_client.net.out.just_connected.PacketJustConnectedOutHello;
 import jsmahy.ups_client.net.out.play.PacketPlayOutMove;
 import jsmahy.ups_client.util.AlertBuilder;
 import jsmahy.ups_client.util.Square;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.lang.annotation.AnnotationTypeMismatchException;
+import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.UnknownHostException;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Client extends AbstractListener {
 	private static final Logger L = LogManager.getLogger(Client.class);
@@ -52,7 +63,6 @@ public class Client extends AbstractListener {
 	 * Sets the login name
 	 *
 	 * @param name the login name to set
-	 *
 	 * @throws NullPointerException     if the name is null
 	 * @throws IllegalArgumentException if the name is empty
 	 */
@@ -73,6 +83,48 @@ public class Client extends AbstractListener {
 		instance = null;
 	}
 
+	public static void attemptReconnect() {
+		Timer reconnect_timer = new Timer("Reconnect timer");
+		AtomicBoolean reconnected = new AtomicBoolean(false);
+		TimerTask task = new TimerTask() {
+			@Override
+			public void run() {
+				Platform.runLater(() -> {
+					NetworkManager.getInstance().setup(ServerConnectionController.ip, ServerConnectionController.port,
+							x -> {
+								String content = "Connection error";
+								if (x instanceof UnknownHostException || x instanceof NoRouteToHostException) {
+									content = "Unknown host destination";
+								} else if (x instanceof ConnectException) {
+									content = "Could not connect to the server";
+								}
+								L.error(content);
+							},
+							() -> {
+								L.info("Successfully connected to the server");
+								try {
+									NetworkManager.getInstance().sendPacket(new PacketJustConnectedOutHello(ServerConnectionController.name));
+								} catch (IllegalStateException | AnnotationTypeMismatchException | InvalidProtocolStateException ex) {
+									L.error("Failed to send a packet!");
+								}
+								reconnected.set(true);
+								cancel();
+							});
+				});
+			}
+		};
+		reconnect_timer.schedule(task, 2000, 2000);
+		new Timer().schedule(new TimerTask() {
+			@Override
+			public void run() {
+				reconnect_timer.cancel();
+				if (!reconnected.get()) {
+					NetworkManager.getInstance().disconnect("Disconnected", "Could not reconnect", "Failed to reconnect after a long timeout", true);
+				}
+			}
+		}, 40000);
+	}
+
 	/**
 	 * Logs in the client
 	 *
@@ -87,6 +139,17 @@ public class Client extends AbstractListener {
 		}
 		L.info(String.format("Logging in as %s...", name));
 		instance = new Client();
+	}
+
+	/**
+	 * @return the client instance
+	 * @throws IllegalStateException if the client is not yet logged in
+	 */
+	public static Client getClient() throws IllegalStateException {
+		if (instance == null) {
+			throw new IllegalStateException("Not yet logged in!");
+		}
+		return instance;
 	}
 
 	/**
@@ -195,7 +258,7 @@ public class Client extends AbstractListener {
 			case REJECTED:
 				L.info("Attempted to play an invalid move! Move: " + PacketPlayOutMove.getMove(packet.getMoveId()));
 				GameController.getInstance().appendMessage("Invalid move!");
-				if (!onTurn){
+				if (!onTurn) {
 					GameController.getInstance().appendMessage("It's not your turn yet!");
 				}
 				break;
@@ -256,7 +319,6 @@ public class Client extends AbstractListener {
 	 * Starts the chess game
 	 *
 	 * @param chessGame the chess game to start
-	 *
 	 * @throws IllegalStateException if the user is already in a game
 	 */
 	public void startGame(ChessGame chessGame) throws IllegalStateException {
@@ -295,18 +357,6 @@ public class Client extends AbstractListener {
 	 */
 	public void setOnTurn(boolean onTurn) {
 		this.onTurn = onTurn;
-	}
-
-	/**
-	 * @return the client instance
-	 *
-	 * @throws IllegalStateException if the client is not yet logged in
-	 */
-	public static Client getClient() throws IllegalStateException {
-		if (instance == null) {
-			throw new IllegalStateException("Not yet logged in!");
-		}
-		return instance;
 	}
 
 	/**

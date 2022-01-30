@@ -24,7 +24,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
-import java.net.StandardSocketOptions;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -52,8 +51,8 @@ public final class NetworkManager {
 	/**
 	 * The timeout limit for server to answer.
 	 */
-	public static final int SHORT_TIMEOUT = 5_000;
-	public static final int MAX_TIMEOUT = 20_000;
+	public static final int SHORT_TIMEOUT = 30_000;
+	public static final int MAX_TIMEOUT = 60_000;
 	private static final NetworkManager INSTANCE = new NetworkManager();
 	private final Executor pool = Executors.newCachedThreadPool();
 	private final Collection<Consumer<ProtocolState>> changedStateListeners = new ArrayList<>();
@@ -421,12 +420,12 @@ public final class NetworkManager {
 				if (onFail != null) {
 					Platform.runLater(() -> onFail.accept(e));
 				}
-				disconnect("Server shutdown", "Unable to reach server", "Packet was not able to reach the server!");
+				disconnect("Server shutdown", "Unable to reach server", "Packet was not able to reach the server!", true);
 			}
 		});
 	}
 
-	public synchronized void disconnect(String title, String header, String content) {
+	public synchronized void disconnect(String title, String header, String content, boolean changeScene) {
 		L.info("Disconnecting...");
 		L.info("Title: " + title);
 		L.info("Header: " + header);
@@ -435,7 +434,9 @@ public final class NetworkManager {
 		Client.stopKeepAlive();
 		Client.logout();
 		changeState(ProtocolState.JUST_CONNECTED);
-		SceneManager.changeScene(SceneManager.Scenes.SERVER_CONNECTION);
+		if (changeScene) {
+			SceneManager.changeScene(SceneManager.Scenes.SERVER_CONNECTION);
+		}
 		if (title != null && header != null && content != null) {
 			Platform.runLater(() -> new AlertBuilder(Alert.AlertType.INFORMATION)
 					.title(title)
@@ -481,7 +482,6 @@ public final class NetworkManager {
 		close(socket);
 		connectionSuccessful = false;
 		initializedStreams = false;
-		readThread.interrupt();
 		L.debug("Closing both I/O streams...");
 
 	}

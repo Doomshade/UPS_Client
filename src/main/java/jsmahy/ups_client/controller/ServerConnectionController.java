@@ -28,6 +28,9 @@ import java.util.regex.Pattern;
 public class ServerConnectionController implements Initializable {
 	private static final Logger L = LogManager.getLogger(ServerConnectionController.class);
 	private static final String ALLOWED_CHARS = "[a-zA-Z\\d]";
+	public static String ip = "";
+	public static int port = 10000;
+	public static String name = "";
 	private static ServerConnectionController instance;
 	@FXML
 	private ProgressIndicator progress;
@@ -62,6 +65,9 @@ public class ServerConnectionController implements Initializable {
 
 		final NetworkManager NM = NetworkManager.getInstance();
 		try {
+			ServerConnectionController.name = nameTF.getText();
+			ServerConnectionController.ip = ipTF.getText();
+			ServerConnectionController.port = port;
 			setProgress(true);
 			Client.setLoginName(nameTF.getText());
 			NM.setup(ipTF.getText(), port,
@@ -69,7 +75,7 @@ public class ServerConnectionController implements Initializable {
 						String content = "Connection error";
 						if (e instanceof UnknownHostException || e instanceof NoRouteToHostException) {
 							content = "Unknown host destination";
-						} else if (e instanceof ConnectException){
+						} else if (e instanceof ConnectException) {
 							content = "Could not connect to the server";
 						}
 						setProgress(false);
@@ -119,9 +125,11 @@ public class ServerConnectionController implements Initializable {
 	}
 
 	public void errorUsernameExists() {
-		setProgress(false);
-		sendInvalidInputAlert("A user with that name already exists! Please choose a different name", "Invalid " +
-				"username");
+		Platform.runLater(() -> {
+			setProgress(false);
+			sendInvalidInputAlert("A user with that name already exists! Please choose a different name", "Invalid " +
+					"username");
+		});
 	}
 
 	@Override

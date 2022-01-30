@@ -31,6 +31,6 @@ public class MainMenuController {
 	}
 
 	public void logout(final ActionEvent actionEvent) {
-		NetworkManager.getInstance().disconnect(null, null, null);
+		NetworkManager.getInstance().disconnect(null, null, null, true);
 	}
 }

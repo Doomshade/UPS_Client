@@ -4,13 +4,14 @@ import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import jsmahy.ups_client.exception.InvalidPacketFormatException;
 import jsmahy.ups_client.exception.InvalidProtocolStateException;
-import jsmahy.ups_client.net.out.all.PacketOutKeepAlive;
+import jsmahy.ups_client.net.listener.impl.Client;
 import jsmahy.ups_client.util.AlertBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 
@@ -48,30 +49,59 @@ public class PacketDeserializer implements Runnable {
 								.show());
 						NetworkManager.getInstance()
 								.disconnect("Connection error", "Server connection error",
-										"Disconnected");
+										"Disconnected", true);
 						break;
 					}
-				} catch (SocketTimeoutException e) {
-					L.fatal("Server is unreachable (ping >5000ms), attempting to reconnect...");
+				} catch (SocketException | SocketTimeoutException e) {
+					L.fatal("Server is unreachable (ping >20000ms), attempting to reconnect...");
+
 					Platform.runLater(() -> new AlertBuilder(Alert.AlertType.INFORMATION)
 							.title("Connectivity issues")
 							.header("Server unreachable")
-							.content("Failed to receive a packet from the server for a while, attempting to " +
-									"reconnect...")
+							.content("Attempting to reconnect...")
 							.build()
 							.show());
-					NetworkManager.getInstance().sendPacket(new PacketOutKeepAlive());
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException ex) {
-						break;
-					}
-					continue;
-				} catch (IOException e) {
-					L.fatal("An exception occurred when reading from the input stream");
 					NetworkManager.getInstance()
 							.disconnect("Connection error", "Server connection error",
-									"Disconnected");
+									"Disconnected", false);
+					Client.attemptReconnect();
+					break;
+				} catch (IOException e) {
+					L.fatal("Disconnected.");
+					Platform.runLater(() -> new AlertBuilder(Alert.AlertType.INFORMATION)
+							.title("Connectivity issues")
+							.header("Server unreachable")
+							.content("Disconnected, attempting to reconnect...")
+							.build()
+							.show());
+
+					/*
+					Platform.runLater(() -> {
+						NetworkManager.getInstance()
+								.disconnect("Connection error", "Server connection error",
+										"Disconnected", false);
+
+						Client.setLoginName(ServerConnectionController.name);
+						NetworkManager.getInstance().setup(ServerConnectionController.ip, ServerConnectionController.port,
+								x -> {
+									String content = "Connection error";
+									if (x instanceof UnknownHostException || x instanceof NoRouteToHostException) {
+										content = "Unknown host destination";
+									} else if (x instanceof ConnectException) {
+										content = "Could not connect to the server";
+									}
+									L.error(content);
+									stop();
+								},
+								() -> {
+									L.info("Successfully connected to the server");
+									try {
+										NetworkManager.getInstance().sendPacket(new PacketJustConnectedOutHello(ServerConnectionController.name));
+									} catch (IllegalStateException | AnnotationTypeMismatchException | InvalidProtocolStateException ex) {
+										L.error("Failed to send a packet!");
+									}
+								});
+					});*/
 					break;
 				}
 				s = new String(buf, StandardCharsets.UTF_8);
@@ -106,13 +136,13 @@ public class PacketDeserializer implements Runnable {
 				L.fatal("Received an invalid packet or the client is in an invalid state");
 				NetworkManager.getInstance()
 						.disconnect("Invalid packet", "Invalid packet received",
-								"The server sent an invalid packet or the client is in an invalid state");
+								"The server sent an invalid packet or the client is in an invalid state", true);
 				break;
 			} catch (Exception e) {
 				L.fatal("An error occurred when handling a packet", e);
 				NetworkManager.getInstance()
 						.disconnect("Connection error", "Server connection error",
-								"An unknown error occurred when handling a packet");
+								"An unknown error occurred when handling a packet", true);
 				break;
 			}
 		}

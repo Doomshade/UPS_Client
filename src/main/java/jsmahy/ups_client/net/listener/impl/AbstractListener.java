@@ -51,7 +51,7 @@ abstract class AbstractListener implements PacketListener {
 				if (System.currentTimeMillis() - lastKeepAlive >= NetworkManager.MAX_TIMEOUT) {
 					NetworkManager.getInstance().disconnect("Disconnected", "Could not reach the server",
 							String.format("Reason: have not received a keep alive packet in %ds",
-									NetworkManager.MAX_TIMEOUT / 1000));
+									NetworkManager.MAX_TIMEOUT / 1000), true);
 					return;
 				}
 				try {
@@ -85,7 +85,7 @@ abstract class AbstractListener implements PacketListener {
 
 	private void disconnect(PacketInDisconnect packet) {
 		NetworkManager.getInstance().disconnect("Disconnected", "Server sent a disconnect packet", "The server " +
-				"disconnection reason: " + packet.getReason());
+				"disconnection reason: " + packet.getReason(), true);
 	}
 
 	private void keepAlive(final PacketInKeepAlive packet) {
